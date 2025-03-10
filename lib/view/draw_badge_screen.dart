@@ -28,14 +28,6 @@ class _DrawBadgeState extends State<DrawBadge> {
   var drawToggle = DrawBadgeProvider();
 
   @override
-  void initState() {
-    super.initState();
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeRight,
-    ]);
-  }
-
-  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _setLandscapeOrientation();
@@ -57,6 +49,7 @@ class _DrawBadgeState extends State<DrawBadge> {
   void _setLandscapeOrientation() {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft,
     ]);
   }
 
