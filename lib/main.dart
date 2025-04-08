@@ -1,5 +1,7 @@
+import 'package:badgemagic/providers/BadgeBrightnessProvider.dart';
 import 'package:badgemagic/providers/getitlocator.dart';
 import 'package:badgemagic/providers/imageprovider.dart';
+import 'package:badgemagic/services/BleBrightnessService.dart';
 import 'package:badgemagic/view/about_us_screen.dart';
 import 'package:badgemagic/view/draw_badge_screen.dart';
 import 'package:badgemagic/view/homescreen.dart';
@@ -8,16 +10,25 @@ import 'package:badgemagic/view/saved_clipart.dart';
 import 'package:badgemagic/view/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get_it/get_it.dart';
 import 'package:provider/provider.dart';
 import 'globals/globals.dart' as globals;
 
 void main() {
+  final getIt = GetIt.instance;
+  getIt.registerSingleton<BleBrightnessService>(BleBrightnessService());
+
   setupLocator();
   WidgetsFlutterBinding.ensureInitialized();
   runApp(MultiProvider(
     providers: [
       ChangeNotifierProvider<InlineImageProvider>(
           create: (context) => getIt<InlineImageProvider>()),
+      ChangeNotifierProvider<BadgeBrightnessProvider>(
+        create: (_) => BadgeBrightnessProvider(
+          GetIt.instance<BleBrightnessService>(),
+        ),
+      )
     ],
     child: const MyApp(),
   ));

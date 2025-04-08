@@ -8,6 +8,7 @@ import 'package:badgemagic/badge_effect/invert_led_effect.dart';
 import 'package:badgemagic/badge_effect/marquee_effect.dart';
 import 'package:badgemagic/constants.dart';
 import 'package:badgemagic/providers/animation_badge_provider.dart';
+import 'package:badgemagic/providers/BadgeBrightnessProvider.dart';
 import 'package:badgemagic/providers/badge_message_provider.dart';
 import 'package:badgemagic/providers/imageprovider.dart';
 import 'package:badgemagic/providers/speed_dial_provider.dart';
@@ -49,12 +50,27 @@ class _HomeScreenState extends State<HomeScreen>
   bool isDialInteracting = false;
   String errorVal = "";
 
+  // Use the provider for brightness management
+  late BadgeBrightnessProvider _brightnessProvider;
+
   @override
   void initState() {
     inlineimagecontroller.addListener(handleTextChange);
     _setPortraitOrientation();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       inlineImageProvider.setContext(context);
+
+      // Get the brightness provider from context
+      _brightnessProvider =
+          Provider.of<BadgeBrightnessProvider>(context, listen: false);
+
+      // Connect to badge (using stored ID or default)
+      final String deviceId =
+          "YOUR_DEVICE_ID"; // Get from preferences in real app
+      _brightnessProvider.connectToDevice(deviceId).then((_) {
+        print("Connection status: ${_brightnessProvider.isConnected}");
+        setState(() {});
+      });
     });
     _startImageCaching();
     speedDialProvider = SpeedDialProvider(animationProvider);
@@ -186,6 +202,121 @@ class _HomeScreenState extends State<HomeScreen>
                         ),
                       ),
                     ),
+
+                    // Use Consumer to listen for changes in the brightness provider
+                    Consumer<BadgeBrightnessProvider>(
+                      builder: (context, brightnessProvider, _) {
+                        // Show connection status and brightness controls
+                        return Column(
+                          children: [
+                            // Connection status indicator - show errors if any
+                            if (brightnessProvider.errorMessage.isNotEmpty)
+                              Container(
+                                margin: EdgeInsets.symmetric(horizontal: 15.w),
+                                padding: EdgeInsets.all(8.w),
+                                decoration: BoxDecoration(
+                                  color: Colors.red[100],
+                                  borderRadius: BorderRadius.circular(5.r),
+                                ),
+                                child: Text(
+                                  brightnessProvider.errorMessage,
+                                  style: TextStyle(color: Colors.red[900]),
+                                ),
+                              ),
+
+                            // Connection status indicator - show success if connected
+                            if (brightnessProvider.isConnected &&
+                                brightnessProvider.errorMessage.isEmpty)
+                              Container(
+                                margin: EdgeInsets.symmetric(horizontal: 15.w),
+                                padding: EdgeInsets.all(8.w),
+                                decoration: BoxDecoration(
+                                  color: Colors.green[100],
+                                  borderRadius: BorderRadius.circular(5.r),
+                                ),
+                                child: Text(
+                                  "Badge Connected",
+                                  style: TextStyle(color: Colors.green[900]),
+                                ),
+                              ),
+
+                            // Toggle for brightness control
+                            Container(
+                              margin: EdgeInsets.symmetric(horizontal: 15.w),
+                              child: SwitchListTile(
+                                title: Text('Adjust Brightness'),
+                                subtitle: Text(
+                                    'Control LED intensity (works on virtual badge too)'),
+                                value: brightnessProvider.isBrightnessVisible,
+                                activeColor: colorPrimary,
+                                onChanged: (bool value) {
+                                  brightnessProvider
+                                      .toggleBrightnessVisibility(value);
+                                },
+                              ),
+                            ),
+
+                            // Brightness Control Section (Shown/Hidden Based on Toggle)
+                            Visibility(
+                              visible: brightnessProvider.isBrightnessVisible,
+                              child: Container(
+                                margin: EdgeInsets.all(15.w),
+                                padding: EdgeInsets.all(10.w),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(10.r),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Padding(
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 10.h),
+                                      child: Text(
+                                        'Set Brightness Level',
+                                        style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    Slider(
+                                      value: brightnessProvider.brightness,
+                                      min: 0,
+                                      max: 100,
+                                      divisions: 100,
+                                      label: brightnessProvider.brightness
+                                          .round()
+                                          .toString(),
+                                      activeColor: colorPrimary,
+                                      onChanged: (double value) {
+                                        brightnessProvider.setBrightness(value);
+                                      },
+                                    ),
+                                    Padding(
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 10.h),
+                                      child: Text(
+                                        "Brightness: ${brightnessProvider.brightness.round()}%",
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                    ),
+                                    // Add a refresh button to get current brightness from device
+                                    TextButton.icon(
+                                      icon: Icon(Icons.refresh),
+                                      label: Text("Refresh from device"),
+                                      onPressed: () {
+                                        brightnessProvider
+                                            .getCurrentBrightness();
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+
                     Visibility(
                         visible: isPrefixIconClicked,
                         child: Container(
@@ -293,6 +424,13 @@ class _HomeScreenState extends State<HomeScreen>
                             children: [
                               GestureDetector(
                                 onTap: () {
+                                  // Get brightness value from provider
+                                  final brightnessProvider =
+                                      Provider.of<BadgeBrightnessProvider>(
+                                          context,
+                                          listen: false);
+
+                                  // Include brightness in the transfer params
                                   badgeData.checkAndTransfer(
                                       inlineImageProvider.getController().text,
                                       animationProvider
@@ -304,8 +442,11 @@ class _HomeScreenState extends State<HomeScreen>
                                       speedDialProvider.getOuterValue(),
                                       modeValueMap[animationProvider
                                           .getAnimationIndex()],
-                                      null,
-                                      false);
+                                      brightnessProvider.brightness.round()
+                                          as Map<String,
+                                              dynamic>?, // Pass brightness value
+                                      brightnessProvider
+                                          .isConnected); // Pass connection status
                                 },
                                 child: Container(
                                   padding: EdgeInsets.symmetric(

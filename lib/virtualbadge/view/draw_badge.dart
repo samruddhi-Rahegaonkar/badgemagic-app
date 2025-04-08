@@ -1,4 +1,5 @@
 import 'package:badgemagic/bademagic_module/utils/badge_utils.dart';
+import 'package:badgemagic/providers/BadgeBrightnessProvider.dart';
 import 'package:badgemagic/providers/draw_badge_provider.dart';
 import 'package:badgemagic/virtualbadge/view/badge_paint.dart';
 import 'package:flutter/material.dart';
@@ -19,13 +20,13 @@ class _BMBadgeState extends State<BMBadge> {
 
   @override
   void initState() {
+    super.initState();
     if (widget.providerInit != null) {
       widget.providerInit!(drawProvider);
     }
     if (widget.badgeGrid != null) {
       drawProvider.updateDrawViewGrid(widget.badgeGrid!);
     }
-    super.initState();
   }
 
   static const int rows = 11;
@@ -70,88 +71,33 @@ class _BMBadgeState extends State<BMBadge> {
       drawProvider.setDrawViewGrid(row, col);
     }
 
-    setState(() {
-      // drawProvider.setDrawViewGrid(row, col);
-    });
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     var width = MediaQuery.of(context).size.width;
     Size size = Size(width, width / 3.2);
-    return ChangeNotifierProvider(
-      create: (context) => drawProvider,
-      child: GestureDetector(
-          onPanUpdate: _handlePanUpdate,
-          child: AspectRatio(
-            aspectRatio: 3.2,
-            child: Consumer<DrawBadgeProvider>(
-              builder: (context, value, child) => CustomPaint(
-                  painter: BadgePaint(grid: value.getDrawViewGrid()),
-                  size: size),
+
+    return ChangeNotifierProvider.value(
+      value: drawProvider,
+      child: Consumer2<DrawBadgeProvider, BadgeBrightnessProvider>(
+        builder: (context, drawProvider, brightnessProvider, child) {
+          return GestureDetector(
+            onPanUpdate: _handlePanUpdate,
+            child: AspectRatio(
+              aspectRatio: 3.2,
+              child: CustomPaint(
+                painter: BadgePaint(
+                  grid: drawProvider.getDrawViewGrid(),
+                  brightness: brightnessProvider.brightness,
+                ),
+                size: size,
+              ),
             ),
-          )),
+          );
+        },
+      ),
     );
   }
 }
-
-// class AnimationBadgeROW extends LeafRenderObjectWidget {
-//   final DrawBadgeProvider provider;
-
-//   const AnimationBadgeROW({super.key, required this.provider});
-
-//   @override
-//   RenderObject createRenderObject(BuildContext context) {
-//     final renderObject = BadgeRenderObject(provider: provider);
-//     provider.addListener(renderObject.onProviderUpdate);
-//     return renderObject;
-//   }
-
-//   @override
-//   void updateRenderObject(
-//       BuildContext context, covariant BadgeRenderObject renderObject) {
-//     renderObject.provider = provider;
-//   }
-// }
-
-// class BadgeRenderObject extends RenderBox with RenderObjectWithChildMixin {
-//   DrawBadgeProvider provider;
-
-//   BadgeRenderObject({required this.provider});
-
-//   @override
-//   void performLayout() {
-//     var width = constraints.maxWidth;
-//     var height = constraints.maxHeight;
-
-//     // Maintain aspect ratio but ensure it fits within the available height
-//     var desiredHeight = width / 3.2;
-//     if (desiredHeight > height) {
-//       desiredHeight = height;
-//     }
-
-//     size = constraints.constrain(Size(width, desiredHeight));
-//   }
-
-//   @override
-//   void paint(PaintingContext context, Offset offset) {
-//     final Canvas canvas = context.canvas;
-//     BadgePaint(grid: provider.getDrawViewGrid()).paint(canvas, size);
-//   }
-
-//   @override
-//   bool get alwaysNeedsCompositing => true;
-
-//   void onProviderUpdate() {
-//     markNeedsPaint();
-//   }
-
-//   @override
-//   bool hitTest(BoxHitTestResult result, {required Offset position}) {
-//     if (size.contains(position)) {
-//       result.add(BoxHitTestEntry(this, position));
-//       return true;
-//     }
-//     return false;
-//   }
-// }

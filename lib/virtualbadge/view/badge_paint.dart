@@ -1,27 +1,33 @@
 import 'dart:math' as math;
-
 import 'package:badgemagic/bademagic_module/utils/badge_utils.dart';
 import 'package:flutter/material.dart';
 
 class BadgePaint extends CustomPainter {
-  BadgeUtils badgeUtils = BadgeUtils();
+  final BadgeUtils badgeUtils = BadgeUtils();
   final List<List<bool>> grid;
+  final double brightness; // Brightness as a percentage (0–100)
 
-  BadgePaint({required this.grid});
+  BadgePaint({
+    required this.grid,
+    required this.brightness,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     // Padding for the rectangle
-    MapEntry<double, double> badgeOffsetBackground =
+    final MapEntry<double, double> badgeOffsetBackground =
         badgeUtils.getBadgeOffsetBackground(size);
-    double offsetHeightBadgeBackground = badgeOffsetBackground.key;
-    double offsetWidthBadgeBackground = badgeOffsetBackground.value;
+    final double offsetHeightBadgeBackground = badgeOffsetBackground.key;
+    final double offsetWidthBadgeBackground = badgeOffsetBackground.value;
 
     // Size of the rectangle
-    MapEntry<double, double> badgeSize = badgeUtils.getBadgeSize(
-        offsetHeightBadgeBackground, offsetWidthBadgeBackground, size);
-    double badgeHeight = badgeSize.key;
-    double badgeWidth = badgeSize.value;
+    final MapEntry<double, double> badgeSize = badgeUtils.getBadgeSize(
+      offsetHeightBadgeBackground,
+      offsetWidthBadgeBackground,
+      size,
+    );
+    final double badgeHeight = badgeSize.key;
+    final double badgeWidth = badgeSize.value;
 
     // Draw the outer rectangle
     final Paint rectPaint = Paint()
@@ -39,21 +45,28 @@ class BadgePaint extends CustomPainter {
 
     canvas.drawRRect(gridRect, rectPaint);
 
-    var cellSize = badgeWidth / grid[0].length;
+    final double cellSize = badgeWidth / grid[0].length;
 
-    MapEntry<double, double> cellStartCoordinate =
-        badgeUtils.getCellStartCoordinate(offsetWidthBadgeBackground,
-            offsetHeightBadgeBackground, badgeWidth, badgeHeight);
-    double cellStartX = cellStartCoordinate.key;
-    double cellStartY = cellStartCoordinate.value;
+    final MapEntry<double, double> cellStartCoordinate =
+        badgeUtils.getCellStartCoordinate(
+      offsetWidthBadgeBackground,
+      offsetHeightBadgeBackground,
+      badgeWidth,
+      badgeHeight,
+    );
+    final double cellStartX = cellStartCoordinate.key;
+    final double cellStartY = cellStartCoordinate.value;
+
     // Draw the cells
     for (int row = 0; row < grid.length; row++) {
       for (int col = 0; col < grid[row].length; col++) {
-        var cellStartRow = cellStartY + row * cellSize;
-        var cellStartCol = cellStartX + col * (cellSize * 0.93);
+        final double cellStartRow = cellStartY + row * cellSize;
+        final double cellStartCol = cellStartX + col * (cellSize * 0.93);
 
         final Paint paint = Paint()
-          ..color = grid[row][col] ? Colors.red : Colors.grey.shade900
+          ..color = grid[row][col]
+              ? Colors.red.withOpacity(brightness / 100)
+              : Colors.grey.shade900
           ..style = PaintingStyle.fill;
 
         final Rect cellRect = Rect.fromLTWH(

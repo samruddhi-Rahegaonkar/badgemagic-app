@@ -1,3 +1,4 @@
+import 'package:badgemagic/providers/BadgeBrightnessProvider.dart';
 import 'package:badgemagic/providers/animation_badge_provider.dart';
 import 'package:badgemagic/virtualbadge/view/badge_paint.dart';
 import 'package:flutter/material.dart';
@@ -21,11 +22,16 @@ class _AnimationBadgeState extends State<AnimationBadge> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<AnimationBadgeProvider>();
+    final animationProvider = context.watch<AnimationBadgeProvider>();
+    final brightnessProvider = context.watch<BadgeBrightnessProvider>();
+
     return AspectRatio(
       aspectRatio: 3.2,
       child: CustomPaint(
-        painter: BadgePaint(grid: provider.getPaintGrid()),
+        painter: BadgePaint(
+          grid: animationProvider.getPaintGrid(),
+          brightness: brightnessProvider.brightness,
+        ),
       ),
     );
   }
