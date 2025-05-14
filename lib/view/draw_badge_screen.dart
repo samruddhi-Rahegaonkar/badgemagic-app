@@ -103,6 +103,10 @@ class _DrawBadgeState extends State<DrawBadge> {
       debugPrint('Error saving image: $e');
       ToastUtils().showToast("Failed to save clipart: ${e.toString()}");
     }
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft,
+    ]);
   }
 
   @override
