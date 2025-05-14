@@ -13,62 +13,110 @@ class DrawBadge extends StatefulWidget {
   final bool? isSavedCard;
   final bool? isSavedClipart;
   final List<List<int>>? badgeGrid;
-  const DrawBadge(
-      {super.key,
-      this.filename,
-      this.isSavedCard = false,
-      this.isSavedClipart = false,
-      this.badgeGrid});
+  const DrawBadge({
+    super.key,
+    this.filename,
+    this.isSavedCard = false,
+    this.isSavedClipart = false,
+    this.badgeGrid,
+  });
 
   @override
   State<DrawBadge> createState() => _DrawBadgeState();
 }
 
 class _DrawBadgeState extends State<DrawBadge> {
-  var drawToggle = DrawBadgeProvider();
+  late DrawBadgeProvider drawToggle;
+  bool _orientationSet = false;
+
+  @override
+  void initState() {
+    super.initState();
+    drawToggle = DrawBadgeProvider();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _setLandscapeOrientation();
+    });
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _setLandscapeOrientation();
+    if (!_orientationSet) {
+      _orientationSet = true;
+    }
   }
 
   @override
   void dispose() {
-    _resetPortraitOrientation();
+    try {
+      _resetPortraitOrientation();
+    } catch (e) {
+      debugPrint('Error resetting orientation: $e');
+    }
     super.dispose();
   }
 
   void _resetPortraitOrientation() {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
+    try {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+    } catch (e) {
+      debugPrint('Error setting portrait orientation: $e');
+    }
   }
 
   void _setLandscapeOrientation() {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
+    try {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    } catch (e) {
+      debugPrint('Error setting landscape orientation: $e');
+    }
+  }
+
+  Future<void> _saveImage() async {
+    try {
+      FileHelper fileHelper = FileHelper();
+      List<List<int>> badgeGrid = drawToggle
+          .getDrawViewGrid()
+          .map((e) => e.map((e) => e ? 1 : 0).toList())
+          .toList();
+
+      if (widget.isSavedCard == true) {
+        await fileHelper.updateBadgeText(
+          widget.filename ?? '',
+          Converters.convertBitmapToLEDHex(badgeGrid, false),
+        );
+      } else if (widget.isSavedClipart == true) {
+        await fileHelper.updateClipart(widget.filename ?? '', badgeGrid);
+      } else {
+        await fileHelper.saveImage(drawToggle.getDrawViewGrid());
+      }
+
+      await fileHelper.generateClipartCache();
+      ToastUtils().showToast("Clipart Saved Successfully");
+    } catch (e) {
+      debugPrint('Error saving image: $e');
+      ToastUtils().showToast("Failed to save clipart: ${e.toString()}");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    FileHelper fileHelper = FileHelper();
     return WillPopScope(
       onWillPop: () async {
         _resetPortraitOrientation();
-        return true; // Allows back navigation
+        return true;
       },
       child: CommonScaffold(
         index: 1,
         title: 'BadgeMagic',
-        body: SingleChildScrollView(
-          physics: NeverScrollableScrollPhysics(),
-          key: const Key(drawBadgeScreen),
-          child: Align(
-            alignment: Alignment.center,
+        body: SafeArea(
+          child: Center(
             child: LayoutBuilder(
               builder: (context, constraints) => Container(
                 constraints: BoxConstraints(
@@ -83,7 +131,13 @@ class _DrawBadgeState extends State<DrawBadge> {
                           width: 100,
                         ),
                         BMBadge(
-                          providerInit: (provider) => drawToggle = provider,
+                          providerInit: (provider) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              setState(() {
+                                drawToggle = provider;
+                              });
+                            });
+                          },
                           badgeGrid: widget.badgeGrid
                               ?.map((e) => e.map((e) => e == 1).toList())
                               .toList(),
@@ -163,28 +217,7 @@ class _DrawBadgeState extends State<DrawBadge> {
                           ),
                         ),
                         TextButton(
-                          onPressed: () {
-                            List<List<int>> badgeGrid = drawToggle
-                                .getDrawViewGrid()
-                                .map((e) => e.map((e) => e ? 1 : 0).toList())
-                                .toList();
-                            List<String> hexString =
-                                Converters.convertBitmapToLEDHex(
-                                    badgeGrid, false);
-                            widget.isSavedCard!
-                                ? fileHelper.updateBadgeText(
-                                    widget.filename!,
-                                    hexString,
-                                  )
-                                : widget.isSavedClipart!
-                                    ? fileHelper.updateClipart(
-                                        widget.filename!, badgeGrid)
-                                    : fileHelper.saveImage(
-                                        drawToggle.getDrawViewGrid());
-                            fileHelper.generateClipartCache();
-                            ToastUtils()
-                                .showToast("Clipart Saved Successfully");
-                          },
+                          onPressed: _saveImage,
                           child: const Column(
                             children: [
                               Icon(
@@ -208,3 +241,4 @@ class _DrawBadgeState extends State<DrawBadge> {
     );
   }
 }
+
