@@ -1,3 +1,4 @@
+import 'package:badgemagic/bademagic_module/utils/byte_array_utils.dart';
 import 'package:badgemagic/bademagic_module/utils/converters.dart';
 import 'package:badgemagic/bademagic_module/utils/file_helper.dart';
 import 'package:badgemagic/bademagic_module/utils/toast_utils.dart';
@@ -13,6 +14,7 @@ class DrawBadge extends StatefulWidget {
   final bool? isSavedCard;
   final bool? isSavedClipart;
   final List<List<int>>? badgeGrid;
+
   const DrawBadge({
     super.key,
     this.filename,
@@ -27,7 +29,6 @@ class DrawBadge extends StatefulWidget {
 
 class _DrawBadgeState extends State<DrawBadge> {
   late DrawBadgeProvider drawToggle;
-  bool _orientationSet = false;
 
   @override
   void initState() {
@@ -39,88 +40,81 @@ class _DrawBadgeState extends State<DrawBadge> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_orientationSet) {
-      _orientationSet = true;
-    }
-  }
-
-  @override
   void dispose() {
-    try {
-      _resetPortraitOrientation();
-    } catch (e) {
-      debugPrint('Error resetting orientation: $e');
-    }
+    _resetPortraitOrientation();
     super.dispose();
   }
 
-  void _resetPortraitOrientation() {
+  Future<void> _resetPortraitOrientation() async {
     try {
-      SystemChrome.setPreferredOrientations([
+      await SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
         DeviceOrientation.portraitDown,
       ]);
     } catch (e) {
-      debugPrint('Error setting portrait orientation: $e');
+      logger.e('Error setting portrait orientation', error: e);
     }
   }
 
-  void _setLandscapeOrientation() {
+  Future<void> _setLandscapeOrientation() async {
     try {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.landscapeLeft,
+      await SystemChrome.setPreferredOrientations([
         DeviceOrientation.landscapeRight,
+        DeviceOrientation.landscapeLeft,
       ]);
     } catch (e) {
-      debugPrint('Error setting landscape orientation: $e');
+      logger.e('Error setting landscape orientation', error: e);
     }
   }
 
   Future<void> _saveImage() async {
     try {
-      FileHelper fileHelper = FileHelper();
       List<List<int>> badgeGrid = drawToggle
           .getDrawViewGrid()
           .map((e) => e.map((e) => e ? 1 : 0).toList())
           .toList();
+      List<String> hexString =
+          Converters.convertBitmapToLEDHex(badgeGrid, false);
 
       if (widget.isSavedCard == true) {
-        await fileHelper.updateBadgeText(
+        await FileHelper().updateBadgeText(
           widget.filename ?? '',
-          Converters.convertBitmapToLEDHex(badgeGrid, false),
+          hexString,
         );
       } else if (widget.isSavedClipart == true) {
-        await fileHelper.updateClipart(widget.filename ?? '', badgeGrid);
+        await FileHelper().updateClipart(
+          widget.filename ?? '',
+          badgeGrid,
+        );
       } else {
-        await fileHelper.saveImage(drawToggle.getDrawViewGrid());
+        await FileHelper().saveImage(drawToggle.getDrawViewGrid());
       }
 
-      await fileHelper.generateClipartCache();
+      await FileHelper().generateClipartCache();
       ToastUtils().showToast("Clipart Saved Successfully");
     } catch (e) {
-      debugPrint('Error saving image: $e');
-      ToastUtils().showToast("Failed to save clipart: ${e.toString()}");
+      logger.e('Error saving image', error: e);
     }
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeRight,
-      DeviceOrientation.landscapeLeft,
-    ]);
   }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        _resetPortraitOrientation();
-        return true;
+    return PopScope(
+      canPop: true,
+      // ignore: deprecated_member_use
+      onPopInvoked: (didPop) async {
+        if (didPop) {
+          await _resetPortraitOrientation();
+        }
       },
       child: CommonScaffold(
         index: 1,
         title: 'BadgeMagic',
-        body: SafeArea(
-          child: Center(
+        body: SingleChildScrollView(
+          physics: NeverScrollableScrollPhysics(),
+          key: const Key(drawBadgeScreen),
+          child: Align(
+            alignment: Alignment.center,
             child: LayoutBuilder(
               builder: (context, constraints) => Container(
                 constraints: BoxConstraints(
@@ -131,17 +125,9 @@ class _DrawBadgeState extends State<DrawBadge> {
                   children: [
                     Column(
                       children: [
-                        SizedBox(
-                          width: 100,
-                        ),
+                        const SizedBox(width: 100),
                         BMBadge(
-                          providerInit: (provider) {
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              setState(() {
-                                drawToggle = provider;
-                              });
-                            });
-                          },
+                          providerInit: (provider) => drawToggle = provider,
                           badgeGrid: widget.badgeGrid
                               ?.map((e) => e.map((e) => e == 1).toList())
                               .toList(),
@@ -168,7 +154,7 @@ class _DrawBadgeState extends State<DrawBadge> {
                               Text(
                                 'Draw',
                                 style: TextStyle(
-                                  color: drawToggle.isDrawing
+                                  color: drawToggle.getIsDrawing()
                                       ? colorPrimary
                                       : Colors.black,
                                 ),
@@ -186,14 +172,14 @@ class _DrawBadgeState extends State<DrawBadge> {
                             children: [
                               Icon(
                                 Icons.delete,
-                                color: drawToggle.isDrawing
+                                color: drawToggle.getIsDrawing()
                                     ? Colors.black
                                     : colorPrimary,
                               ),
                               Text(
                                 'Erase',
                                 style: TextStyle(
-                                  color: drawToggle.isDrawing
+                                  color: drawToggle.getIsDrawing()
                                       ? Colors.black
                                       : colorPrimary,
                                 ),
@@ -209,25 +195,19 @@ class _DrawBadgeState extends State<DrawBadge> {
                           },
                           child: const Column(
                             children: [
-                              Icon(
-                                Icons.refresh,
-                                color: Colors.black,
-                              ),
-                              Text(
-                                'Reset',
-                                style: TextStyle(color: Colors.black),
-                              )
+                              Icon(Icons.refresh, color: Colors.black),
+                              Text('Reset',
+                                  style: TextStyle(color: Colors.black))
                             ],
                           ),
                         ),
                         TextButton(
-                          onPressed: _saveImage,
+                          onPressed: () async {
+                            await _saveImage();
+                          },
                           child: const Column(
                             children: [
-                              Icon(
-                                Icons.save,
-                                color: Colors.black,
-                              ),
+                              Icon(Icons.save, color: Colors.black),
                               Text('Save',
                                   style: TextStyle(color: Colors.black))
                             ],
@@ -245,4 +225,3 @@ class _DrawBadgeState extends State<DrawBadge> {
     );
   }
 }
-
