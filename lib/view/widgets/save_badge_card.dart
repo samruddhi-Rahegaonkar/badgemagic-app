@@ -72,22 +72,130 @@ class SaveBadgeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     BadgeMessageProvider badge = BadgeMessageProvider();
-    return GestureDetector(
-        onLongPress: onLongPress,
-        onTap: onTap,
-        child: Container(
-          width: 370.w,
-          padding: EdgeInsets.all(6.dg),
-          margin: EdgeInsets.all(10.dg),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(6.dg),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.5),
-                spreadRadius: 2,
-                blurRadius: 5,
-                offset: const Offset(0, 3),
+    return Container(
+      width: 370.w,
+      padding: EdgeInsets.all(6.dg),
+      margin: EdgeInsets.all(10.dg),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6.dg),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 2,
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Wrapping the text with Flexible to ensure it doesn't overflow.
+              Flexible(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                      right: 8
+                          .w), // Adding some padding to separate text and buttons
+                  child: Text(
+                    badgeData.key.substring(0, badgeData.key.length - 5),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                    softWrap: true,
+                    overflow: TextOverflow
+                        .ellipsis, // Use ellipsis to indicate overflowed text
+                    maxLines: 1, // Limit to 1 line for a cleaner look
+                  ),
+                ),
+              ),
+              Consumer<SavedBadgeProvider>(
+                builder: (context, provider, widget) => Row(
+                  mainAxisSize: MainAxisSize.min, // Keep the row compact
+                  children: [
+                    IconButton(
+                      icon: Image.asset(
+                        "assets/icons/t_play.png",
+                        height: 20,
+                        color: Colors.black,
+                      ),
+                      onPressed: () {
+                        provider.savedBadgeAnimation(
+                            badgeData.value,
+                            Provider.of<AnimationBadgeProvider>(context,
+                                listen: false));
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.edit,
+                        color: Colors.black,
+                      ),
+                      onPressed: () {
+                        List<List<int>> data = hexStringToBool(file
+                                .jsonToData(badgeData.value)
+                                .messages[0]
+                                .text
+                                .join())
+                            .map((e) => e.map((e) => e ? 1 : 0).toList())
+                            .toList();
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => DrawBadge(
+                              filename: badgeData.key,
+                              isSavedCard: true,
+                              badgeGrid: data,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: Image.asset(
+                        "assets/icons/t_updown.png",
+                        height: 24.h,
+                        color: Colors.black,
+                      ),
+                      onPressed: () {
+                        logger.d("BadgeData: ${badgeData.value}");
+                        //We can Acrtually call a method to generate the data just by transffering the JSON data
+                        //so we would not necessarily need the Providers.
+                        badge.checkAndTransfer(null, null, null, null, null,
+                            null, badgeData.value, true, context);
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.share,
+                        color: Colors.black,
+                      ),
+                      onPressed: () {
+                        file.shareBadgeData(badgeData.key);
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.delete,
+                        color: Colors.black,
+                      ),
+                      onPressed: () async {
+                        //add a dialog for confirmation before deleting
+                        await _showDeleteDialog(context).then((value) async {
+                          if (value == true) {
+                            file.deleteFile(badgeData.key);
+                            toastUtils.showToast("Badge Deleted Successfully");
+                            await refreshBadgesCallback(badgeData);
+                          }
+                        });
+                      },
+                    ),
+                  ],
+                ),
               ),
             ],
             border:
