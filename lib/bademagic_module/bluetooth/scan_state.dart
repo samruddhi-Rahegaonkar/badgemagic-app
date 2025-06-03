@@ -1,42 +1,65 @@
 import 'dart:async';
 import 'package:badgemagic/bademagic_module/bluetooth/connect_state.dart';
 import 'package:badgemagic/bademagic_module/bluetooth/datagenerator.dart';
+import 'package:badgemagic/providers/BadgeScanProvider.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 import 'base_ble_state.dart';
 
 class ScanState extends NormalBleState {
   final DataTransferManager manager;
-  ScanState({required this.manager});
+  final BadgeScanMode mode;
+  final List<String> allowedNames;
+
+  ScanState({
+    required this.manager,
+    required this.mode,
+    required this.allowedNames,
+  });
 
   @override
   Future<BleState?> processState() async {
     StreamSubscription<List<ScanResult>>? subscription;
     toast.showToast("Searching for device...");
 
-    Completer<BleState?> nextStateCompleter = Completer();
+    final Completer<BleState?> nextStateCompleter = Completer();
     bool isCompleted = false;
-
-    ScanResult? foundDevice;
 
     try {
       subscription = FlutterBluePlus.scanResults.listen(
         (results) async {
-          if (!isCompleted) {
-            if (results.isNotEmpty) {
-              foundDevice = results.firstWhere(
-                (result) => result.advertisementData.serviceUuids
-                    .contains(Guid("0000fee0-0000-1000-8000-00805f9b34fb")),
-              );
-              if (foundDevice != null) {
-                toast.showToast('Device found. Connecting...');
-                isCompleted = true;
-                nextStateCompleter.complete(ConnectState(
-                  scanResult: foundDevice!,
-                  manager: manager,
-                ));
-              }
-            }
+          if (isCompleted || results.isEmpty) return;
+
+          try {
+            final normalizedAllowedNames = allowedNames
+                .map((e) => e.trim().toLowerCase())
+                .where((e) => e.isNotEmpty)
+                .toList();
+
+            final foundDevice = results.firstWhere(
+              (result) {
+                final matchesUuid = result.advertisementData.serviceUuids
+                    .contains(Guid("0000fee0-0000-1000-8000-00805f9b34fb"));
+
+                final deviceName = result.device.name.trim().toLowerCase();
+                final matchesName = mode == BadgeScanMode.any ||
+                    normalizedAllowedNames.contains(deviceName);
+
+                return matchesUuid && matchesName;
+              },
+              orElse: () => throw Exception("Matching device not found."),
+            );
+
+            isCompleted = true;
+            FlutterBluePlus.stopScan();
+            toast.showToast('Device found. Connecting...');
+
+            nextStateCompleter.complete(ConnectState(
+              scanResult: foundDevice,
+              manager: manager,
+            ));
+          } catch (e) {
+            logger.w("No matching device found in this batch: $e");
           }
         },
         onError: (e) async {
@@ -44,7 +67,7 @@ class ScanState extends NormalBleState {
             isCompleted = true;
             logger.e("Scan error: $e");
             toast.showErrorToast('Scan error occurred.');
-            nextStateCompleter.completeError(e);
+            nextStateCompleter.completeError(Exception("Scan error: $e"));
           }
         },
       );

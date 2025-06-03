@@ -188,7 +188,8 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
                                           null,
                                           null,
                                           data.toJson(),
-                                          true);
+                                          true,
+                                          context);
                                     }
                                   : null,
                               style: ElevatedButton.styleFrom(
