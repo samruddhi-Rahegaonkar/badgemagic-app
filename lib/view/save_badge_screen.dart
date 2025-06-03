@@ -253,15 +253,15 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
                                       final data =
                                           Data(messages: badgeDataList);
                                       badgeMessageProvider.checkAndTransfer(
-                                        null,
-                                        null,
-                                        null,
-                                        null,
-                                        null,
-                                        null,
-                                        data.toJson(),
-                                        true,
-                                      );
+                                          null,
+                                          null,
+                                          null,
+                                          null,
+                                          null,
+                                          null,
+                                          data.toJson(),
+                                          true,
+                                          context);
                                     }
                                   : null,
                               style: ElevatedButton.styleFrom(
