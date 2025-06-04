@@ -13,7 +13,6 @@ class WriteState extends NormalBleState {
   Future<BleState?> processState() async {
     List<List<int>> dataChunks = await manager.generateDataChunk();
     logger.d("Data to write: $dataChunks");
-
     try {
       List<BluetoothService> services = await device.discoverServices();
       for (BluetoothService service in services) {
@@ -30,7 +29,7 @@ class WriteState extends NormalBleState {
                   success = true;
                   break;
                 } catch (e) {
-                  logger.e("Write failed, retrying ($attempt/3): $e");
+                  logger.e("Write failed, retrying ([36m$attempt/3[0m): $e");
                 }
               }
               if (!success) {
@@ -47,6 +46,15 @@ class WriteState extends NormalBleState {
     } catch (e) {
       logger.e("Failed to write characteristic: $e");
       throw Exception("Failed to transfer data. Please try again.");
+    } finally {
+      try {
+        await device.disconnect();
+        logger.d("Device disconnected after write");
+        await Future.delayed(const Duration(seconds: 1));
+        logger.d("Waited 1s after disconnect");
+      } catch (e) {
+        logger.e("Error during disconnect: $e");
+      }
     }
   }
 }
