@@ -9,6 +9,7 @@ import 'package:badgemagic/view/save_badge_screen.dart';
 import 'package:badgemagic/view/saved_clipart.dart';
 import 'package:badgemagic/view/settings_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get_it/get_it.dart';
 import 'package:provider/provider.dart';
@@ -20,6 +21,10 @@ void main() {
 
   setupLocator();
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   runApp(MultiProvider(
     providers: [
       ChangeNotifierProvider<InlineImageProvider>(

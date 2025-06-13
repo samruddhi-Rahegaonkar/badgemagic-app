@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:badgemagic/bademagic_module/utils/byte_array_utils.dart';
 import 'package:badgemagic/bademagic_module/utils/converters.dart';
 import 'package:badgemagic/bademagic_module/utils/image_utils.dart';
+import 'package:badgemagic/bademagic_module/utils/toast_utils.dart';
 import 'package:badgemagic/badge_effect/flash_effect.dart';
 import 'package:badgemagic/badge_effect/invert_led_effect.dart';
 import 'package:badgemagic/badge_effect/marquee_effect.dart';
@@ -34,7 +35,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen>
-    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+    with
+        TickerProviderStateMixin,
+        AutomaticKeepAliveClientMixin,
+        WidgetsBindingObserver {
   late final TabController _tabController;
   AnimationBadgeProvider animationProvider = AnimationBadgeProvider();
   late SpeedDialProvider speedDialProvider;
@@ -55,6 +59,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void initState() {
+    WidgetsBinding.instance.addObserver(this);
     inlineimagecontroller.addListener(handleTextChange);
     _setPortraitOrientation();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -75,7 +80,6 @@ class _HomeScreenState extends State<HomeScreen>
     _startImageCaching();
     speedDialProvider = SpeedDialProvider(animationProvider);
     super.initState();
-
     _tabController = TabController(length: 3, vsync: this);
   }
 
@@ -117,6 +121,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     inlineimagecontroller.removeListener(handleTextChange);
     animationProvider.stopAnimation();
     inlineImageProvider.getController().removeListener(_controllerListner);
@@ -385,6 +390,13 @@ class _HomeScreenState extends State<HomeScreen>
                             children: [
                               GestureDetector(
                                 onTap: () {
+                                  if (inlineimagecontroller.text
+                                      .trim()
+                                      .isEmpty) {
+                                    ToastUtils().showErrorToast(
+                                        "Please enter a message");
+                                    return;
+                                  }
                                   logger.i(
                                       'Save button clicked, showing dialog : ${animationProvider.isEffectActive(FlashEffect())}');
                                   showDialog(
@@ -474,4 +486,19 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      inlineimagecontroller.clear();
+      previousText = '';
+      animationProvider.stopAllAnimations();
+      animationProvider.initializeAnimation();
+      if (mounted) setState(() {});
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      animationProvider.stopAnimation();
+    }
+  }
 }
