@@ -13,8 +13,10 @@ class WriteState extends NormalBleState {
   Future<BleState?> processState() async {
     List<List<int>> dataChunks = await manager.generateDataChunk();
     logger.d("Data to write: $dataChunks");
+
     try {
       List<BluetoothService> services = await device.discoverServices();
+
       for (BluetoothService service in services) {
         for (BluetoothCharacteristic characteristic
             in service.characteristics) {
@@ -23,35 +25,45 @@ class WriteState extends NormalBleState {
               characteristic.properties.write) {
             for (List<int> chunk in dataChunks) {
               bool success = false;
+
               for (int attempt = 1; attempt <= 3; attempt++) {
                 try {
                   await characteristic.write(chunk, withoutResponse: false);
+                  logger.d("Chunk written successfully: $chunk");
                   success = true;
                   break;
                 } catch (e) {
-                  logger.e("Write failed, retrying ([36m$attempt/3[0m): $e");
+                  logger.e("Write failed (attempt $attempt/3): $e");
                 }
               }
+
               if (!success) {
-                throw Exception("Failed to transfer data. Please try again.");
+                throw Exception(
+                    "Failed to write data chunk. Please try again.");
               }
+
+              await Future.delayed(
+                  Duration(milliseconds: 50)); // Prevent badge overload
             }
-            logger.d("Characteristic written successfully");
+
+            logger.d("All data written successfully.");
             return CompletedState(
-                isSuccess: true, message: "Data transferred successfully");
+              isSuccess: true,
+              message: "Data transferred successfully",
+            );
           }
         }
       }
-      throw Exception("Please use the correct Badge");
+
+      throw Exception("Writable characteristic not found. Use a valid badge.");
     } catch (e) {
-      logger.e("Failed to write characteristic: $e");
+      logger.e("Error while writing data: $e");
       throw Exception("Failed to transfer data. Please try again.");
     } finally {
       try {
         await device.disconnect();
-        logger.d("Device disconnected after write");
-        await Future.delayed(const Duration(seconds: 1));
-        logger.d("Waited 1s after disconnect");
+        await Future.delayed(Duration(seconds: 1)); // Ensure BLE reset
+        logger.d("Disconnected from device after write.");
       } catch (e) {
         logger.e("Error during disconnect: $e");
       }

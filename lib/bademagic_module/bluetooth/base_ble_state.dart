@@ -18,6 +18,7 @@ abstract class NormalBleState extends BleState {
       return await processState();
     } on Exception catch (e) {
       String errorMessage = e.toString().replaceFirst('Exception: ', '');
+      logger.e("BLE state failed: $errorMessage");
       return CompletedState(isSuccess: false, message: errorMessage);
     }
   }
@@ -27,7 +28,7 @@ abstract class RetryBleState extends BleState {
   final logger = Logger();
   final toast = ToastUtils();
 
-  final _maxRetries = 3;
+  final int _maxRetries = 3;
 
   Future<BleState?> processState();
 
@@ -40,22 +41,23 @@ abstract class RetryBleState extends BleState {
       try {
         return await processState();
       } on Exception catch (e) {
-        logger.e(e);
+        logger.e("BLE retry attempt ${attempt + 1} failed: $e");
         lastException = e;
         attempt++;
+
         if (attempt < _maxRetries) {
-          logger.d("Retrying ($attempt/$_maxRetries)...");
+          logger.d("Retrying BLE state ($attempt/$_maxRetries)...");
+          await Future.delayed(Duration(seconds: 1));
         } else {
           logger.e("Max retries reached. Last exception: $lastException");
-          lastException =
-              Exception("Max retries reached. Last exception: $lastException");
         }
       }
     }
 
-    // After max retries, return a CompletedState indicating failure.
     return CompletedState(
-        isSuccess: false,
-        message: lastException?.toString() ?? "Unknown error");
+      isSuccess: false,
+      message: lastException?.toString().replaceFirst('Exception: ', '') ??
+          "Unknown error",
+    );
   }
 }
