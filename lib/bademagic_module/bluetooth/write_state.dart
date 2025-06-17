@@ -64,6 +64,10 @@ class WriteState extends NormalBleState {
         await device.disconnect();
         await Future.delayed(Duration(seconds: 1)); // Ensure BLE reset
         logger.d("Disconnected from device after write.");
+        logger.d("Disconnecting from device after write attempt...");
+        await device.disconnect();
+        await Future.delayed(const Duration(milliseconds: 700));
+        logger.d("Device disconnected and delay complete.");
       } catch (e) {
         logger.e("Error during disconnect: $e");
       }

@@ -12,7 +12,6 @@ class ConnectState extends RetryBleState {
   @override
   Future<BleState?> processState() async {
     try {
-      // Check if already connected before trying to connect
       BluetoothConnectionState currentState =
           await scanResult.device.connectionState.first;
 
@@ -21,7 +20,6 @@ class ConnectState extends RetryBleState {
         logger.d("Device connection initiated");
       }
 
-      // Re-check connection status after connect
       BluetoothConnectionState connectionState =
           await scanResult.device.connectionState.first;
 
@@ -33,7 +31,14 @@ class ConnectState extends RetryBleState {
             WriteState(device: scanResult.device, manager: manager);
         final result = await writeState.process();
 
-        // Do NOT disconnect again here; WriteState handles it
+        try {
+          await scanResult.device.disconnect();
+          logger.d("Device disconnected after transfer");
+          await Future.delayed(const Duration(seconds: 1));
+          logger.d("Waited 1s after disconnect");
+        } catch (e) {
+          logger.e("Error during disconnect after transfer: $e");
+        }
         return result;
       } else {
         throw Exception("Failed to connect to the device.");
@@ -42,6 +47,18 @@ class ConnectState extends RetryBleState {
       toast.showErrorToast('Failed to connect, retrying...');
       logger.e("BLE connection error: $e");
       rethrow;
+
+    } finally {
+      if (!connected) {
+        try {
+          await scanResult.device.disconnect();
+          logger.d("Device disconnected in finally block");
+          await Future.delayed(const Duration(seconds: 1));
+          logger.d("Waited 1s after disconnect (finally)");
+        } catch (e) {
+          logger.e("Error during disconnect in finally: $e");
+        }
+      }
     }
   }
 }
