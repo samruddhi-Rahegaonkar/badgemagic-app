@@ -2,7 +2,7 @@
 
 # Badge Magic
 [![Join the chat at https://gitter.im/fossasia/badge-magic](https://badges.gitter.im/fossasia/badge-magic.svg)](https://gitter.im/fossasia/badge-magic?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 
-![Github](https://img.shields.io/github/license/fossasia/badgemagic-android?logo=github)
+![Github](https://img.shields.io/github/license/fossasia/badgemagic-app?logo=github)
 
 **Python Library to program via desktop https://github.com/fossasia/led-name-badge-ls32**
 
@@ -10,18 +10,27 @@
 
 The Badge Magic Android app lets you create moving text and draw clipart for LED name badges. The app provides options to portray names, cliparts, and simple animations on the badges. For the org.fossasia.badgemagic.data transfer from the smartphone to the LED badge it uses Bluetooth. The project is based on the work of [Nilhcem](https://github.com/Nilhcem).
 
+## Get Stable Versions
+
+<a href='https://apps.apple.com/us/app/badge-magic/id6740176888'><img align='center' height='55' src='./docs/images/appstore_badge.svg'></a>
 <a href='https://play.google.com/store/apps/details?id=org.fossasia.badgemagic'><img align='center' height='55' src='./docs/images/google_play_badge.png'></a>
 <a href='https://f-droid.org/en/packages/org.fossasia.badgemagic/'><img align='center' alt='Get it on F-Droid' src='./docs/images/fdroid_badge.png' height="55"/></a>
 
+## Get Beta Versions (Built from the latest code)
+
+<a href='https://testflight.apple.com/join/h6tHnYGK'><img align='center' height='55' src='./docs/images/testflight.png'></a>
+<a href='https://play.google.com/apps/testing/org.fossasia.badgemagic'><img align='center' height='55' src='./docs/images/google_play_badge.png'></a>
+
 ## Download
 
-* [Latest Release Build](https://github.com/fossasia/badgemagic-android/raw/apk/badge-magic-master-release.apk) in the apk branch
-* [Latest Development Build](https://github.com/fossasia/badgemagic-android/raw/apk/badge-magic-development-release.apk) in the apk branch
+* [Latest Release Build](https://github.com/fossasia/badgemagic-app/raw/apk/badge-magic-flutter_app-release.apk) in the apk branch
 
 ## Permissions
 * **Bluetooth**: For sending org.fossasia.badgemagic.data to the badge.
-* **GPS Location**: This has been the standard set by Android for use with Bluetooth Low Energy (BLE) devices. For more information, please read the notes on [Android website](https://source.android.com/devices/bluetooth/ble).
 * **Storage**: For storing and saving badges.
+
+Up to Android version 11 
+* **GPS Location**: This has been the standard set by Android for use with Bluetooth Low Energy (BLE) devices. For more information, please read the notes on [Android website](https://source.android.com/devices/bluetooth/ble).
 
 ## Communication
 
@@ -34,11 +43,21 @@ There are a number of devices with Bluetooth on the market. As far as we can tel
 
 ## Screenshots
 
-| <!-- -->    | <!-- -->    | <!-- -->    |
-|-------------|-------------|-------------|
-| <img src="./docs/images/screen-1.jpg" width="288" /> <img src="./docs/images/screen-1-hard.png" width="288" /> | <img src="./docs/images/screen-2.jpg" width="288" /> <img src="./docs/images/screen-2-hard.png" width="288" /> | <img src="./docs/images/screen-3.jpg" width="288" /> <img src="./docs/images/screen-3-hard.png" width="288" /> |
-| <!-- -->    | <!-- -->    | <!-- -->    |
-| <img src="./docs/images/screen-4.jpg" width="288" /> <img src="./docs/images/screen-4-hard.png" width="288" /> | <img src="./docs/images/screen-5.jpg" width="288" /> <img src="./docs/images/screen-5-hard.png" width="288" /> | <img src="./docs/images/screen-6.jpg" width="288" /> <img src="./docs/images/screen-6-hard.png" width="288" /> |
+<table>
+  <tr>
+    <td><img src="https://github.com/fossasia/badgemagic-app/blob/fastlane-android/metadata/android/en-US/images/phoneScreenshots/Pixel_6-1_home_screen.png" width="1080"/></td>
+    <td><img src="https://github.com/fossasia/badgemagic-app/blob/fastlane-android/metadata/android/en-US/images/phoneScreenshots/Pixel_6-2_text_badge.png" width="1080"/></td>
+    <td><img src="https://github.com/fossasia/badgemagic-app/blob/fastlane-android/metadata/android/en-US/images/phoneScreenshots/Pixel_6-3_emoji_badge.png" width="1080"/></td>
+    <td><img src="https://github.com/fossasia/badgemagic-app/blob/fastlane-android/metadata/android/en-US/images/phoneScreenshots/Pixel_6-4_inverted_emoji_badge.png" width="1080"/></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/fossasia/badgemagic-app/blob/fastlane-android/metadata/android/en-US/images/phoneScreenshots/Pixel_6-5_saved_badges.png" width="1080"/></td>
+    <td><img src="https://github.com/fossasia/badgemagic-app/blob/fastlane-android/metadata/android/en-US/images/phoneScreenshots/Pixel_6-6_saved_badges_clicked.png" width="1080"/></td>
+    <td colspan="2">
+      <img src="https://github.com/fossasia/badgemagic-app/blob/fastlane-android/metadata/android/en-US/images/phoneScreenshots/Pixel_6-7_draw_badge.png" width="2146"/>
+    </td>
+  </tr>
+</table>
 
 ## Reverse-Engineering Bluetooth LE Devices
 
@@ -52,8 +71,7 @@ The implementation in the Android app consists of manipulating bits. That may be
 
 We have the following branches
 
- * **development** All development goes on in this branch. If you're making a contribution, you are supposed to make a pull request to _development_. PRs to development branch must pass a build check on Travis CI.
- * **master** This contains shipped code. After significant features/bugfixes are accumulated on development, we make a version update and make a release.
+ * **development** All development goes on in this branch. If you're making a contribution, you are supposed to make a pull request to _development_. PRs to development branch must pass a build check on CI/CD.
  * **apk** This branch contains many apk files, that are automatically generated on the merged pull request a) debug apk b) release apk
     - There are multiple files in the apk branch of the project, this branch consists of all the APK files and other files that are relevant when an APK is generated.
     - Once a pull request is merged, the previous APK branch is deleted and a new APK branch is created.
@@ -70,6 +88,49 @@ Please read FOSSASIA's [Best Practices](https://blog.fossasia.org/open-source-de
 * If the PR is related to any front end change, please attach relevant screenshots in the pull request description.
 * Before you join development, please set up the project on your local machine, run it and go through the application completely. Press on any button you can find and see where it leads to. Explore.
 * If you would like to work on an issue, drop in a comment at the issue. If it is already assigned to someone, but there is no sign of any work being done, please free to drop in a comment and start working on it.
+
+## Dev Container usage
+
+Opening this repository in VSCode, GitHub Codespaces or another supported editor/IDE will allow the repository to be opened in a [Dev Container](https://containers.dev/).
+
+The Dev Container contains all necessary dependencies and tools required to build, run and debug flutter applications.
+
+### How to connect via `adb`
+
+:warning: In case `adb` is already installed and running on the host it may need to be stopped before continuing.
+
+This Dev Container allows several different methods of connecting to a device via `adb`:
+
+#### Entirely from inside the container (USB pass-through)
+
+:information_source: **Windows** and **MacOS** need a working **USB/IP** setup. Read more in the official [Docker Desktop documentation](https://docs.docker.com/desktop/features/usbip/) and in this [blog post](https://blog.golioth.io/usb-docker-windows-macos/).
+
+The Dev Container bind-mounts `/dev/bus/usb/` and sets the correct access controls for a seamless integration.  \
+Enable [USB debugging](https://developer.android.com/tools/adb#Enabling) on your phone and try to find it via:
+
+```bash
+adb devices
+```
+If it shows up, everything is ready and you can run `flutter run` to push a development version of the app onto your device.
+
+#### Using the host's `adb` server
+
+If `adb` is already installed on the host, the tools in the Dev Container can be configured to use the host's `adb` server:
+
+1. Ensure the `adb` server is listening on **all interfaces**
+    1. If that is not the case, kill and restart it: `adb kill-server && adb -a server` (the `-a` instructs it to listen on all interfaces).
+1. Set or export the following environment variable before executing `adb` or `flutter run`: `ADB_SERVER_SOCKET=tcp:host.docker.internal:5037`
+1. You should now be able to list the devices connected via USB to the host
+
+#### Wireless connection
+
+Android 11 and higher support wireless debugging. Check out the [documentation](https://developer.android.com/tools/adb#wireless-android11-command-line) for more information.  \
+For this mode it is required that both the workstation and the device are on the **same network**.
+
+:information_source: This also works when developing inside **GitHub Codespaces**. In that case you can bring your device and the Codespace onto the same network by installing WireGuard, Tailscale or another overlay/mesh network on both the Codespace and your device.
+
+Enable Wireless debugging as per the [documentation](https://developer.android.com/tools/adb#wireless-android11-command-line), then **pair** `adb pair <IP>:<PORT>` and **connect** `adb connect <IP>:<PORT>` and you should be able to find your device via `adb devices`.
+
 
 ## LICENSE
 

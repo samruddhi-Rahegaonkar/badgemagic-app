@@ -3,6 +3,7 @@ name: Badge Magic Push CI
 on:
   push:
     branches: ["development"]
+    branches: ["flutter_app"]
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

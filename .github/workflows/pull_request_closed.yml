@@ -3,6 +3,8 @@ name: Delete Screenshots
 on:
   pull_request_target:
     branches: [ "development" ]
+
+    branches: [ "flutter_app" ]
     types:
       - closed
 
