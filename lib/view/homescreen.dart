@@ -34,7 +34,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen>
-    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+    with
+        TickerProviderStateMixin,
+        AutomaticKeepAliveClientMixin,
+        WidgetsBindingObserver {
   late final TabController _tabController;
   AnimationBadgeProvider animationProvider = AnimationBadgeProvider();
   late SpeedDialProvider speedDialProvider;
@@ -52,6 +55,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void initState() {
+    WidgetsBinding.instance.addObserver(this);
     inlineimagecontroller.addListener(handleTextChange);
     _setPortraitOrientation();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -60,7 +64,6 @@ class _HomeScreenState extends State<HomeScreen>
     _startImageCaching();
     speedDialProvider = SpeedDialProvider(animationProvider);
     super.initState();
-
     _tabController = TabController(length: 3, vsync: this);
   }
 
@@ -102,6 +105,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     inlineimagecontroller.removeListener(handleTextChange);
     animationProvider.stopAnimation();
     inlineImageProvider.getController().removeListener(_controllerListner);
@@ -341,4 +345,19 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      inlineimagecontroller.clear();
+      previousText = '';
+      animationProvider.stopAllAnimations();
+      animationProvider.initializeAnimation();
+      if (mounted) setState(() {});
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      animationProvider.stopAnimation();
+    }
+  }
 }
