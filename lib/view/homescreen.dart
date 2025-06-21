@@ -66,6 +66,24 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _cachedText = inlineimagecontroller.text;
+      animationProvider.stopAnimation();
+    } else if (state == AppLifecycleState.resumed) {
+      if (inlineimagecontroller.text.trim().isEmpty &&
+          _cachedText.trim().isNotEmpty) {
+        inlineimagecontroller.text = _cachedText;
+      }
+      animationProvider.badgeAnimation(
+        inlineimagecontroller.text,
+        Converters(),
+        animationProvider.isEffectActive(InvertLEDEffect()),
+      );
+    }
+  }
+
+  @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     inlineimagecontroller.removeListener(handleTextChange);
@@ -319,21 +337,4 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   bool get wantKeepAlive => true;
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused) {
-      _cachedText = inlineimagecontroller.text;
-      animationProvider.stopAnimation();
-    } else if (state == AppLifecycleState.resumed) {
-      if (inlineimagecontroller.text.trim().isEmpty &&
-          _cachedText.trim().isNotEmpty) {
-        inlineimagecontroller.text = _cachedText;
-      }
-      animationProvider.badgeAnimation(
-        inlineimagecontroller.text,
-        Converters(),
-        animationProvider.isEffectActive(InvertLEDEffect()),
-      );
-    }
-  }
 }
