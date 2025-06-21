@@ -99,6 +99,8 @@ class _HomeScreenState extends State<HomeScreen>
       Converters(),
       animationProvider.isEffectActive(InvertLEDEffect()),
     );
+
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   void handleTextChange() {
@@ -131,6 +133,20 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
+  void _controllerListner() {
+    animationProvider.badgeAnimation(inlineImageProvider.getController().text,
+        Converters(), animationProvider.isEffectActive(InvertLEDEffect()));
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    inlineimagecontroller.removeListener(handleTextChange);
+    animationProvider.stopAnimation();
+    inlineImageProvider.getController().removeListener(_controllerListner);
+    _tabController.dispose();
+    super.dispose();
+  }
   void _setPortraitOrientation() {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
@@ -337,4 +353,19 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      inlineimagecontroller.clear();
+      previousText = '';
+      animationProvider.stopAllAnimations();
+      animationProvider.initializeAnimation();
+      if (mounted) setState(() {});
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      animationProvider.stopAnimation();
+    }
+  }
 }
