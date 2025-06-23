@@ -1,3 +1,4 @@
+import 'package:badgemagic/bademagic_module/models/screen_size.dart';
 import 'package:badgemagic/view/widgets/save_badge_card.dart';
 import 'package:flutter/material.dart';
 
@@ -6,12 +7,14 @@ class BadgeListView extends StatelessWidget {
   final bool isTransferEnabled;
   final Future<void> Function(MapEntry<String, Map<String, dynamic>>)
       refreshBadgesCallback; // Add callback for refreshing badges
+  final ScreenSize selectedSize;
 
   const BadgeListView(
       {super.key,
       required this.isTransferEnabled,
       required this.futureBadges,
-      required this.refreshBadgesCallback // Require the callback
+      required this.refreshBadgesCallback,
+      required this.selectedSize // Require the callback
       });
 
   @override
@@ -31,8 +34,8 @@ class BadgeListView extends StatelessWidget {
               itemBuilder: (context, index) {
                 return SaveBadgeCard(
                   badgeData: savedBadges[index],
-                  refreshBadgesCallback:
-                      refreshBadgesCallback, // Pass callback to card
+                  refreshBadgesCallback: refreshBadgesCallback,
+                  selectedSize: selectedSize, // Pass callback to card
                 );
               },
             ),

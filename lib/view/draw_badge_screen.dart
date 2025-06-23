@@ -1,3 +1,4 @@
+import 'package:badgemagic/bademagic_module/models/screen_size.dart'; // Import this!
 import 'package:badgemagic/bademagic_module/utils/byte_array_utils.dart';
 import 'package:badgemagic/bademagic_module/utils/converters.dart';
 import 'package:badgemagic/bademagic_module/utils/file_helper.dart';
@@ -14,6 +15,7 @@ class DrawBadge extends StatefulWidget {
   final bool? isSavedCard;
   final bool? isSavedClipart;
   final List<List<int>>? badgeGrid;
+  final ScreenSize selectedSize;
 
   const DrawBadge({
     super.key,
@@ -21,6 +23,7 @@ class DrawBadge extends StatefulWidget {
     this.isSavedCard = false,
     this.isSavedClipart = false,
     this.badgeGrid,
+    required this.selectedSize,
   });
 
   @override
@@ -34,6 +37,7 @@ class _DrawBadgeState extends State<DrawBadge> {
   void initState() {
     super.initState();
     drawToggle = DrawBadgeProvider();
+    drawToggle.initGridWithSize(widget.selectedSize);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _setLandscapeOrientation();
     });
@@ -101,7 +105,6 @@ class _DrawBadgeState extends State<DrawBadge> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: true,
-      // ignore: deprecated_member_use
       onPopInvoked: (didPop) async {
         if (didPop) {
           await _resetPortraitOrientation();
@@ -131,6 +134,7 @@ class _DrawBadgeState extends State<DrawBadge> {
                           badgeGrid: widget.badgeGrid
                               ?.map((e) => e.map((e) => e == 1).toList())
                               .toList(),
+                          selectedSize: widget.selectedSize,
                         ),
                       ],
                     ),

@@ -1,3 +1,4 @@
+import 'package:badgemagic/bademagic_module/models/screen_size.dart';
 import 'package:badgemagic/bademagic_module/utils/badge_utils.dart';
 import 'package:badgemagic/providers/draw_badge_provider.dart';
 import 'package:badgemagic/virtualbadge/view/badge_paint.dart';
@@ -7,7 +8,12 @@ import 'package:provider/provider.dart';
 class BMBadge extends StatefulWidget {
   final void Function(DrawBadgeProvider provider)? providerInit;
   final List<List<bool>>? badgeGrid;
-  const BMBadge({super.key, this.providerInit, this.badgeGrid});
+  final ScreenSize selectedSize;
+  const BMBadge(
+      {super.key,
+      this.providerInit,
+      this.badgeGrid,
+      required this.selectedSize});
 
   @override
   State<BMBadge> createState() => _BMBadgeState();
@@ -15,25 +21,36 @@ class BMBadge extends StatefulWidget {
 
 class _BMBadgeState extends State<BMBadge> {
   BadgeUtils badgeUtils = BadgeUtils();
-  var drawProvider = DrawBadgeProvider();
+  late DrawBadgeProvider drawProvider;
 
   @override
   void initState() {
+    super.initState();
+    drawProvider = DrawBadgeProvider();
+    drawProvider.initGridWithSize(widget.selectedSize);
+
     if (widget.providerInit != null) {
       widget.providerInit!(drawProvider);
     }
     if (widget.badgeGrid != null) {
       drawProvider.updateDrawViewGrid(widget.badgeGrid!);
     }
-    super.initState();
   }
 
-  static const int rows = 11;
-  static const int cols = 44;
+  @override
+  void didUpdateWidget(covariant BMBadge oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedSize != oldWidget.selectedSize) {
+      drawProvider.initGridWithSize(widget.selectedSize);
+    }
+  }
 
   void _handlePanUpdate(DragUpdateDetails details) {
     RenderBox renderBox = context.findRenderObject() as RenderBox;
     Offset localPosition = renderBox.globalToLocal(details.globalPosition);
+
+    final int rows = widget.selectedSize.height;
+    final int cols = widget.selectedSize.width;
 
     MapEntry<double, double> badgeOffsetBackground =
         badgeUtils.getBadgeOffsetBackground(renderBox.size);
@@ -64,27 +81,28 @@ class _BMBadgeState extends State<BMBadge> {
         localPosition.dy < cellEndY * 1.1) {
       int col = ((localPosition.dx - cellStartX) / (cellSize * 0.93))
           .floor()
-          .clamp(0, 43);
-      int row =
-          ((localPosition.dy - cellStartY) / cellSize).floor().clamp(0, 10);
+          .clamp(0, cols - 1);
+      int row = ((localPosition.dy - cellStartY) / cellSize)
+          .floor()
+          .clamp(0, rows - 1);
       drawProvider.setDrawViewGrid(row, col);
     }
 
-    setState(() {
-      // drawProvider.setDrawViewGrid(row, col);
-    });
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+    final aspectRatio = widget.selectedSize.width / widget.selectedSize.height;
     var width = MediaQuery.of(context).size.width;
-    Size size = Size(width, width / 3.2);
-    return ChangeNotifierProvider(
-      create: (context) => drawProvider,
+    Size size = Size(width, width / aspectRatio);
+
+    return ChangeNotifierProvider.value(
+      value: drawProvider,
       child: GestureDetector(
           onPanUpdate: _handlePanUpdate,
           child: AspectRatio(
-            aspectRatio: 3.2,
+            aspectRatio: aspectRatio,
             child: Consumer<DrawBadgeProvider>(
               builder: (context, value, child) => CustomPaint(
                   painter: BadgePaint(grid: value.getDrawViewGrid()),
@@ -94,7 +112,6 @@ class _BMBadgeState extends State<BMBadge> {
     );
   }
 }
-
 // class AnimationBadgeROW extends LeafRenderObjectWidget {
 //   final DrawBadgeProvider provider;
 

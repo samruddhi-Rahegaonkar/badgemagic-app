@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:badgemagic/bademagic_module/bluetooth/base_ble_state.dart';
 import 'package:badgemagic/bademagic_module/bluetooth/datagenerator.dart';
+import 'package:badgemagic/bademagic_module/models/screen_size.dart';
 import 'package:badgemagic/bademagic_module/utils/converters.dart';
 import 'package:badgemagic/bademagic_module/utils/file_helper.dart';
 import 'package:badgemagic/bademagic_module/utils/toast_utils.dart';
@@ -45,8 +46,13 @@ class BadgeMessageProvider {
   Converters converters = Converters();
 
   Future<Data> getBadgeData(String text, bool flash, bool marq, Speed speed,
-      Mode mode, bool isInverted) async {
-    List<String> message = await converters.messageTohex(text, isInverted);
+      Mode mode, bool isInverted, int badgeHeight, int badgeWidth) async {
+    List<String> message = await converters.messageTohex(
+      text,
+      isInverted,
+      badgeHeight,
+      ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+    );
     Data data = Data(messages: [
       Message(
         text: message,
@@ -66,12 +72,22 @@ class BadgeMessageProvider {
       bool? inverted,
       Speed? speed,
       Mode? mode,
-      Map<String, dynamic>? jsonData) async {
+      Map<String, dynamic>? jsonData,
+      int badgeHeight,
+      int badgeWidth) async {
     if (jsonData != null) {
       return fileHelper.jsonToData(jsonData);
     } else {
-      return getBadgeData(text ?? '', flash ?? false, marq ?? false,
-          speed ?? Speed.one, mode ?? Mode.left, inverted ?? false);
+      return getBadgeData(
+        text ?? '',
+        flash ?? false,
+        marq ?? false,
+        speed ?? Speed.one,
+        mode ?? Mode.left,
+        inverted ?? false,
+        badgeHeight,
+        badgeWidth,
+      );
     }
   }
 
@@ -94,7 +110,9 @@ class BadgeMessageProvider {
       int? speed,
       Mode? mode,
       Map<String, dynamic>? jsonData,
-      bool isSavedBadge) async {
+      bool isSavedBadge,
+      int badgeHeight,
+      int badgeWidth) async {
     if (await FlutterBluePlus.isSupported == false) {
       ToastUtils().showErrorToast('Bluetooth is not supported by the device');
       return;
@@ -111,8 +129,8 @@ class BadgeMessageProvider {
       if (jsonData != null) {
         data = fileHelper.jsonToData(jsonData);
       } else {
-        data = await generateData(
-            text, flash, marq, isInverted, speedMap[speed], mode, jsonData);
+        data = await generateData(text, flash, marq, isInverted,
+            speedMap[speed], mode, jsonData, badgeHeight, badgeWidth);
       }
       DataTransferManager manager = DataTransferManager(data);
       await transferData(manager);

@@ -5,6 +5,7 @@ import 'package:badgemagic/badge_effect/marquee_effect.dart';
 import 'package:badgemagic/providers/animation_badge_provider.dart';
 import 'package:badgemagic/providers/saved_badge_provider.dart';
 import 'package:badgemagic/providers/speed_dial_provider.dart';
+import 'package:badgemagic/bademagic_module/models/screen_size.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -12,15 +13,17 @@ class SaveBadgeDialog extends StatelessWidget {
   final SpeedDialProvider speed;
   final bool isInverse;
   final AnimationBadgeProvider animationProvider;
+  final TextEditingController textController;
+  final ScreenSize selectedSize; // <-- Pass the selected screen size
+
   const SaveBadgeDialog({
     super.key,
     required this.textController,
     required this.isInverse,
     required this.animationProvider,
     required this.speed,
+    required this.selectedSize, // <-- Required parameter
   });
-
-  final TextEditingController textController;
 
   @override
   Widget build(BuildContext context) {
@@ -51,8 +54,6 @@ class SaveBadgeDialog extends StatelessWidget {
                 ),
               ),
             ),
-            // const SizedBox(
-            //     height: 10), // Space between title and file name text
             const Text(
               'File Name',
               style: TextStyle(
@@ -96,16 +97,26 @@ class SaveBadgeDialog extends StatelessWidget {
                     )),
                 TextButton(
                   onPressed: () {
-                    logger.i(
-                        "Flash Effect ${animationProvider.isEffectActive(FlashEffect())} , Marquee Effect ${animationProvider.isEffectActive(MarqueeEffect())} , invert $isInverse , speed ${speed.getOuterValue()} , animation ${animationProvider.getAnimationIndex() ?? 1}");
+                    logger.i("Flash Effect ${animationProvider.isEffectActive(
+                      FlashEffect(),
+                    )} , Marquee Effect ${animationProvider.isEffectActive(
+                      MarqueeEffect(),
+                    )} , invert $isInverse , speed ${speed.getOuterValue()} , animation ${animationProvider.getAnimationIndex() ?? 1}");
                     savedBadgeProvider.saveBadgeData(
                         badgeNameController.text,
                         textController.text,
-                        animationProvider.isEffectActive(FlashEffect()),
-                        animationProvider.isEffectActive(MarqueeEffect()),
+                        animationProvider.isEffectActive(
+                          FlashEffect(),
+                        ),
+                        animationProvider.isEffectActive(
+                          MarqueeEffect(),
+                        ),
                         isInverse,
                         speed.getOuterValue(),
-                        animationProvider.getAnimationIndex() ?? 1);
+                        animationProvider.getAnimationIndex() ?? 1,
+                        selectedSize.height,
+                        selectedSize.width // <-- Pass badge height here
+                        );
                     ToastUtils().showToast("Badge Saved Successfully");
                     Navigator.pop(context);
                   },

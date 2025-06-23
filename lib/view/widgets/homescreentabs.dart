@@ -4,10 +4,12 @@ import 'package:badgemagic/view/widgets/effects_container.dart';
 import 'package:flutter/material.dart';
 
 //effects tab to show effects that the user can select
+import 'package:badgemagic/bademagic_module/models/screen_size.dart';
+
 class EffectTab extends StatefulWidget {
-  const EffectTab({
-    super.key,
-  });
+  final ScreenSize selectedSize;
+
+  const EffectTab({super.key, required this.selectedSize});
 
   @override
   State<EffectTab> createState() => _EffectsTabState();
@@ -28,16 +30,19 @@ class _EffectsTabState extends State<EffectTab> {
           effect: effInvert,
           effectName: 'Invert',
           index: 0,
+          selectedSize: widget.selectedSize,
         ),
         EffectContainer(
           effect: effFlash,
           effectName: 'Effect',
           index: 1,
+          selectedSize: widget.selectedSize,
         ),
         EffectContainer(
           effect: effMarque,
           effectName: 'Marquee',
           index: 2,
+          selectedSize: widget.selectedSize,
         ),
       ],
     );

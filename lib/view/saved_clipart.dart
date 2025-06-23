@@ -1,3 +1,4 @@
+import 'package:badgemagic/bademagic_module/models/screen_size.dart';
 import 'package:badgemagic/bademagic_module/utils/byte_array_utils.dart';
 import 'package:badgemagic/bademagic_module/utils/file_helper.dart';
 import 'package:badgemagic/constants.dart';
@@ -20,11 +21,13 @@ class SavedClipart extends StatefulWidget {
 class _SavedClipartState extends State<SavedClipart> {
   InlineImageProvider imageprovider = GetIt.instance<InlineImageProvider>();
   FileHelper file = FileHelper();
+  late final ScreenSize selectedSize;
 
   @override
   void initState() {
     _setOrientation();
     super.initState();
+    selectedSize = supportedScreenSizes.first;
   }
 
   void _setOrientation() {
@@ -82,7 +85,8 @@ class _SavedClipartState extends State<SavedClipart> {
                 imageprovider.removeFromCache(fileName);
                 imageprovider.generateImageCache();
               },
-            ), // Use the separate ListView widget here
+              selectedSize: selectedSize,
+            ),
     );
   }
 }

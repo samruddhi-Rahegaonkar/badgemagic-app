@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-
 import 'package:badgemagic/bademagic_module/utils/badge_utils.dart';
 import 'package:flutter/material.dart';
 
@@ -7,23 +6,30 @@ class BadgePaint extends CustomPainter {
   BadgeUtils badgeUtils = BadgeUtils();
   final List<List<bool>> grid;
 
+  // Cell horizontal spacing factor to prevent crowding (1.0 = no spacing)
+  static const double cellHorizontalSpacingFactor = 0.93;
+
   BadgePaint({required this.grid});
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Padding for the rectangle
-    MapEntry<double, double> badgeOffsetBackground =
-        badgeUtils.getBadgeOffsetBackground(size);
-    double offsetHeightBadgeBackground = badgeOffsetBackground.key;
-    double offsetWidthBadgeBackground = badgeOffsetBackground.value;
+    if (grid.isEmpty || grid[0].isEmpty) return;
 
-    // Size of the rectangle
-    MapEntry<double, double> badgeSize = badgeUtils.getBadgeSize(
-        offsetHeightBadgeBackground, offsetWidthBadgeBackground, size);
-    double badgeHeight = badgeSize.key;
-    double badgeWidth = badgeSize.value;
+    // Get padding offsets
+    final badgeOffsetBackground = badgeUtils.getBadgeOffsetBackground(size);
+    final offsetHeightBadgeBackground = badgeOffsetBackground.key;
+    final offsetWidthBadgeBackground = badgeOffsetBackground.value;
 
-    // Draw the outer rectangle
+    // Calculate badge dimensions
+    final badgeSize = badgeUtils.getBadgeSize(
+      offsetHeightBadgeBackground,
+      offsetWidthBadgeBackground,
+      size,
+    );
+    final badgeHeight = badgeSize.key;
+    final badgeWidth = badgeSize.value;
+
+    // Draw badge background
     final Paint rectPaint = Paint()
       ..style = PaintingStyle.fill
       ..color = Colors.black
@@ -39,18 +45,30 @@ class BadgePaint extends CustomPainter {
 
     canvas.drawRRect(gridRect, rectPaint);
 
-    var cellSize = badgeWidth / grid[0].length;
+    final int cols = grid[0].length;
+    final int rows = grid.length;
 
-    MapEntry<double, double> cellStartCoordinate =
-        badgeUtils.getCellStartCoordinate(offsetWidthBadgeBackground,
-            offsetHeightBadgeBackground, badgeWidth, badgeHeight);
-    double cellStartX = cellStartCoordinate.key;
-    double cellStartY = cellStartCoordinate.value;
-    // Draw the cells
-    for (int row = 0; row < grid.length; row++) {
-      for (int col = 0; col < grid[row].length; col++) {
-        var cellStartRow = cellStartY + row * cellSize;
-        var cellStartCol = cellStartX + col * (cellSize * 0.93);
+    // Adjust cell size to fit grid inside badge area
+    final double cellWidth = badgeWidth / (cols * cellHorizontalSpacingFactor);
+    final double cellHeight = badgeHeight / rows;
+    final double cellSize = math.min(cellWidth, cellHeight);
+
+    // Compute cell grid start coordinates
+    final cellStartCoordinate = badgeUtils.getCellStartCoordinate(
+      offsetWidthBadgeBackground,
+      offsetHeightBadgeBackground,
+      badgeWidth,
+      badgeHeight,
+    );
+    final cellStartX = cellStartCoordinate.key;
+    final cellStartY = cellStartCoordinate.value;
+
+    // Draw pixel grid
+    for (int row = 0; row < rows; row++) {
+      for (int col = 0; col < cols; col++) {
+        final double cellStartRow = cellStartY + row * cellSize;
+        final double cellStartCol =
+            cellStartX + col * (cellSize * cellHorizontalSpacingFactor);
 
         final Paint paint = Paint()
           ..color = grid[row][col] ? Colors.red : Colors.grey.shade900
@@ -59,11 +77,11 @@ class BadgePaint extends CustomPainter {
         final Rect cellRect = Rect.fromLTWH(
           cellStartCol,
           cellStartRow,
-          cellSize / 2.5,
+          cellSize * 0.5, // Width may be adjusted separately if needed
           cellSize,
         );
 
-        // Apply 45-degree rotation
+        // Rotate cell by 45 degrees to give LED pixel look
         canvas.save();
         canvas.translate(
           cellRect.left + (cellRect.width / 2),
@@ -83,6 +101,7 @@ class BadgePaint extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true;
+    if (oldDelegate is! BadgePaint) return true;
+    return oldDelegate.grid != grid;
   }
 }

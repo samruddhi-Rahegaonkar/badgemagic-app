@@ -1,3 +1,4 @@
+import 'package:badgemagic/bademagic_module/models/screen_size.dart';
 import 'package:badgemagic/bademagic_module/utils/converters.dart';
 import 'package:badgemagic/providers/getitlocator.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,13 +10,21 @@ void main() {
     setupLocator();
     Converters converters = Converters();
     const String message = "Hii!";
-    List<String> result = await converters.messageTohex(message, false);
+    const int badgeHeight = 11;
+    const int badgeWidth = 44;
+    List<String> result = await converters.messageTohex(
+      message,
+      false,
+      badgeHeight,
+      ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+    );
     List<String> expected = [
-      "00C6C6C6C6FEC6C6C6C600",
-      "0018180038181818183C00",
-      "0018180038181818183C00",
-      "00183C3C3C181800181800"
+      "00666666667e6666666600", // 'H'
+      "0010100030101010103800", // 'i'
+      "0010100030101010103800", // 'i'
+      "0010383838101000101000", // '!'
     ];
+
     expect(result, expected);
   });
 

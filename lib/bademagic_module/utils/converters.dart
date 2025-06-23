@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:badgemagic/bademagic_module/models/screen_size.dart';
 import 'package:badgemagic/bademagic_module/utils/byte_array_utils.dart';
 import 'package:badgemagic/bademagic_module/utils/data_to_bytearray_converter.dart';
 import 'package:badgemagic/bademagic_module/utils/file_helper.dart';
@@ -8,173 +9,229 @@ import 'package:badgemagic/providers/imageprovider.dart';
 import 'package:get_it/get_it.dart';
 
 class Converters {
-  InlineImageProvider controllerData =
-      GetIt.instance.get<InlineImageProvider>();
-  DataToByteArrayConverter converter = DataToByteArrayConverter();
-  ImageUtils imageUtils = ImageUtils();
-  FileHelper fileHelper = FileHelper();
+  final controllerData = GetIt.instance.get<InlineImageProvider>();
+  final converter = DataToByteArrayConverter();
+  final imageUtils = ImageUtils();
+  final fileHelper = FileHelper();
 
-  int controllerLength = 0;
-
-  Future<List<String>> messageTohex(String message, bool isInverted) async {
+  Future<List<String>> messageTohex(
+    String message,
+    bool isInverted,
+    int rows,
+    ScreenSize screenSize, {
+    bool scale = true,
+  }) async {
     List<String> hexStrings = [];
-    for (int x = 0; x < message.length; x++) {
-      if (message[x] == '<' && message[min(x + 5, message.length - 1)] == '>') {
-        int index = int.parse(message[x + 2] + message[x + 3]);
-        var key = controllerData.imageCache.keys.toList()[index];
-        if (key is List) {
-          String filename = key[0];
-          List<dynamic>? decodedData = await fileHelper.readFromFile(filename);
-          final List<List<dynamic>> image = decodedData!.cast<List<dynamic>>();
-          List<List<int>> imageData =
-              image.map((list) => list.cast<int>()).toList();
-          hexStrings += convertBitmapToLEDHex(imageData, true);
-          x += 5;
-        } else {
-          List<String> hs =
-              await imageUtils.generateLedHex(controllerData.vectors[index]);
-          hexStrings.addAll(hs);
-          x += 5;
-        }
+
+    for (int i = 0; i < message.length; i++) {
+      if (_isEmojiTag(message, i)) {
+        int index = int.parse(message.substring(i + 2, i + 4));
+        hexStrings.addAll(await _handleEmoji(index, screenSize));
+        i += 5;
       } else {
-        if (converter.charCodes.containsKey(message[x])) {
-          hexStrings.add(converter.charCodes[message[x]]!);
-        }
+        hexStrings.addAll(_handleChar(message[i], screenSize, scale));
       }
     }
+
     if (isInverted) {
-      hexStrings = invertHex(hexStrings.join()).split('');
-      hexStrings = padHexString(hexStrings);
+      hexStrings = padHexString(invertHex(hexStrings.join()).split(''), rows);
     }
-    logger.d("Hex strings: $hexStrings");
+
+    logger.d("Final hex strings count: ${hexStrings.length}");
     return hexStrings;
   }
 
-  //function to convert the bitmap to the LED hex format
-  //it takes the 2D list of pixels and converts it to the LED hex format
+  bool _isEmojiTag(String msg, int i) =>
+      i + 5 < msg.length &&
+      msg.substring(i, i + 2) == '<<' &&
+      msg.substring(i + 4, i + 6) == '>>';
+
+  Future<List<String>> _handleEmoji(int index, ScreenSize size) async {
+    if (index >= controllerData.imageCache.length) {
+      logger.e("Image cache index $index out of range");
+      return [];
+    }
+
+    var key = controllerData.imageCache.keys.toList()[index];
+    if (key is List) {
+      final data = await fileHelper.readFromFile(key[0]);
+      if (data == null) {
+        logger.e("Failed to read file: ${key[0]}");
+        return [];
+      }
+
+      var image = data.cast<List<dynamic>>().map((e) => e.cast<int>()).toList();
+      var scaled = _scaleBitmapToBadgeSize(image, size.width, size.height);
+      return convertBitmapToLEDHex(scaled, true);
+    }
+
+    if (index < controllerData.vectors.length) {
+      return await imageUtils.generateLedHexWithSize(
+          controllerData.vectors[index], size.width, size.height);
+    }
+
+    logger.e("Vector index $index out of range");
+    return [];
+  }
+
+  List<String> _handleChar(String ch, ScreenSize size, bool scale) {
+    if (!converter.charCodes.containsKey(ch)) {
+      logger.w("Character '$ch' not found in charCodes");
+      return [];
+    }
+
+    String hex = converter.charCodes[ch]!;
+
+    if (!scale) {
+      return [hex]; // ✅ return raw hex for test
+    }
+
+    var scaledBitmap = _scaleCharacterToBadgeSize(hex, size.width, size.height);
+    return convertBitmapToLEDHex(scaledBitmap, true);
+  }
+
+  List<List<int>> _scaleCharacterToBadgeSize(
+      String hex, int width, int height) {
+    var bitmap = _hexStringToBitmap(hex);
+    int scaledWidth = (width * 0.12).round().clamp(6, width ~/ 2);
+    return _scaleTextCharacterToBadgeSize(bitmap, scaledWidth, height);
+  }
+
+  List<List<int>> _scaleTextCharacterToBadgeSize(
+      List<List<int>> bitmap, int targetW, int targetH) {
+    if (bitmap.isEmpty || bitmap[0].isEmpty) {
+      return List.generate(targetH, (_) => List.filled(targetW, 0));
+    }
+
+    return List.generate(targetH, (y) {
+      int srcY =
+          (y * bitmap.length / targetH).floor().clamp(0, bitmap.length - 1);
+      return List.generate(targetW, (x) {
+        int srcX = (x * bitmap[0].length / targetW)
+            .floor()
+            .clamp(0, bitmap[0].length - 1);
+        return bitmap[srcY][srcX];
+      });
+    });
+  }
+
+  List<List<int>> _hexStringToBitmap(String hex) {
+    const int width = 8, height = 11;
+    return List.generate(height, (row) {
+      int byteVal = int.parse(hex.substring(row * 2, row * 2 + 2), radix: 16);
+      return List.generate(width, (col) => (byteVal >> (7 - col)) & 1);
+    });
+  }
+
+  List<List<int>> _scaleBitmapToBadgeSize(
+      List<List<int>> original, int targetW, int targetH) {
+    if (original.isEmpty || original[0].isEmpty) {
+      return List.generate(targetH, (_) => List.filled(targetW, 0));
+    }
+
+    double scale = min(targetW / original[0].length, targetH / original.length);
+    int scaledW = (original[0].length * scale).round();
+    int scaledH = (original.length * scale).round();
+    int offsetX = ((targetW - scaledW) / 2).floor();
+    int offsetY = ((targetH - scaledH) / 2).floor();
+
+    List<List<int>> result =
+        List.generate(targetH, (_) => List.filled(targetW, 0));
+    for (int y = 0; y < scaledH; y++) {
+      for (int x = 0; x < scaledW; x++) {
+        int sx = (x / scale).floor();
+        int sy = (y / scale).floor();
+        result[y + offsetY][x + offsetX] = original[sy][sx];
+      }
+    }
+    return result;
+  }
+
   static List<String> convertBitmapToLEDHex(List<List<int>> image, bool trim) {
-    // Determine the height and width of the image
-    int height = image.length;
-    int width = image.isNotEmpty ? image[0].length : 0;
+    int height = image.length, width = image[0].length;
+    int left = 0, right = 0;
 
-    // Initialize variables to calculate padding and offsets
-    int finalSum = 0;
-
-    // Calculate and adjust for right-side padding
-    for (int j = 0; j < width; j++) {
-      int sum = 0;
-      for (int i = 0; i < height; i++) {
-        sum += image[i][j]; // Sum up pixel values in each column
-      }
-      if (sum == 0 && trim) {
-        // If column sum is zero, mark all pixels in that column as -1
-        for (int i = 0; i < height; i++) {
-          image[i][j] = -1;
-        }
-      } else {
-        // Otherwise, update finalSum and exit loop
-        finalSum += j;
-        break;
-      }
-    }
-
-    // Calculate and adjust for left-side padding
-    for (int j = width - 1; j >= 0; j--) {
-      int sum = 0;
-      for (int i = 0; i < height; i++) {
-        sum += image[i]
-            [j]; // Sum up pixel values in each column (from right to left)
-      }
-      if (sum == 0 && trim) {
-        // If column sum is zero, mark all pixels in that column as -1
-        for (int i = 0; i < height; i++) {
-          image[i][j] = -1;
-        }
-      } else {
-        // Otherwise, update finalSum and exit loop
-        finalSum += (height - j - 1);
-        break;
-      }
-    }
-
-    // Calculate padding difference to align height to a multiple of 8
-    int diff = 0;
-    if ((height - finalSum) % 8 > 0) {
-      diff = 8 - (height - finalSum) % 8;
-    }
-
-    // Calculate left and right offsets for padding
-    int rOff = (diff / 2).floor();
-    int lOff = (diff / 2).ceil();
-
-    // Initialize a new list to accommodate the padded image
-    List<List<int>> list =
-        List.generate(height, (i) => List.filled(width + rOff + lOff, 0));
-
-    // Fill the new list with the padded image data
-    for (int i = 0; i < height; i++) {
-      int k = 0;
-      for (int j = 0; j < rOff; j++) {
-        list[i][k++] = 0; // Fill right-side padding
-      }
+    if (trim) {
       for (int j = 0; j < width; j++) {
-        if (image[i][j] != -1) {
-          list[i][k++] = image[i][j]; // Copy non-padded pixels
+        if (image.any((row) => row[j] == 1)) {
+          left = j;
+          break;
         }
       }
-      for (int j = 0; j < lOff; j++) {
-        list[i][k++] = 0; // Fill left-side padding
-      }
-    }
-
-    logger.d("Padded image: $list");
-
-    // Convert each 8-bit segment into hexadecimal strings
-    List<String> allHexs = [];
-    for (int i = 0; i < list[0].length ~/ 8; i++) {
-      StringBuffer lineHex = StringBuffer();
-
-      for (int k = 0; k < height; k++) {
-        StringBuffer stBuilder = StringBuffer();
-
-        // Construct 8-bit segments for each row
-        for (int j = i * 8; j < i * 8 + 8; j++) {
-          stBuilder.write(list[k][j]);
+      for (int j = width - 1; j >= left; j--) {
+        if (image.any((row) => row[j] == 1)) {
+          right = width - j - 1;
+          break;
         }
-
-        // Convert binary string to hexadecimal
-        String hex = int.parse(stBuilder.toString(), radix: 2)
-            .toRadixString(16)
-            .padLeft(2, '0');
-        lineHex.write(hex); // Append hexadecimal to line
       }
-
-      allHexs.add(lineHex.toString()); // Store completed hexadecimal line
     }
-    return allHexs; // Return list of hexadecimal strings
+
+    int effectiveW = width - left - right;
+    int paddedW = ((effectiveW + 7) ~/ 8) * 8;
+    int padLeft = (paddedW - effectiveW) ~/ 2;
+
+    return List.generate(paddedW ~/ 8, (block) {
+      int colStart = block * 8;
+      return List.generate(height, (row) {
+        int byteVal = 0;
+        for (int bit = 0; bit < 8; bit++) {
+          int col = colStart + bit - padLeft + left;
+          byteVal |=
+              ((col >= 0 && col < width ? image[row][col] : 0) << (7 - bit));
+        }
+        return byteVal.toRadixString(16).padLeft(2, '0');
+      }).join();
+    });
   }
 
-  static String invertHex(String hex) {
-    StringBuffer invertedHex = StringBuffer();
-    for (int i = 0; i < hex.length; i++) {
-      String invertedHexDigit =
-          (~int.parse(hex[i], radix: 16) & 0xF).toRadixString(16).toUpperCase();
-      invertedHex.write(invertedHexDigit);
+  static String invertHex(String hex) => hex
+      .split('')
+      .map((c) =>
+          (~int.parse(c, radix: 16) & 0xF).toRadixString(16).toUpperCase())
+      .join();
+
+  List<String> padHexString(List<String> hex, int rows) {
+    var boolGrid = hexStringToBool(hex.join(), rows)
+        .map((row) => row.map((e) => e ? 1 : 0).toList())
+        .toList();
+
+    for (var row in boolGrid) {
+      row.insert(0, 1);
+      row.add(1);
     }
-    return invertedHex.toString();
+
+    return convertBitmapToLEDHex(boolGrid, true);
   }
 
-  List<String> padHexString(List<String> hexString) {
-    List<List<int>> hexArray = hexStringToBool(hexString.join()).map((e) {
-      return e.map((e) => e ? 1 : 0).toList();
-    }).toList();
+  static List<List<bool>> textToBitmapFixedWidth(
+    String msg,
+    int height,
+    DataToByteArrayConverter conv,
+  ) {
+    const int w = 8, h = 11, spacing = 2;
+    if (msg.isEmpty) return List.generate(height, (_) => []);
 
-    //add 1 at the satrt and end of each row in the 2D list
-    for (int i = 0; i < hexArray.length; i++) {
-      hexArray[i].insert(0, 1);
-      hexArray[i].add(1);
+    int totalWidth = msg.length * (w + spacing) - spacing;
+    var bitmap = List.generate(height, (_) => List.filled(totalWidth, false));
+
+    for (int i = 0; i < msg.length; i++) {
+      var hex = conv.charCodes[msg[i]];
+      if (hex == null) continue;
+
+      var charBitmap = List.generate(h, (row) {
+        int byte = int.parse(hex.substring(row * 2, row * 2 + 2), radix: 16);
+        return List.generate(w, (col) => ((byte >> (7 - col)) & 1) == 1);
+      });
+
+      int offsetX = i * (w + spacing);
+      for (int row = 0; row < height; row++) {
+        int srcRow = ((row * h) / height).floor().clamp(0, h - 1);
+        for (int col = 0; col < w; col++) {
+          bitmap[row][offsetX + col] = charBitmap[srcRow][col];
+        }
+      }
     }
 
-    return convertBitmapToLEDHex(hexArray, true);
+    return bitmap;
   }
 }

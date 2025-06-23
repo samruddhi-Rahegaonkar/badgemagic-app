@@ -1,5 +1,6 @@
 import 'package:badgemagic/bademagic_module/models/data.dart';
 import 'package:badgemagic/bademagic_module/models/messages.dart';
+import 'package:badgemagic/bademagic_module/models/screen_size.dart';
 import 'package:badgemagic/bademagic_module/utils/byte_array_utils.dart';
 import 'package:badgemagic/bademagic_module/utils/file_helper.dart';
 import 'package:badgemagic/bademagic_module/utils/toast_utils.dart';
@@ -33,10 +34,14 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
   FileHelper fileHelper = FileHelper();
   SavedBadgeProvider savedBadgeProvider = SavedBadgeProvider();
   AnimationBadgeProvider animationBadgeProvider = AnimationBadgeProvider();
+  late ScreenSize _selectedSize;
 
   @override
   void initState() {
     _setOrientation();
+    _selectedSize = supportedScreenSizes.first;
+    animationBadgeProvider.initGrids(_selectedSize);
+
     super.initState();
   }
 
@@ -126,7 +131,36 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
                 children: [
                   Column(
                     children: [
-                      AnimationBadge(),
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 15.w, vertical: 10.h),
+                        child: Row(
+                          children: [
+                            const Text("Screen Size: ",
+                                style: TextStyle(fontSize: 16)),
+                            const SizedBox(width: 10),
+                            DropdownButton<ScreenSize>(
+                              value: _selectedSize,
+                              onChanged: (newSize) {
+                                if (newSize != null) {
+                                  setState(() {
+                                    _selectedSize = newSize;
+                                    animationBadgeProvider
+                                        .initGrids(_selectedSize);
+                                  });
+                                }
+                              },
+                              items: supportedScreenSizes.map((size) {
+                                return DropdownMenuItem<ScreenSize>(
+                                  value: size,
+                                  child: Text(size.name),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+                      ),
+                      AnimationBadge(selectedSize: _selectedSize),
                       Expanded(
                         child: Selector<BadgeSlotProvider, bool>(
                             selector: (context, selectionProvider) =>
@@ -141,6 +175,7 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
                                   setState(() {});
                                   return Future.value();
                                 },
+                                selectedSize: _selectedSize,
                               );
                             }),
                       ),
@@ -175,7 +210,6 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
                                             badgeData['messages'][0]);
                                         badgeDataList.add(message);
                                       }
-                                      //add empty message object in the badgeList such that total count becomes 8
                                       while (badgeDataList.length < 8) {
                                         badgeDataList.add(Message(text: []));
                                       }
@@ -188,7 +222,9 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
                                           null,
                                           null,
                                           data.toJson(),
-                                          true);
+                                          true,
+                                          _selectedSize.height,
+                                          _selectedSize.width);
                                     }
                                   : null,
                               style: ElevatedButton.styleFrom(

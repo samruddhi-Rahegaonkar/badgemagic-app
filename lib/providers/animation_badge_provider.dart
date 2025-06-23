@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:badgemagic/bademagic_module/models/screen_size.dart';
 import 'package:badgemagic/bademagic_module/utils/byte_array_utils.dart';
 import 'package:badgemagic/bademagic_module/utils/converters.dart';
 import 'package:badgemagic/badge_animation/ani_animation.dart';
@@ -43,34 +44,25 @@ class AnimationBadgeProvider extends ChangeNotifier {
   int _animationSpeed = aniSpeedStrategy(0);
   Timer? _timer;
 
-  //List that contains the state of each cell of the badge for home view
-  List<List<bool>> _paintGrid =
-      List.generate(11, (i) => List.generate(44, (j) => false));
+  List<List<bool>> _paintGrid = [];
+  List<List<bool>> _newGrid = [];
+  final List<List<List<bool>>> _frames = [];
+  int _currentFrame = 0;
 
   BadgeAnimation _currentAnimation = LeftAnimation();
-
   final Set<BadgeEffect?> _currentEffect = {};
 
-  //function to get the state of the cell
   List<List<bool>> getPaintGrid() => _paintGrid;
-
-  //function to calculate duration for the animation
-  void calculateDuration(int speed) {
-    int newSpeed = aniSpeedStrategy(speed - 1);
-    if (newSpeed != _animationSpeed) {
-      _animationSpeed = newSpeed;
-      _timer?.cancel();
-      startTimer();
-    }
-  }
-
-  List<List<bool>> _newGrid =
-      List.generate(11, (i) => List.generate(44, (j) => false));
-
-  //getter for newGrid
   List<List<bool>> getNewGrid() => _newGrid;
 
-  //setter for newGrid
+  void initGrids(ScreenSize size) {
+    _paintGrid = List.generate(
+        size.height, (_) => List.generate(size.width, (_) => false));
+    _newGrid = List.generate(
+        size.height, (_) => List.generate(size.width, (_) => false));
+    notifyListeners();
+  }
+
   void setNewGrid(List<List<bool>> grid) {
     _newGrid = grid;
     _animationIndex = 0;
@@ -95,34 +87,33 @@ class AnimationBadgeProvider extends ChangeNotifier {
   }
 
   void initializeAnimation() {
-    if (_timer == null) {
+    if (_timer == null || !_timer!.isActive) {
       startTimer();
     }
   }
 
-  //function to stop timer and reset the animationIndex
   void stopAnimation() {
     logger.d("Timer stopped  ${_timer?.tick.toString()}");
     _timer?.cancel();
-
     _animationIndex = 0;
   }
 
   void stopAllAnimations() {
-    // Stop any ongoing timer and reset the animation index
     stopAnimation();
     _currentAnimation = LeftAnimation();
-    // Reset the grids to all false values
-    _paintGrid = List.generate(11, (i) => List.generate(44, (j) => false));
-    _newGrid = List.generate(11, (i) => List.generate(44, (j) => false));
+    _paintGrid = [];
+    _newGrid = [];
     logger.d("All animations stopped");
   }
 
   void startTimer() {
+    if (_newGrid.isEmpty || _newGrid[0].isEmpty) {
+      logger.w("Cannot start animation timer: _newGrid is empty");
+      return;
+    }
+
     _timer =
         Timer.periodic(Duration(microseconds: _animationSpeed), (Timer timer) {
-      // logger.i(
-      //     "New Grid set to: ${getNewGrid().map((e) => e.map((e) => e ? 1 : 0).toList()).toList()}");
       renderGrid(getNewGrid());
       _animationIndex++;
     });
@@ -146,32 +137,108 @@ class AnimationBadgeProvider extends ChangeNotifier {
   }
 
   bool isAnimationActive(BadgeAnimation? badgeAnimation) {
-    bool isActive = _currentAnimation == badgeAnimation;
-    return isActive;
+    return _currentAnimation == badgeAnimation;
   }
 
   void badgeAnimation(
-      String message, Converters converters, bool isInverted) async {
+    String message,
+    Converters converters,
+    bool isInverted,
+    ScreenSize screenSize,
+  ) async {
+    initGrids(screenSize);
+
     if (message.isEmpty) {
       stopAllAnimations();
-      List<List<bool>> emptyGrid =
-          List.generate(11, (i) => List.generate(44, (j) => false));
+      List<List<bool>> emptyGrid = List.generate(screenSize.height,
+          (i) => List.generate(screenSize.width, (j) => false));
       _newGrid = emptyGrid;
       _paintGrid = emptyGrid;
       notifyListeners();
       return;
     }
+
     if (_timer == null || !_timer!.isActive) {
       startTimer();
     }
-    List<String> hexString = await converters.messageTohex(message, isInverted);
-    List<List<bool>> binaryArray = hexStringToBool(hexString.join());
-    setNewGrid(binaryArray);
+
+    List<List<bool>> fullBitmap;
+
+    if (message.contains('<<') && message.contains('>>')) {
+      List<String> hexStrings = await converters.messageTohex(
+        message,
+        isInverted,
+        screenSize.height,
+        screenSize,
+      );
+
+      fullBitmap = _hexStringsToBitmap(hexStrings, screenSize);
+    } else {
+      fullBitmap = Converters.textToBitmapFixedWidth(
+        message,
+        screenSize.height,
+        converters.converter,
+      );
+    }
+
+    setNewGrid(fullBitmap);
+  }
+
+  List<List<bool>> _hexStringsToBitmap(
+      List<String> hexStrings, ScreenSize screenSize) {
+    if (hexStrings.isEmpty) {
+      return List.generate(screenSize.height,
+          (_) => List.generate(screenSize.width, (_) => false));
+    }
+
+    int totalWidth = hexStrings.length * 8;
+
+    List<List<bool>> bitmap = List.generate(
+      screenSize.height,
+      (_) => List.filled(totalWidth, false),
+    );
+
+    for (int hexIndex = 0; hexIndex < hexStrings.length; hexIndex++) {
+      String hexString = hexStrings[hexIndex];
+
+      int charsPerRow = 2;
+
+      for (int row = 0;
+          row < screenSize.height && row * charsPerRow < hexString.length;
+          row++) {
+        int byteStart = row * charsPerRow;
+        int byteEnd = byteStart + charsPerRow;
+
+        if (byteEnd <= hexString.length) {
+          String rowHex = hexString.substring(byteStart, byteEnd);
+          int byteVal = int.parse(rowHex, radix: 16);
+
+          for (int bit = 0; bit < 8; bit++) {
+            int col = hexIndex * 8 + bit;
+            if (col < totalWidth) {
+              bitmap[row][col] = ((byteVal >> (7 - bit)) & 1) == 1;
+            }
+          }
+        }
+      }
+    }
+
+    return bitmap;
   }
 
   void renderGrid(List<List<bool>> newGrid) {
+    if (_paintGrid.isEmpty || _paintGrid[0].isEmpty) {
+      logger.w("renderGrid skipped: _paintGrid is empty");
+      return;
+    }
+
     int badgeWidth = _paintGrid[0].length;
     int badgeHeight = _paintGrid.length;
+
+    if (_frames.isNotEmpty) {
+      _currentFrame = (_currentFrame + 1) % _frames.length;
+      newGrid = _frames[_currentFrame];
+    }
 
     var canvas = List.generate(
         badgeHeight, (i) => List.generate(badgeWidth, (j) => false));
@@ -185,5 +252,14 @@ class AnimationBadgeProvider extends ChangeNotifier {
 
     _paintGrid = canvas;
     notifyListeners();
+  }
+
+  void calculateDuration(int speed) {
+    int newSpeed = aniSpeedStrategy(speed - 1);
+    if (newSpeed != _animationSpeed) {
+      _animationSpeed = newSpeed;
+      _timer?.cancel();
+      startTimer();
+    }
   }
 }

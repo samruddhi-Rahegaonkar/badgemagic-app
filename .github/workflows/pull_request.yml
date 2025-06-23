@@ -3,7 +3,6 @@ name: Badge Magic PR CI
 on:
   pull_request:
     branches: [ "development" ]
-    branches: [ "flutter_app" ]
 
 env:
   ANDROID_EMULATOR_API: 34
@@ -84,3 +83,4 @@ jobs:
         with:
           IPHONE_DEVICE_MODEL: ${{ env.IPHONE_DEVICE_MODEL }}
           IPAD_DEVICE_MODEL: ${{ env.IPAD_DEVICE_MODEL }}
+      

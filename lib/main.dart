@@ -1,7 +1,7 @@
+import 'package:badgemagic/bademagic_module/models/screen_size.dart';
 import 'package:badgemagic/providers/getitlocator.dart';
 import 'package:badgemagic/providers/imageprovider.dart';
 import 'package:badgemagic/view/about_us_screen.dart';
-import 'package:badgemagic/view/draw_badge_screen.dart';
 import 'package:badgemagic/view/homescreen.dart';
 import 'package:badgemagic/view/save_badge_screen.dart';
 import 'package:badgemagic/view/saved_clipart.dart';
@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'globals/globals.dart' as globals;
+import 'package:badgemagic/view/draw_badge_screen.dart';
 
 void main() {
   setupLocator();
@@ -46,11 +47,13 @@ class MyApp extends StatelessWidget {
           initialRoute: '/',
           routes: {
             '/': (context) => const HomeScreen(),
-            '/drawBadge': (context) => const DrawBadge(),
             '/savedBadge': (context) => const SaveBadgeScreen(),
             '/savedClipart': (context) => const SavedClipart(),
             '/aboutUs': (context) => const AboutUsScreen(),
             '/settings': (context) => const SettingsScreen(),
+            '/drawBadge': (context) => DrawBadge(
+                  selectedSize: supportedScreenSizes[0],
+                ),
           },
         );
       },

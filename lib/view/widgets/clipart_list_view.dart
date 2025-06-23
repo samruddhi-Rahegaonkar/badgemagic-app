@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:badgemagic/bademagic_module/models/screen_size.dart';
 import 'package:badgemagic/bademagic_module/utils/file_helper.dart';
 import 'package:badgemagic/bademagic_module/utils/image_utils.dart';
 import 'package:badgemagic/view/draw_badge_screen.dart';
@@ -11,6 +12,7 @@ class SavedClipartListView extends StatelessWidget {
   final Map<String, List<List<int>>?> images;
   final FileHelper file = FileHelper();
   final ImageUtils imageUtils = ImageUtils();
+  final ScreenSize selectedSize; // <-- Add this parameter!
 
   final void Function(String) refreshClipartCallback; // Pass the filename
 
@@ -18,6 +20,7 @@ class SavedClipartListView extends StatelessWidget {
     super.key,
     required this.images,
     required this.refreshClipartCallback,
+    required this.selectedSize,
   });
 
   @override
@@ -71,6 +74,7 @@ class SavedClipartListView extends StatelessWidget {
                               filename: fileName,
                               isSavedClipart: true,
                               badgeGrid: images.values.elementAt(index),
+                              selectedSize: selectedSize,
                             )));
                   },
                   icon: const Icon(Icons.edit)),

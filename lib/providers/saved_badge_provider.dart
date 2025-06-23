@@ -1,6 +1,7 @@
 import 'package:badgemagic/bademagic_module/models/data.dart';
 import 'package:badgemagic/bademagic_module/models/messages.dart';
 import 'package:badgemagic/bademagic_module/models/mode.dart';
+import 'package:badgemagic/bademagic_module/models/screen_size.dart';
 import 'package:badgemagic/bademagic_module/models/speed.dart';
 import 'package:badgemagic/bademagic_module/utils/byte_array_utils.dart';
 import 'package:badgemagic/bademagic_module/utils/converters.dart';
@@ -45,23 +46,46 @@ class SavedBadgeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void saveBadgeData(String filename, String message, bool isFlash,
-      bool isMarquee, bool isInvert, int? speed, int animation) async {
+  void saveBadgeData(
+      String filename,
+      String message,
+      bool isFlash,
+      bool isMarquee,
+      bool isInvert,
+      int? speed,
+      int animation,
+      int badgeHeight,
+      int badgeWidth // <-- add badgeHeight parameter
+      ) async {
     Data data = await getBadgeData(
       message,
-      isFlash, //needs aniEffectProvider
+      isFlash,
       isMarquee,
-      isInvert, //needs Anieffect provider
-      speedMap[speed] ?? Speed.one, //needs speed dial provider
+      isInvert,
+      speedMap[speed] ?? Speed.one,
       modeValueMap[animation]!,
+      badgeHeight,
+      badgeWidth, // <-- pass badgeHeight
     );
-    fileHelper.saveBadgeData(
-        data, filename, isInvert); //needs AniEffectProvider
+    fileHelper.saveBadgeData(data, filename, isInvert);
   }
 
-  Future<Data> getBadgeData(String text, bool flash, bool marq, bool isInverted,
-      Speed speed, Mode mode) async {
-    List<String> message = await converters.messageTohex(text, isInverted);
+  Future<Data> getBadgeData(
+      String text,
+      bool flash,
+      bool marq,
+      bool isInverted,
+      Speed speed,
+      Mode mode,
+      int badgeHeight,
+      int badgeWidth // <-- add badgeHeight parameter
+      ) async {
+    List<String> message = await converters.messageTohex(
+      text,
+      isInverted,
+      badgeHeight,
+      ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+    ); // <-- pass badgeHeight
     Data data = Data(messages: [
       Message(
         text: message,
@@ -74,9 +98,8 @@ class SavedBadgeProvider extends ChangeNotifier {
     return data;
   }
 
-  void savedBadgeAnimation(
-      Map<String, dynamic> data, AnimationBadgeProvider aniProvider) {
-    //set the animations and the modes from the json file
+  void savedBadgeAnimation(Map<String, dynamic> data,
+      AnimationBadgeProvider aniProvider, int badgeHeight) {
     logger.i(Speed.getIntValue(Speed.fromHex(data['messages'][0]['speed'])));
     aniProvider.calculateDuration(
         Speed.getIntValue(Speed.fromHex(data['messages'][0]['speed'])) + 1);
@@ -98,7 +121,7 @@ class SavedBadgeProvider extends ChangeNotifier {
     logger.i("Effects set are = ${aniProvider.getCurrentEffect}");
 
     String hexString = data['messages'][0]['text'].join();
-    List<List<bool>> binaryArray = hexStringToBool(hexString);
+    List<List<bool>> binaryArray = hexStringToBool(hexString, badgeHeight);
     aniProvider.setNewGrid(binaryArray);
   }
 

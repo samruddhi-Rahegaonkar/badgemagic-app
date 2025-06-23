@@ -83,16 +83,25 @@ class ImageUtils {
     final ui.Canvas canvas = Canvas(recorder,
         Rect.fromPoints(Offset.zero, Offset(targetWidth, targetHeight)));
 
+    // Calculate scale factors
     double scaleX = targetWidth / inputImage.width;
     double scaleY = targetHeight / inputImage.height;
 
+    // Use the smaller scale to ensure the image fits within bounds
     double scale = scaleX < scaleY ? scaleX : scaleY;
 
-    double dx = (targetWidth - (inputImage.width * scale)) / 2;
-    double dy = (targetHeight - (inputImage.height * scale)) / 2;
+    // Center the scaled image
+    double scaledWidth = inputImage.width * scale;
+    double scaledHeight = inputImage.height * scale;
+    double dx = (targetWidth - scaledWidth) / 2;
+    double dy = (targetHeight - scaledHeight) / 2;
+
+    // Fill background with transparent
+    canvas.drawRect(Rect.fromLTWH(0, 0, targetWidth, targetHeight),
+        Paint()..color = Colors.transparent);
+
     canvas.translate(dx, dy);
     canvas.scale(scale, scale);
-
     canvas.drawImage(inputImage, Offset.zero, Paint());
 
     final ui.Image imgByteData = await recorder
@@ -223,6 +232,30 @@ class ImageUtils {
         }
       }
     }
+    return Converters.convertBitmapToLEDHex(pixelArray, true);
+  }
+
+  Future<List<String>> generateLedHexWithSize(
+      String asset, int targetWidth, int targetHeight) async {
+    await _loadSVG(asset);
+    ui.Image image =
+        await picture.toImage(originalWidth.toInt(), originalHeight.toInt());
+
+    final ui.Image scaledImage =
+        await _scaleSVG(image, targetHeight.toDouble(), targetWidth.toDouble());
+    final ui.Image trimmedImage = await _trimSVG(scaledImage);
+    final Uint8List? byteArray = await _convertImageToByteArray(trimmedImage);
+    final List<List<int>> pixelArray = _convertUint8ListTo2DList(
+        byteArray!, trimmedImage.width, trimmedImage.height);
+
+    for (int x = 0; x < pixelArray.length; x++) {
+      for (int y = 0; y < pixelArray[x].length; y++) {
+        if (pixelArray[x][y] != 0) {
+          pixelArray[x][y] = 1;
+        }
+      }
+    }
+
     return Converters.convertBitmapToLEDHex(pixelArray, true);
   }
 

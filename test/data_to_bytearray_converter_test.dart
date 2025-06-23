@@ -2,6 +2,7 @@ import 'dart:core';
 import 'package:badgemagic/bademagic_module/models/data.dart';
 import 'package:badgemagic/bademagic_module/models/messages.dart';
 import 'package:badgemagic/bademagic_module/models/mode.dart';
+import 'package:badgemagic/bademagic_module/models/screen_size.dart';
 import 'package:badgemagic/bademagic_module/models/speed.dart';
 import 'package:badgemagic/bademagic_module/utils/byte_array_utils.dart';
 import 'package:badgemagic/bademagic_module/utils/converters.dart';
@@ -10,6 +11,9 @@ import 'package:badgemagic/providers/getitlocator.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  const int badgeHeight = 11; // adjust as needed for your test badge
+  const int badgeWidth = 44;
+
   test('result should start with 77616E670000', () {
     DataToByteArrayConverter converter = DataToByteArrayConverter();
     var data = Data(messages: [
@@ -38,14 +42,78 @@ void main() {
     Converters converters = Converters();
     DataToByteArrayConverter converter = DataToByteArrayConverter();
     var data = Data(messages: [
-      Message(text: await converters.messageTohex('Hii', false), flash: true),
-      Message(text: await converters.messageTohex('Hii', false), flash: true),
-      Message(text: await converters.messageTohex('Hii', false), flash: false),
-      Message(text: await converters.messageTohex('Hii', false), flash: false),
-      Message(text: await converters.messageTohex('Hii', false), flash: true),
-      Message(text: await converters.messageTohex('Hii', false), flash: false),
-      Message(text: await converters.messageTohex('Hii', false), flash: true),
-      Message(text: await converters.messageTohex('Hii', false), flash: false)
+      Message(
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
+          flash: true),
+      Message(
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
+          flash: true),
+      Message(
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
+          flash: false),
+      Message(
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
+          flash: false),
+      Message(
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
+          flash: true),
+      Message(
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
+          flash: false),
+      Message(
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
+          flash: true),
+      Message(
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
+          flash: false)
     ]);
 
     var result = converter.convert(data);
@@ -58,7 +126,15 @@ void main() {
     Converters converters = Converters();
     DataToByteArrayConverter converter = DataToByteArrayConverter();
     var data = Data(messages: [
-      Message(text: await converters.messageTohex('Hii', false), marquee: false)
+      Message(
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
+          marquee: false)
     ]);
 
     var result = converter.convert(data);
@@ -72,17 +148,79 @@ void main() {
     Converters converters = Converters();
     DataToByteArrayConverter converter = DataToByteArrayConverter();
     var data = Data(messages: [
-      Message(text: await converters.messageTohex('Hii', false), marquee: true),
-      Message(text: await converters.messageTohex('Hii', false), marquee: true),
       Message(
-          text: await converters.messageTohex('Hii', false), marquee: false),
+        text: await converters.messageTohex(
+          'Hii',
+          false,
+          badgeHeight,
+          ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+          scale: false,
+        ),
+        marquee: true,
+      ),
       Message(
-          text: await converters.messageTohex('Hii', false), marquee: false),
-      Message(text: await converters.messageTohex('Hii', false), marquee: true),
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
+          marquee: true),
       Message(
-          text: await converters.messageTohex('Hii', false), marquee: false),
-      Message(text: await converters.messageTohex('Hii', false), marquee: true),
-      Message(text: await converters.messageTohex('Hii', false), marquee: false)
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
+          marquee: false),
+      Message(
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
+          marquee: false),
+      Message(
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
+          marquee: true),
+      Message(
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
+          marquee: false),
+      Message(
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
+          marquee: true),
+      Message(
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
+          marquee: false)
     ]);
 
     var result = converter.convert(data);
@@ -97,31 +235,73 @@ void main() {
     DataToByteArrayConverter converter = DataToByteArrayConverter();
     Data data = Data(messages: [
       Message(
-          text: await converters.messageTohex('Hii', false),
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
           speed: Speed.one,
           mode: Mode.right),
       Message(
-          text: await converters.messageTohex('Hii', false),
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
           speed: Speed.two,
           mode: Mode.left),
       Message(
-          text: await converters.messageTohex('Hii', false),
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
           speed: Speed.three,
           mode: Mode.up),
       Message(
-          text: await converters.messageTohex('Hii', false),
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
           speed: Speed.four,
           mode: Mode.fixed),
       Message(
-          text: await converters.messageTohex('Hii', false),
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
           speed: Speed.six,
           mode: Mode.laser),
       Message(
-          text: await converters.messageTohex('Hii', false),
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
           speed: Speed.seven,
           mode: Mode.snowflake),
       Message(
-          text: await converters.messageTohex('Hii', false),
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
           speed: Speed.eight,
           mode: Mode.picture),
     ]);
@@ -138,15 +318,62 @@ void main() {
     Converters converters = Converters();
     DataToByteArrayConverter converter = DataToByteArrayConverter();
     Data data = Data(messages: [
-      Message(text: await converters.messageTohex('A', false)),
-      Message(text: await converters.messageTohex('...', false)),
       Message(
           text: await converters.messageTohex(
-              'abcdefghijklmnopqrstuvwxyz', false)),
-      Message(text: await converters.messageTohex('_' * 500, false)),
-      Message(text: await converters.messageTohex('°', false)),
-      Message(text: await converters.messageTohex('ÇÇÇÇÇabc', false)),
-      Message(text: await converters.messageTohex('', false)),
+        'A',
+        false,
+        badgeHeight,
+        ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+        scale: false,
+      )),
+      Message(
+          text: await converters.messageTohex(
+        '...',
+        false,
+        badgeHeight,
+        ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+        scale: false,
+      )),
+      Message(
+          text: await converters.messageTohex(
+        'abcdefghijklmnopqrstuvwxyz',
+        false,
+        badgeHeight,
+        ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+        scale: false,
+      )),
+      Message(
+          text: await converters.messageTohex(
+        '_' * 500,
+        false,
+        badgeHeight,
+        ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+        scale: false,
+      )),
+      Message(
+          text: await converters.messageTohex(
+        '°',
+        false,
+        badgeHeight,
+        ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+        scale: false,
+      )),
+      Message(
+          text: await converters.messageTohex(
+        'ÇÇÇÇÇabc',
+        false,
+        badgeHeight,
+        ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+        scale: false,
+      )),
+      Message(
+          text: await converters.messageTohex(
+        '',
+        false,
+        badgeHeight,
+        ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+        scale: false,
+      )),
     ]);
 
     List<List<int>> result = converter.convert(data);
@@ -175,8 +402,16 @@ void main() {
     Converters converters = Converters();
 
     DataToByteArrayConverter converter = DataToByteArrayConverter();
-    var data = Data(
-        messages: [Message(text: await converters.messageTohex('A', false))]);
+    var data = Data(messages: [
+      Message(
+          text: await converters.messageTohex(
+        'A',
+        false,
+        badgeHeight,
+        ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+        scale: false,
+      ))
+    ]);
 
     var result = converter.convert(data);
     expect(result[2].sublist(0, 6), [0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
@@ -200,8 +435,22 @@ void main() {
     Converters converters = Converters();
     DataToByteArrayConverter converter = DataToByteArrayConverter();
     Data data = Data(messages: [
-      Message(text: await converters.messageTohex('AB', false)),
-      Message(text: await converters.messageTohex('°C', false)),
+      Message(
+          text: await converters.messageTohex(
+        'AB',
+        false,
+        badgeHeight,
+        ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+        scale: false,
+      )),
+      Message(
+          text: await converters.messageTohex(
+        '°C',
+        false,
+        badgeHeight,
+        ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+        scale: false,
+      )),
     ]);
 
     List<List<int>> result = converter.convert(data);
@@ -217,17 +466,67 @@ void main() {
     Converters converters = Converters();
     DataToByteArrayConverter converter = DataToByteArrayConverter();
     // Given
-    final data1 = Data(
-        messages: [Message(text: await converters.messageTohex('A', false))]);
+    final data1 = Data(messages: [
+      Message(
+          text: await converters.messageTohex(
+        'A',
+        false,
+        badgeHeight,
+        ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+        scale: false,
+      ))
+    ]);
     final data2 = Data(messages: [
-      Message(text: await converters.messageTohex('B', false)),
-      Message(text: await converters.messageTohex('BBB', false))
+      Message(
+          text: await converters.messageTohex(
+        'B',
+        false,
+        badgeHeight,
+        ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+        scale: false,
+      )),
+      Message(
+          text: await converters.messageTohex(
+        'BBB',
+        false,
+        badgeHeight,
+        ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+        scale: false,
+      ))
     ]);
     final data3 = Data(messages: [
-      Message(text: await converters.messageTohex('C', false)),
-      Message(text: await converters.messageTohex('CCC', false)),
-      Message(text: await converters.messageTohex('CCCCC', false)),
-      Message(text: await converters.messageTohex('CCCCCCCC', false))
+      Message(
+          text: await converters.messageTohex(
+        'C',
+        false,
+        badgeHeight,
+        ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+        scale: false,
+      )),
+      Message(
+          text: await converters.messageTohex(
+        'CCC',
+        false,
+        badgeHeight,
+        ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+        scale: false,
+      )),
+      Message(
+          text: await converters.messageTohex(
+        'CCCCC',
+        false,
+        badgeHeight,
+        ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+        scale: false,
+      )),
+      Message(
+          text: await converters.messageTohex(
+        'CCCCCCCC',
+        false,
+        badgeHeight,
+        ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+        scale: false,
+      ))
     ]);
 
     // When

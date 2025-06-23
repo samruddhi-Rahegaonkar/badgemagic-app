@@ -1,3 +1,4 @@
+import 'package:badgemagic/bademagic_module/models/screen_size.dart';
 import 'package:badgemagic/bademagic_module/utils/converters.dart';
 import 'package:badgemagic/badge_effect/badgeeffectabstract.dart';
 import 'package:badgemagic/badge_effect/invert_led_effect.dart';
@@ -12,12 +13,14 @@ class EffectContainer extends StatefulWidget {
   final String effect;
   final String effectName;
   final int index;
-
-  const EffectContainer(
-      {super.key,
-      required this.effect,
-      required this.effectName,
-      required this.index});
+  final ScreenSize selectedSize;
+  const EffectContainer({
+    super.key,
+    required this.effect,
+    required this.effectName,
+    required this.index,
+    required this.selectedSize,
+  });
 
   @override
   State<EffectContainer> createState() => _EffectContainerState();
@@ -45,15 +48,26 @@ class _EffectContainerState extends State<EffectContainer> {
       width: 110.w,
       child: GestureDetector(
         onTap: () {
-          effectCardState.isEffectActive(badgeEffect)
+          effectCardState.isEffectActive(
+            badgeEffect,
+          )
               ? effectCardState.removeEffect(badgeEffect)
               : effectCardState.addEffect(badgeEffect);
-          effectCardState.badgeAnimation(imageProvider.getController().text,
-              Converters(), effectCardState.isEffectActive(InvertLEDEffect()));
+
+          effectCardState.badgeAnimation(
+            imageProvider.getController().text,
+            Converters(),
+            effectCardState.isEffectActive(
+              InvertLEDEffect(),
+            ),
+            widget.selectedSize,
+          );
         },
         child: Card(
           surfaceTintColor: Colors.white,
-          color: effectCardState.isEffectActive(badgeEffect)
+          color: effectCardState.isEffectActive(
+            badgeEffect,
+          )
               ? colorAccent
               : drawerHeaderTitle,
           elevation: 5,

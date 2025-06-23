@@ -1,3 +1,4 @@
+import 'package:badgemagic/bademagic_module/models/screen_size.dart';
 import 'package:badgemagic/bademagic_module/models/speed.dart';
 import 'package:badgemagic/bademagic_module/utils/byte_array_utils.dart';
 import 'package:badgemagic/bademagic_module/utils/converters.dart';
@@ -21,11 +22,13 @@ class SaveBadgeCard extends StatelessWidget {
   final FileHelper file = FileHelper();
   final Converters converters = Converters();
   final ToastUtils toastUtils = ToastUtils();
+  final ScreenSize selectedSize;
 
   SaveBadgeCard({
     super.key,
     required this.badgeData,
     required this.refreshBadgesCallback,
+    required this.selectedSize,
   });
 
   @override
@@ -85,9 +88,11 @@ class SaveBadgeCard extends StatelessWidget {
                       ),
                       onPressed: () {
                         provider.savedBadgeAnimation(
-                            badgeData.value,
-                            Provider.of<AnimationBadgeProvider>(context,
-                                listen: false));
+                          badgeData.value,
+                          Provider.of<AnimationBadgeProvider>(context,
+                              listen: false),
+                          selectedSize.height, // <-- pass badge height
+                        );
                       },
                     ),
                     IconButton(
@@ -96,11 +101,14 @@ class SaveBadgeCard extends StatelessWidget {
                         color: Colors.black,
                       ),
                       onPressed: () {
-                        List<List<int>> data = hexStringToBool(file
-                                .jsonToData(badgeData.value)
-                                .messages[0]
-                                .text
-                                .join())
+                        List<List<int>> data = hexStringToBool(
+                                file
+                                    .jsonToData(badgeData.value)
+                                    .messages[0]
+                                    .text
+                                    .join(),
+                                selectedSize.height // <-- pass badge height
+                                )
                             .map((e) => e.map((e) => e ? 1 : 0).toList())
                             .toList();
                         Navigator.of(context).push(
@@ -109,6 +117,7 @@ class SaveBadgeCard extends StatelessWidget {
                               filename: badgeData.key,
                               isSavedCard: true,
                               badgeGrid: data,
+                              selectedSize: selectedSize,
                             ),
                           ),
                         );
@@ -122,10 +131,18 @@ class SaveBadgeCard extends StatelessWidget {
                       ),
                       onPressed: () {
                         logger.d("BadgeData: ${badgeData.value}");
-                        //We can Acrtually call a method to generate the data just by transffering the JSON data
-                        //so we would not necessarily need the Providers.
-                        badge.checkAndTransfer(null, null, null, null, null,
-                            null, badgeData.value, true);
+                        badge.checkAndTransfer(
+                          null,
+                          null,
+                          null,
+                          null,
+                          null,
+                          null,
+                          badgeData.value,
+                          true,
+                          selectedSize.height,
+                          selectedSize.width, // <-- pass badge height
+                        );
                       },
                     ),
                     IconButton(
