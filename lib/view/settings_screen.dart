@@ -1,4 +1,5 @@
 import 'package:badgemagic/constants.dart';
+import 'package:badgemagic/providers/BadgeAliasProvider.dart';
 import 'package:badgemagic/providers/BadgeScanProvider.dart';
 import 'package:badgemagic/view/widgets/common_scaffold_widget.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,7 @@ class SettingsScreenState extends State<SettingsScreen> {
 
   late BadgeScanMode _scanMode;
   late List<TextEditingController> _controllers;
+  late List<TextEditingController> _aliasControllers;
 
   @override
   void initState() {
@@ -25,10 +27,19 @@ class SettingsScreenState extends State<SettingsScreen> {
     _setOrientation();
 
     final scanProvider = Provider.of<BadgeScanProvider>(context, listen: false);
+    final aliasProvider =
+        Provider.of<BadgeAliasProvider>(context, listen: false);
+
     _scanMode = scanProvider.mode;
-    _controllers = scanProvider.badgeNames
-        .map((name) => TextEditingController(text: name))
-        .toList();
+    _controllers = [];
+    _aliasControllers = [];
+
+    for (final name in scanProvider.badgeNames) {
+      _controllers.add(TextEditingController(text: name));
+      _aliasControllers.add(
+        TextEditingController(text: aliasProvider.getAlias(name) ?? ""),
+      );
+    }
   }
 
   void _setOrientation() {
@@ -42,6 +53,9 @@ class SettingsScreenState extends State<SettingsScreen> {
   void dispose() {
     for (final controller in _controllers) {
       controller.dispose();
+    }
+    for (final c in _aliasControllers) {
+      c.dispose();
     }
     super.dispose();
   }
@@ -80,39 +94,52 @@ class SettingsScreenState extends State<SettingsScreen> {
               onChanged: (value) => setState(() => _scanMode = value!),
             ),
             if (_scanMode == BadgeScanMode.specific)
-              ..._controllers.asMap().entries.map((entry) {
-                final index = entry.key;
-                final controller = entry.value;
-                return Row(
+              ...List.generate(_controllers.length, (index) {
+                return Column(
                   children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: TextField(
-                          controller: controller,
-                          decoration: const InputDecoration(
-                            hintText: 'Badge name',
-                            border: OutlineInputBorder(),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: TextField(
+                              controller: _controllers[index],
+                              decoration: const InputDecoration(
+                                hintText: 'Badge name',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
                           ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.remove_circle_outline),
+                          onPressed: () {
+                            setState(() {
+                              _controllers.removeAt(index).dispose();
+                              _aliasControllers.removeAt(index).dispose();
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: TextField(
+                        controller: _aliasControllers[index],
+                        decoration: const InputDecoration(
+                          hintText: 'Alias (optional)',
+                          border: OutlineInputBorder(),
                         ),
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.remove_circle_outline),
-                      onPressed: () {
-                        setState(() {
-                          controller.dispose();
-                          _controllers.removeAt(index);
-                        });
-                      },
-                    ),
                   ],
                 );
-              }).toList(),
+              }),
             if (_scanMode == BadgeScanMode.specific)
               TextButton.icon(
                 onPressed: () => setState(() {
                   _controllers.add(TextEditingController());
+                  _aliasControllers.add(TextEditingController());
                 }),
                 icon: const Icon(Icons.add),
                 label: const Text('Add More'),
@@ -123,9 +150,26 @@ class SettingsScreenState extends State<SettingsScreen> {
                 final provider =
                     Provider.of<BadgeScanProvider>(context, listen: false);
                 provider.setMode(_scanMode);
-                provider.setBadgeNames(
-                  _controllers.map((c) => c.text.trim()).toList(),
-                );
+                final badgeNames = <String>[];
+                final aliasMap = <String, String>{};
+
+                for (int i = 0; i < _controllers.length; i++) {
+                  final name = _controllers[i].text.trim();
+                  final alias = _aliasControllers[i].text.trim();
+                  if (name.isNotEmpty) {
+                    badgeNames.add(name);
+                    if (alias.isNotEmpty) {
+                      aliasMap[name] = alias;
+                    }
+                  }
+                }
+                provider.setBadgeNames(badgeNames);
+                final aliasProvider =
+                    Provider.of<BadgeAliasProvider>(context, listen: false);
+                aliasProvider.clearAll();
+                aliasMap.forEach(
+                    (name, alias) => aliasProvider.setAlias(name, alias));
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Scan settings saved')),
                 );

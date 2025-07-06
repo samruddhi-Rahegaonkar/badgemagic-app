@@ -9,6 +9,7 @@ import 'package:badgemagic/bademagic_module/models/speed.dart';
 import 'package:badgemagic/bademagic_module/utils/converters.dart';
 import 'package:badgemagic/bademagic_module/utils/file_helper.dart';
 import 'package:badgemagic/bademagic_module/utils/toast_utils.dart';
+import 'package:badgemagic/providers/BadgeAliasProvider.dart';
 import 'package:badgemagic/providers/BadgeScanProvider.dart';
 import 'package:badgemagic/providers/imageprovider.dart';
 import 'package:flutter/widgets.dart';
@@ -100,10 +101,11 @@ class BadgeMessageProvider {
   ) async {
     final scanProvider = Provider.of<BadgeScanProvider>(context, listen: false);
 
-    final BleState? initialState = ScanState(
+    final BleState initialState = ScanState(
       manager: manager,
       mode: scanProvider.mode,
       allowedNames: scanProvider.badgeNames,
+      aliasProvider: context.read<BadgeAliasProvider>(),
     );
 
     BleState? state = initialState;

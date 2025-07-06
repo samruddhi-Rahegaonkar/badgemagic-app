@@ -312,7 +312,7 @@ class _HomeScreenState extends State<HomeScreen>
                                   animationProvider.getAnimationIndex()],
                               null,
                               false,
-                              context, // <== This is needed and now passed
+                              context,
                             );
                           },
                           child: Container(

@@ -2,19 +2,21 @@ import 'dart:async';
 import 'package:badgemagic/bademagic_module/bluetooth/connect_state.dart';
 import 'package:badgemagic/bademagic_module/bluetooth/datagenerator.dart';
 import 'package:badgemagic/providers/BadgeScanProvider.dart';
+import 'package:badgemagic/providers/BadgeAliasProvider.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-
 import 'base_ble_state.dart';
 
 class ScanState extends NormalBleState {
   final DataTransferManager manager;
   final BadgeScanMode mode;
   final List<String> allowedNames;
+  final BadgeAliasProvider aliasProvider;
 
   ScanState({
     required this.manager,
     required this.mode,
     required this.allowedNames,
+    required this.aliasProvider,
   });
 
   @override
@@ -24,6 +26,14 @@ class ScanState extends NormalBleState {
 
     final Completer<BleState?> nextStateCompleter = Completer();
     bool isCompleted = false;
+    bool stopScanCalled = false;
+
+    void stopScanSafely() {
+      if (!stopScanCalled) {
+        stopScanCalled = true;
+        FlutterBluePlus.stopScan();
+      }
+    }
 
     try {
       subscription = FlutterBluePlus.scanResults.listen(
@@ -42,21 +52,44 @@ class ScanState extends NormalBleState {
                     .contains(Guid("0000fee0-0000-1000-8000-00805f9b34fb"));
 
                 final deviceName = result.device.name.trim().toLowerCase();
-                final matchesName = mode == BadgeScanMode.any ||
+
+                final matchesDirectName = mode == BadgeScanMode.any ||
                     normalizedAllowedNames.contains(deviceName);
 
-                return matchesUuid && matchesName;
+                final aliasMatch = normalizedAllowedNames.any((realName) {
+                  final alias =
+                      aliasProvider.getAlias(realName)?.trim().toLowerCase();
+                  return alias == deviceName;
+                });
+
+                return matchesUuid && (matchesDirectName || aliasMatch);
               },
               orElse: () => throw Exception("Matching device not found."),
             );
 
             isCompleted = true;
-            FlutterBluePlus.stopScan();
+            stopScanSafely();
+
             toast.showToast('Device found. Connecting...');
+
+            final foundName = foundDevice.device.name.trim();
+            String? resolvedAlias;
+
+            for (final real in allowedNames) {
+              final alias = aliasProvider.getAlias(real)?.trim();
+              if (alias != null &&
+                  alias.toLowerCase() == foundName.toLowerCase()) {
+                resolvedAlias = alias;
+                break;
+              }
+            }
+
+            final displayName = resolvedAlias ?? foundName;
 
             nextStateCompleter.complete(ConnectState(
               scanResult: foundDevice,
               manager: manager,
+              displayName: displayName,
             ));
           } catch (e) {
             logger.w("No matching device found in this batch: $e");
@@ -65,6 +98,7 @@ class ScanState extends NormalBleState {
         onError: (e) async {
           if (!isCompleted) {
             isCompleted = true;
+            stopScanSafely(); // ✅ Guarded again
             logger.e("Scan error: $e");
             toast.showErrorToast('Scan error occurred.');
             nextStateCompleter.completeError(Exception("Scan error: $e"));
@@ -76,13 +110,14 @@ class ScanState extends NormalBleState {
         withServices: [Guid("0000fee0-0000-1000-8000-00805f9b34fb")],
         removeIfGone: Duration(seconds: 5),
         continuousUpdates: true,
-        timeout: const Duration(seconds: 15), // Reduced scan timeout
+        timeout: const Duration(seconds: 15),
       );
 
       await Future.delayed(const Duration(seconds: 1));
 
-      // If no device is found after the scan timeout, complete with an error.
       if (!isCompleted) {
+        isCompleted = true;
+        stopScanSafely();
         toast.showToast('Device not found.');
         nextStateCompleter.completeError(Exception('Device not found.'));
       }
@@ -90,9 +125,10 @@ class ScanState extends NormalBleState {
       return await nextStateCompleter.future;
     } catch (e) {
       logger.e("Exception during scanning: $e");
-      throw Exception("please check the device is turned on and retry.");
+      throw Exception("Please check if the device is turned on and retry.");
     } finally {
       await subscription?.cancel();
+      stopScanSafely();
     }
   }
 }

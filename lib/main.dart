@@ -1,3 +1,4 @@
+import 'package:badgemagic/providers/BadgeAliasProvider.dart';
 import 'package:badgemagic/providers/BadgeScanProvider.dart';
 import 'package:badgemagic/providers/getitlocator.dart';
 import 'package:badgemagic/providers/imageprovider.dart';
@@ -25,6 +26,7 @@ void main() {
       ChangeNotifierProvider<InlineImageProvider>(
           create: (context) => getIt<InlineImageProvider>()),
       ChangeNotifierProvider(create: (_) => BadgeScanProvider()),
+      ChangeNotifierProvider(create: (_) => BadgeAliasProvider()),
     ],
     child: const MyApp(),
   ));
