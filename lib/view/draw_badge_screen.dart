@@ -28,6 +28,7 @@ class DrawBadge extends StatefulWidget {
 
 class _DrawBadgeState extends State<DrawBadge> {
   var drawToggle = DrawBadgeProvider();
+  bool _showShapeOptions = false;
 
   @override
   void didChangeDependencies() {
@@ -93,27 +94,32 @@ class _DrawBadgeState extends State<DrawBadge> {
                           _buildDrawEraseButton(false, Icons.delete, 'Erase'),
                           _buildResetButton(),
                           _buildSaveButton(fileHelper),
+                          _buildShapesToggleButton(),
                         ],
                       ),
                       const SizedBox(height: 10),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Row(
-                          children: [
-                            _buildShapeCard(context, DrawShape.freehand,
-                                Icons.gesture, 'Free'),
-                            _buildShapeCard(context, DrawShape.square,
-                                Icons.crop_square, 'Square'),
-                            _buildShapeCard(context, DrawShape.rectangle,
-                                Icons.rectangle_outlined, 'Rect'),
-                            _buildShapeCard(context, DrawShape.circle,
-                                Icons.circle_outlined, 'Circle'),
-                            _buildShapeCard(context, DrawShape.triangle,
-                                Icons.change_history, 'Triangle'),
-                          ],
+
+                      // Only show shapes when toggled
+                      if (_showShapeOptions)
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Row(
+                            children: [
+                              _buildShapeCard(context, DrawShape.freehand,
+                                  Icons.gesture, 'Free'),
+                              _buildShapeCard(context, DrawShape.square,
+                                  Icons.crop_square, 'Square'),
+                              _buildShapeCard(context, DrawShape.rectangle,
+                                  Icons.rectangle_outlined, 'Rect'),
+                              _buildShapeCard(context, DrawShape.circle,
+                                  Icons.circle_outlined, 'Circle'),
+                              _buildShapeCard(context, DrawShape.triangle,
+                                  Icons.change_history, 'Triangle'),
+                            ],
+                          ),
                         ),
-                      ),
+
                       const SizedBox(height: 20),
                     ],
                   ),
@@ -191,6 +197,30 @@ class _DrawBadgeState extends State<DrawBadge> {
         children: [
           Icon(Icons.save, color: Colors.black),
           Text('Save', style: TextStyle(color: Colors.black)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShapesToggleButton() {
+    return TextButton(
+      onPressed: () {
+        setState(() {
+          _showShapeOptions = !_showShapeOptions;
+
+          // ✅ Reset to Freehand when hiding shape options
+          if (!_showShapeOptions) {
+            drawToggle.setShape(DrawShape.freehand);
+          }
+        });
+      },
+      child: Column(
+        children: [
+          Icon(Icons.category,
+              color: _showShapeOptions ? colorPrimary : Colors.black),
+          Text('Shapes',
+              style: TextStyle(
+                  color: _showShapeOptions ? colorPrimary : Colors.black)),
         ],
       ),
     );
