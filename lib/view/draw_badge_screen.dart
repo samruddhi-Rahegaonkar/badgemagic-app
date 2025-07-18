@@ -57,6 +57,7 @@ class _DrawBadgeState extends State<DrawBadge> {
   @override
   Widget build(BuildContext context) {
     FileHelper fileHelper = FileHelper();
+
     return WillPopScope(
       onWillPop: () async {
         _resetPortraitOrientation();
@@ -65,15 +66,13 @@ class _DrawBadgeState extends State<DrawBadge> {
       child: CommonScaffold(
         index: 1,
         title: 'BadgeMagic',
-        body: SingleChildScrollView(
-          physics: NeverScrollableScrollPhysics(),
-          key: const Key(drawBadgeScreen),
-          child: Align(
-            alignment: Alignment.center,
-            child: LayoutBuilder(
-              builder: (context, constraints) => Container(
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              key: const Key(drawBadgeScreen),
+              child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxWidth: constraints.maxWidth * 0.94,
+                  minHeight: constraints.maxHeight,
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -211,8 +210,112 @@ class _DrawBadgeState extends State<DrawBadge> {
                   ],
                 ),
               ),
-            ),
-          ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawEraseButton(bool isDraw, IconData icon, String label) {
+    final isSelected = drawToggle.isDrawing == isDraw;
+
+    return TextButton(
+      onPressed: () {
+        setState(() {
+          drawToggle.toggleIsDrawing(isDraw);
+        });
+      },
+      child: Column(
+        children: [
+          Icon(icon, color: isSelected ? colorPrimary : Colors.black),
+          Text(label,
+              style:
+                  TextStyle(color: isSelected ? colorPrimary : Colors.black)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResetButton() {
+    return TextButton(
+      onPressed: () {
+        setState(() {
+          drawToggle.resetDrawViewGrid();
+        });
+      },
+      child: const Column(
+        children: [
+          Icon(Icons.refresh, color: Colors.black),
+          Text('Reset', style: TextStyle(color: Colors.black)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSaveButton(FileHelper fileHelper) {
+    return TextButton(
+      onPressed: () {
+        List<List<int>> badgeGrid = drawToggle
+            .getDrawViewGrid()
+            .map((e) => e.map((e) => e ? 1 : 0).toList())
+            .toList();
+        List<String> hexString =
+            Converters.convertBitmapToLEDHex(badgeGrid, false);
+
+        if (widget.isSavedCard!) {
+          fileHelper.updateBadgeText(widget.filename!, hexString);
+        } else if (widget.isSavedClipart!) {
+          fileHelper.updateClipart(widget.filename!, badgeGrid);
+        } else {
+          fileHelper.saveImage(drawToggle.getDrawViewGrid());
+        }
+
+        fileHelper.generateClipartCache();
+        ToastUtils().showToast("Clipart Saved Successfully");
+
+        Future.delayed(const Duration(milliseconds: 800), () {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        });
+      },
+      child: const Column(
+        children: [
+          Icon(Icons.save, color: Colors.black),
+          Text('Save', style: TextStyle(color: Colors.black)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShapeCard(
+      BuildContext context, DrawShape shape, IconData icon, String label) {
+    final isSelected = drawToggle.selectedShape == shape;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: ElevatedButton(
+        onPressed: () {
+          setState(() {
+            drawToggle.setShape(shape);
+          });
+        },
+        style: ElevatedButton.styleFrom(
+          foregroundColor: isSelected ? Colors.white : Colors.black,
+          backgroundColor: isSelected ? colorPrimary : Colors.white,
+          elevation: isSelected ? 4 : 1,
+          side: BorderSide(
+              color: isSelected ? colorPrimary : Colors.grey.shade300),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 24),
+            const SizedBox(height: 4),
+            Text(label, style: const TextStyle(fontSize: 12)),
+          ],
         ),
       ),
     );
