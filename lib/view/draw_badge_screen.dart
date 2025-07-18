@@ -162,43 +162,38 @@ class _DrawBadgeState extends State<DrawBadge> {
                           ),
                         ),
                         TextButton(
-                          onPressed: () async {
-                            try {
-                              List<List<int>> badgeGrid = drawToggle
-                                  .getDrawViewGrid()
-                                  .map((e) => e.map((e) => e ? 1 : 0).toList())
-                                  .toList();
-                              List<String> hexString =
-                                  Converters.convertBitmapToLEDHex(
-                                      badgeGrid, false);
+                          onPressed: () {
+                            List<List<int>> badgeGrid = drawToggle
+                                .getDrawViewGrid()
+                                .map((e) => e.map((e) => e ? 1 : 0).toList())
+                                .toList();
+                            List<String> hexString =
+                                Converters.convertBitmapToLEDHex(
+                                    badgeGrid, false);
 
-                              if (widget.isSavedCard!) {
-                                await fileHelper.updateBadgeText(
-                                    widget.filename!, hexString);
-                              } else if (widget.isSavedClipart!) {
-                                await fileHelper.updateClipart(
-                                    widget.filename!, badgeGrid);
-                              } else {
-                                await fileHelper
-                                    .saveImage(drawToggle.getDrawViewGrid());
-                              }
-
-                              await fileHelper.generateClipartCache();
-
-                              ToastUtils()
-                                  .showToast("Clipart Saved Successfully");
-
-                              await Future.delayed(
-                                  const Duration(milliseconds: 800));
-
-                              if (mounted) {
-                                Navigator.of(context)
-                                    .popUntil((route) => route.isFirst);
-                              }
-                            } catch (e) {
-                              ToastUtils().showToast(
-                                  "Failed to save badge: ${e.toString()}");
+                            if (widget.isSavedCard!) {
+                              fileHelper.updateBadgeText(
+                                  widget.filename!, hexString);
+                            } else if (widget.isSavedClipart!) {
+                              fileHelper.updateClipart(
+                                  widget.filename!, badgeGrid);
+                            } else {
+                              fileHelper
+                                  .saveImage(drawToggle.getDrawViewGrid());
                             }
+
+                            fileHelper.generateClipartCache();
+
+                            // Show toast first
+                            ToastUtils()
+                                .showToast("Clipart Saved Successfully");
+
+                            // Delay redirection slightly to ensure toast is visible
+                            Future.delayed(const Duration(milliseconds: 800),
+                                () {
+                              Navigator.of(context)
+                                  .popUntil((route) => route.isFirst);
+                            });
                           },
                           child: const Column(
                             children: [
