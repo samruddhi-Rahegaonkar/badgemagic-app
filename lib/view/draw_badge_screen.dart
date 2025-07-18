@@ -171,19 +171,30 @@ class _DrawBadgeState extends State<DrawBadge> {
                             List<String> hexString =
                                 Converters.convertBitmapToLEDHex(
                                     badgeGrid, false);
-                            widget.isSavedCard!
-                                ? fileHelper.updateBadgeText(
-                                    widget.filename!,
-                                    hexString,
-                                  )
-                                : widget.isSavedClipart!
-                                    ? fileHelper.updateClipart(
-                                        widget.filename!, badgeGrid)
-                                    : fileHelper.saveImage(
-                                        drawToggle.getDrawViewGrid());
+
+                            if (widget.isSavedCard!) {
+                              fileHelper.updateBadgeText(
+                                  widget.filename!, hexString);
+                            } else if (widget.isSavedClipart!) {
+                              fileHelper.updateClipart(
+                                  widget.filename!, badgeGrid);
+                            } else {
+                              fileHelper
+                                  .saveImage(drawToggle.getDrawViewGrid());
+                            }
+
                             fileHelper.generateClipartCache();
+
+                            // Show toast first
                             ToastUtils()
                                 .showToast("Clipart Saved Successfully");
+
+                            // Delay redirection slightly to ensure toast is visible
+                            Future.delayed(const Duration(milliseconds: 800),
+                                () {
+                              Navigator.of(context)
+                                  .popUntil((route) => route.isFirst);
+                            });
                           },
                           child: const Column(
                             children: [
