@@ -1,76 +1,101 @@
+import 'package:flutter/material.dart';
 import 'package:badgemagic/badge_animation/ani_left.dart';
 import 'package:badgemagic/badge_animation/animation_abstract.dart';
-import 'package:flutter/material.dart';
 
-// Optional: shape enum, doesn't affect freehand
 enum DrawShape { freehand, square, rectangle, circle, triangle }
 
 class DrawBadgeProvider extends ChangeNotifier {
-  // 11x44 LED grid, default all false (off)
+  final int rows = 11;
+  final int cols = 44;
+
   List<List<bool>> _drawViewGrid =
-      List.generate(11, (i) => List.generate(44, (j) => false));
+      List.generate(11, (_) => List.generate(44, (_) => false));
 
-  // Drawing mode (true = draw, false = erase)
+  final List<List<bool>> _previewGrid =
+      List.generate(11, (_) => List.generate(44, (_) => false));
+
   bool isDrawing = true;
-
-  // Currently selected shape
   DrawShape _selectedShape = DrawShape.freehand;
-
-  // Animation used in badge (not part of drawing)
   BadgeAnimation currentAnimation = LeftAnimation();
 
-  // Return the current grid
-  List<List<bool>> getDrawViewGrid() => _drawViewGrid;
+  List<List<bool>> getDrawViewGrid() {
+    // Merge preview + permanent grid
+    final combined = List.generate(
+        rows,
+        (i) => List.generate(cols, (j) {
+              return _drawViewGrid[i][j] || _previewGrid[i][j];
+            }));
+    return combined;
+  }
 
-  // Return current drawing mode
+  DrawShape get selectedShape => _selectedShape;
   bool getIsDrawing() => isDrawing;
 
-  // Return selected shape
-  DrawShape get selectedShape => _selectedShape;
-
-  // Toggle between drawing and erasing
   void toggleIsDrawing(bool drawing) {
     isDrawing = drawing;
     notifyListeners();
   }
 
-  // Set selected shape
   void setShape(DrawShape shape) {
     _selectedShape = shape;
     notifyListeners();
   }
 
-  // Set a single LED (used by gesture drawing)
-  void setDrawViewGrid(int row, int col) {
-    // Only allow grid update for freehand drawing
-    if (_selectedShape == DrawShape.freehand) {
-      if (row >= 0 &&
-          row < _drawViewGrid.length &&
-          col >= 0 &&
-          col < _drawViewGrid[0].length) {
-        _drawViewGrid[row][col] = isDrawing;
-        notifyListeners();
+  void setCell(int row, int col, bool value, {bool preview = false}) {
+    if (row >= 0 && row < rows && col >= 0 && col < cols) {
+      if (preview) {
+        _previewGrid[row][col] = value;
+      } else {
+        _drawViewGrid[row][col] = value;
       }
     }
   }
 
-  // Reset the grid to all OFF
-  void resetDrawViewGrid() {
-    _drawViewGrid = List.generate(11, (i) => List.generate(44, (j) => false));
-    notifyListeners();
+  void clearPreviewGrid() {
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < cols; j++) {
+        _previewGrid[i][j] = false;
+      }
+    }
   }
 
-  // Load a grid into the draw view
-  void updateDrawViewGrid(List<List<bool>> badgeData) {
-    for (int i = 0; i < _drawViewGrid.length; i++) {
-      for (int j = 0; j < _drawViewGrid[0].length; j++) {
-        if (j < badgeData[0].length) {
-          _drawViewGrid[i][j] = badgeData[i][j];
-        } else {
-          _drawViewGrid[i][j] = false;
+  void commitGridUpdate() {
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < cols; j++) {
+        if (_previewGrid[i][j]) {
+          _drawViewGrid[i][j] = _previewGrid[i][j];
         }
       }
     }
+    clearPreviewGrid();
     notifyListeners();
   }
+
+  void resetDrawViewGrid() {
+    _drawViewGrid =
+        List.generate(rows, (_) => List.generate(cols, (_) => false));
+    notifyListeners();
+  }
+
+  void updateDrawViewGrid(List<List<bool>> badgeData) {
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < cols; j++) {
+        _drawViewGrid[i][j] =
+            (j < badgeData[0].length) ? badgeData[i][j] : false;
+      }
+    }
+    notifyListeners();
+  }
+
+  GridPosition getGridPosition(Offset position, double cellSize) {
+    final row = (position.dy / cellSize).floor();
+    final col = (position.dx / cellSize).floor();
+    return GridPosition(row, col);
+  }
+}
+
+class GridPosition {
+  final int x;
+  final int y;
+  GridPosition(this.x, this.y);
 }
