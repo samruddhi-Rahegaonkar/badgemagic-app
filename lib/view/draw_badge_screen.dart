@@ -228,8 +228,13 @@ class _DrawBadgeState extends State<DrawBadge> {
                           _buildResetButton(),
                           _buildSaveButton(fileHelper),
                           _buildShapesToggleButton(),
+
+                          // ✅ New Undo & Redo buttons
+                          _buildUndoButton(),
+                          _buildRedoButton(),
                         ],
                       ),
+
                       const SizedBox(height: 10),
 
                       // Only show shapes when toggled
@@ -354,6 +359,38 @@ class _DrawBadgeState extends State<DrawBadge> {
           Text('Shapes',
               style: TextStyle(
                   color: _showShapeOptions ? colorPrimary : Colors.black)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUndoButton() {
+    return TextButton(
+      onPressed: () {
+        setState(() {
+          drawToggle.undo();
+        });
+      },
+      child: const Column(
+        children: [
+          Icon(Icons.undo, color: Colors.black),
+          Text('Undo', style: TextStyle(color: Colors.black)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRedoButton() {
+    return TextButton(
+      onPressed: () {
+        setState(() {
+          drawToggle.redo();
+        });
+      },
+      child: const Column(
+        children: [
+          Icon(Icons.redo, color: Colors.black),
+          Text('Redo', style: TextStyle(color: Colors.black)),
         ],
       ),
     );
