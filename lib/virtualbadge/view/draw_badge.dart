@@ -39,6 +39,8 @@ class _BMBadgeState extends State<BMBadge> {
   }
 
   void _handlePanUpdate(DragUpdateDetails details) {
+    if (dragStart == null) return; // Safety check
+
     final localPosition = _getLocalPosition(details.globalPosition);
     final shape = drawProvider.selectedShape;
 

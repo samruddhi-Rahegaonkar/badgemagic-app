@@ -308,7 +308,7 @@ class _DrawBadgeState extends State<DrawBadge> {
 
   Widget _buildSaveButton(FileHelper fileHelper) {
     return TextButton(
-      onPressed: () {
+      onPressed: () async {
         List<List<int>> badgeGrid = drawToggle
             .getDrawViewGrid()
             .map((e) => e.map((e) => e ? 1 : 0).toList())
@@ -317,19 +317,19 @@ class _DrawBadgeState extends State<DrawBadge> {
             Converters.convertBitmapToLEDHex(badgeGrid, false);
 
         if (widget.isSavedCard!) {
-          fileHelper.updateBadgeText(widget.filename!, hexString);
+          await fileHelper.updateBadgeText(widget.filename!, hexString);
         } else if (widget.isSavedClipart!) {
-          fileHelper.updateClipart(widget.filename!, badgeGrid);
+          await fileHelper.updateClipart(widget.filename!, badgeGrid);
         } else {
-          fileHelper.saveImage(drawToggle.getDrawViewGrid());
+          await fileHelper.saveImage(drawToggle.getDrawViewGrid());
         }
 
-        fileHelper.generateClipartCache();
+        await fileHelper.generateClipartCache();
         ToastUtils().showToast("Clipart Saved Successfully");
 
-        Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted) {
           Navigator.of(context).popUntil((route) => route.isFirst);
-        });
+        }
       },
       child: const Column(
         children: [
