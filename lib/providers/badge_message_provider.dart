@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:ui';
 import 'package:badgemagic/bademagic_module/bluetooth/base_ble_state.dart';
 import 'package:badgemagic/bademagic_module/bluetooth/datagenerator.dart';
 import 'package:badgemagic/bademagic_module/utils/converters.dart';
@@ -11,7 +12,6 @@ import 'package:badgemagic/bademagic_module/models/messages.dart';
 import 'package:badgemagic/bademagic_module/models/mode.dart';
 import 'package:badgemagic/bademagic_module/models/speed.dart';
 import 'package:badgemagic/providers/imageprovider.dart';
-import 'package:flutter/src/painting/text_style.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get_it/get_it.dart';
 import 'package:logger/logger.dart';
@@ -284,7 +284,6 @@ Future<void> transferPacmanAnimation(
     int pacmanCol = pathEnd;
     int pacmanRow = badgeHeight ~/ 2;
     double minMouth = 3.14 / 10;
-    double maxMouth = 3.14 / 1.8;
     double mouthAngle = minMouth;
     // Draw Pacman (closed mouth)
     for (int y = -pacmanRadius; y <= pacmanRadius; y++) {
@@ -541,8 +540,7 @@ Future<void> transferBrokenHeartsAnimation(
   clustersL = paired.map((e) => e.key).toList();
   clustersR = paired.map((e) => e.value).toList();
 
-  final int N = clustersL.length;
-  final int cycle = N + badgeHeight; // ensure all clusters fall out
+  final int N = clustersL.length;// ensure all clusters fall out
 
   // For transfer, sample the first 8 frames of the cycle
   for (int frame = 0; frame < frameCount; frame++) {
@@ -590,49 +588,7 @@ List<List<int>> boolToIntBitmap(List<List<bool>> bitmap) {
   return bitmap.map((row) => row.map((b) => b ? 1 : 0).toList()).toList();
 }
 
-void _drawFilledCircle(
-    List<List<int>> canvas, int cx, int cy, int radius, int w, int h) {
-  for (int y = -radius; y <= radius; y++) {
-    for (int x = -radius; x <= radius; x++) {
-      if (x * x + y * y <= radius * radius) {
-        int px = cx + x;
-        int py = cy + y;
-        if (py >= 0 && py < h && px >= 0 && px < w) {
-          canvas[py][px] = 1;
-        }
-      }
-    }
-  }
-}
 
-void _drawPacman(List<List<int>> canvas, int cx, int cy, int radius,
-    double mouthAngle, double mouthDirection, int w, int h) {
-  for (int y = -radius; y <= radius; y++) {
-    for (int x = -radius; x <= radius; x++) {
-      if (x * x + y * y <= radius * radius) {
-        double angle = atan2(y.toDouble(), x.toDouble());
-        if (angle < 0) angle += 2 * pi;
-        double start = mouthDirection - mouthAngle / 2;
-        double end = mouthDirection + mouthAngle / 2;
-        if (start < 0) start += 2 * pi;
-        if (end < 0) end += 2 * pi;
-        bool inMouth = false;
-        if (start < end) {
-          inMouth = angle >= start && angle <= end;
-        } else {
-          inMouth = angle >= start || angle <= end;
-        }
-        if (!inMouth) {
-          int px = cx + x;
-          int py = cy + y;
-          if (py >= 0 && py < h && px >= 0 && px < w) {
-            canvas[py][px] = 1;
-          }
-        }
-      }
-    }
-  }
-}
 
 void _drawDestroyEffect(
     List<List<bool>> canvas, int cx, int cy, int frame, int w, int h) {
