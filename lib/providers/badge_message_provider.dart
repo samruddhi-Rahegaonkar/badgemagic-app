@@ -411,23 +411,33 @@ Future<void> transferDiamondAnimation(
   const int frameCount = 8; // Badge hardware limit
   const int badgeHeight = 11;
   const int badgeWidth = 44;
-  const int seamlessSpawnInterval = 4; // Two diamonds per loop for seamlessness
+  const int spawnInterval = 4; // frames between new diamonds
   final Speed selectedSpeed = Speed.eight; // Use max speed
   final logger = Logger();
   logger.i(
       'Diamond transfer (seamless, shifted): selectedSpeed = ${selectedSpeed.toString()}, hex = ${selectedSpeed.hexValue}');
   List<Message> diamondFrames = [];
   final DiamondAnimation diamondAnimation = DiamondAnimation();
-  // Start from what would be the 7th frame in the logic
-  const int startIndex = 7;
+
+  // Calculate a cycle length that ensures seamless looping
+  // The largest diamond radius is limited by badge size
+  final int maxDy = (badgeHeight ~/ 2);
+  final int maxDx = (badgeWidth ~/ 4);
+  final int maxRadius = max(maxDy, maxDx);
+  final int cycleLength = spawnInterval * 2 +
+      maxRadius +
+      1; // enough for two diamonds to grow and overlap
+  // Pick a start index for best seamlessness (e.g., cycleLength - frameCount)
+  final int startIndex = cycleLength - frameCount;
+
   for (int frame = 0; frame < frameCount; frame++) {
-    int animationIndex = startIndex + frame;
+    int animationIndex = (startIndex + frame) % cycleLength;
     List<List<bool>> frameBitmap =
         List.generate(badgeHeight, (_) => List.filled(badgeWidth, false));
     diamondAnimation.processAnimation(
       badgeHeight,
       badgeWidth,
-      animationIndex, // shifted animationIndex
+      animationIndex,
       List.generate(badgeHeight, (_) => List.filled(badgeWidth, false)),
       frameBitmap,
     );
