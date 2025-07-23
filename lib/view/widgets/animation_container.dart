@@ -6,15 +6,18 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
 class AniContainer extends StatefulWidget {
-  final String animation;
+  final String? animation;
   final String animationName;
   final int index;
+  final IconData? icon;
 
-  const AniContainer(
-      {super.key,
-      required this.animation,
-      required this.animationName,
-      required this.index});
+  const AniContainer({
+    super.key,
+    this.animation,
+    required this.animationName,
+    required this.index,
+    this.icon,
+  });
 
   @override
   State<AniContainer> createState() => _AniContainerState();
@@ -52,7 +55,11 @@ class _AniContainerState extends State<AniContainer> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Flexible(
-                child: Image.asset(widget.animation, fit: BoxFit.fill),
+                child: widget.icon != null
+                    ? Icon(widget.icon, size: 36)
+                    : (widget.animation != null
+                        ? Image.asset(widget.animation!, fit: BoxFit.fill)
+                        : SizedBox.shrink()),
               ),
               Text(
                 widget.animationName,

@@ -55,66 +55,101 @@ class AnimationTab extends StatefulWidget {
 class _AnimationTabState extends State<AnimationTab> {
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            AniContainer(
-              animation: aniLeft,
-              animationName: 'Left',
-              index: 0,
-            ),
-            AniContainer(
-              animation: aniRight,
-              animationName: 'Right',
-              index: 1,
-            ),
-            AniContainer(
-              animation: aniUp,
-              animationName: 'Up',
-              index: 2,
-            ),
-          ],
-        ),
-        Row(
-          children: [
-            AniContainer(
-              animation: aniDown,
-              animationName: 'Down',
-              index: 3,
-            ),
-            AniContainer(
-              animation: aniFixed,
-              animationName: 'Fixed',
-              index: 4,
-            ),
-            AniContainer(
-              animation: animation,
-              animationName: 'Animation',
-              index: 5,
-            ),
-          ],
-        ),
-        Row(
-          children: [
-            AniContainer(
-              animation: aniSnowflake,
-              animationName: 'Snowflake',
-              index: 6,
-            ),
-            AniContainer(
-              animation: aniPicture,
-              animationName: 'Picture',
-              index: 7,
-            ),
-            AniContainer(
-              animation: aniLaser,
-              animationName: 'Laser',
-              index: 8,
-            ),
-          ],
-        ),
-      ],
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          Row(
+            children: [
+              AniContainer(
+                animation: aniLeft,
+                animationName: 'Left',
+                index: 0,
+              ),
+              AniContainer(
+                animation: aniRight,
+                animationName: 'Right',
+                index: 1,
+              ),
+              AniContainer(
+                animation: aniUp,
+                animationName: 'Up',
+                index: 2,
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              AniContainer(
+                animation: aniDown,
+                animationName: 'Down',
+                index: 3,
+              ),
+              AniContainer(
+                animation: aniFixed,
+                animationName: 'Fixed',
+                index: 4,
+              ),
+              AniContainer(
+                animation: aniFixed,
+                animationName: 'Snowflake',
+                index: 5,
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              AniContainer(
+                animation: aniPicture,
+                animationName: 'Picture',
+                index: 6,
+              ),
+              AniContainer(
+                animation: animation,
+                animationName: 'Animation',
+                index: 7,
+              ),
+              AniContainer(
+                animation: aniLaser,
+                animationName: 'Laser',
+                index: 8,
+              ),
+            ],
+          ),
+          // New animations: group up to 3 per row
+          Row(
+            children: [
+              AniContainer(
+                animation: null, // No asset
+                icon: Icons.sports_esports, // Pacman icon
+                animationName: 'Pacman',
+                index: 9,
+              ),
+              AniContainer(
+                animation: null,
+                icon: Icons.chevron_left, // Chevron icon
+                animationName: 'Chevron',
+                index: 10,
+              ),
+              AniContainer(
+                animation: null,
+                icon: Icons.diamond, // Diamond icon
+                animationName: 'Diamond',
+                index: 11,
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              AniContainer(
+                animation: null,
+                icon: Icons.heart_broken, // Broken Hearts icon
+                animationName: 'Broken Hearts',
+                index: 12,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

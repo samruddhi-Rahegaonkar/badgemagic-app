@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'package:badgemagic/providers/badge_message_provider.dart';
+import 'package:badgemagic/providers/imageprovider.dart';
+import 'package:badgemagic/providers/speed_dial_provider.dart';
 import 'package:badgemagic/bademagic_module/utils/byte_array_utils.dart';
 import 'package:badgemagic/bademagic_module/utils/converters.dart';
 import 'package:badgemagic/badge_animation/ani_animation.dart';
@@ -10,6 +13,10 @@ import 'package:badgemagic/badge_animation/ani_picture.dart';
 import 'package:badgemagic/badge_animation/ani_right.dart';
 import 'package:badgemagic/badge_animation/ani_snowflake.dart';
 import 'package:badgemagic/badge_animation/ani_up.dart';
+import 'package:badgemagic/badge_animation/ani_pacman.dart';
+import 'package:badgemagic/badge_animation/ani_chevron_left.dart';
+import 'package:badgemagic/badge_animation/ani_diamond.dart';
+import 'package:badgemagic/badge_animation/ani_broken_hearts.dart';
 import 'package:badgemagic/badge_animation/animation_abstract.dart';
 import 'package:badgemagic/badge_effect/badgeeffectabstract.dart';
 import 'package:badgemagic/badge_effect/flash_effect.dart';
@@ -28,6 +35,10 @@ Map<int, BadgeAnimation?> animationMap = {
   6: SnowFlakeAnimation(),
   7: PictureAnimation(),
   8: LaserAnimation(),
+  9: PacmanClassicAnimation(), // Pacman
+  10: LeftChevronAnimation(), // Chevron left
+  11: DiamondAnimation(), // Diamond
+  12: BrokenHeartsAnimation(), // Broken Hearts
 };
 
 Map<int, BadgeEffect> effectMap = {
@@ -54,9 +65,32 @@ class AnimationBadgeProvider extends ChangeNotifier {
   //function to get the state of the cell
   List<List<bool>> getPaintGrid() => _paintGrid;
 
+  // Helper: returns true if a special animation (custom) is selected
+  bool isSpecialAnimationSelected() {
+    int idx = getAnimationIndex() ?? 0;
+    return idx == 9 || idx == 10 || idx == 11 || idx == 12;
+  }
+
+  // Call this to reset to text animation (LeftAnimation)
+  void resetToTextAnimation() {
+    setAnimationMode(LeftAnimation());
+  }
+
   //function to calculate duration for the animation
   void calculateDuration(int speed) {
-    int newSpeed = aniSpeedStrategy(speed - 1);
+    int idx = getAnimationIndex() ?? 0;
+    int newSpeed;
+    if (idx == 9 || idx == 10 || idx == 11 || idx == 12) {
+      // Use slower mapping for custom animations
+      // (aniSpeedStrategy already uses the slower mapping if you want, or you can hardcode)
+      newSpeed = aniSpeedStrategy(speed - 1); // keep as is, or adjust if needed
+    } else {
+      // Use original (faster) mapping for text/standard animations
+      // For original: aniBaseSpeed = 200000us, minSpeed = 25000us (example)
+      const int originalBase = 200000;
+      const int minSpeed = 25000;
+      newSpeed = originalBase - ((speed - 1) * (originalBase - minSpeed) ~/ 8);
+    }
     if (newSpeed != _animationSpeed) {
       _animationSpeed = newSpeed;
       _timer?.cancel();
@@ -191,5 +225,39 @@ class AnimationBadgeProvider extends ChangeNotifier {
 
     _paintGrid = canvas;
     notifyListeners();
+  }
+
+  /// Handles animation transfer selection logic for the current animation index.
+  Future<void> handleAnimationTransfer({
+    required BadgeMessageProvider badgeData,
+    required InlineImageProvider inlineImageProvider,
+    required SpeedDialProvider speedDialProvider,
+    required bool flash,
+    required bool marquee,
+    required bool invert,
+  }) async {
+    final int aniIndex = getAnimationIndex() ?? 0;
+    final int selectedSpeed = speedDialProvider.getOuterValue();
+    if (aniIndex == 9) {
+      // Pacman
+      await transferPacmanAnimation(badgeData, selectedSpeed);
+    } else if (aniIndex == 10) {
+      await transferChevronAnimation(badgeData, selectedSpeed);
+    } else if (aniIndex == 11) {
+      await transferDiamondAnimation(badgeData, selectedSpeed);
+    } else if (aniIndex == 12) {
+      await transferBrokenHeartsAnimation(badgeData, selectedSpeed);
+    } else {
+      await badgeData.checkAndTransfer(
+        inlineImageProvider.getController().text,
+        flash,
+        marquee,
+        invert,
+        selectedSpeed,
+        modeValueMap[aniIndex],
+        null,
+        false,
+      );
+    }
   }
 }
