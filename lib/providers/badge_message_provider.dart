@@ -540,7 +540,7 @@ Future<void> transferBrokenHeartsAnimation(
   clustersL = paired.map((e) => e.key).toList();
   clustersR = paired.map((e) => e.value).toList();
 
-  final int N = clustersL.length;// ensure all clusters fall out
+  final int N = clustersL.length; // ensure all clusters fall out
 
   // For transfer, sample the first 8 frames of the cycle
   for (int frame = 0; frame < frameCount; frame++) {
@@ -587,8 +587,6 @@ Future<void> transferBrokenHeartsAnimation(
 List<List<int>> boolToIntBitmap(List<List<bool>> bitmap) {
   return bitmap.map((row) => row.map((b) => b ? 1 : 0).toList()).toList();
 }
-
-
 
 void _drawDestroyEffect(
     List<List<bool>> canvas, int cx, int cy, int frame, int w, int h) {
