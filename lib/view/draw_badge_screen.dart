@@ -229,7 +229,7 @@ class _DrawBadgeState extends State<DrawBadge> {
                           _buildSaveButton(fileHelper),
                           _buildShapesToggleButton(),
 
-                          // ✅ New Undo & Redo buttons
+                          // ✅ Updated Undo & Redo buttons with greyed out state
                           _buildUndoButton(),
                           _buildRedoButton(),
                         ],
@@ -365,32 +365,44 @@ class _DrawBadgeState extends State<DrawBadge> {
   }
 
   Widget _buildUndoButton() {
+    // Check if undo is available using the getter
+    final bool canUndo = drawToggle.canUndo;
+    final Color buttonColor = canUndo ? Colors.black : Colors.grey;
+
     return TextButton(
-      onPressed: () {
-        setState(() {
-          drawToggle.undo();
-        });
-      },
-      child: const Column(
+      onPressed: canUndo
+          ? () {
+              setState(() {
+                drawToggle.undo();
+              });
+            }
+          : null, // Disable button when can't undo
+      child: Column(
         children: [
-          Icon(Icons.undo, color: Colors.black),
-          Text('Undo', style: TextStyle(color: Colors.black)),
+          Icon(Icons.undo, color: buttonColor),
+          Text('Undo', style: TextStyle(color: buttonColor)),
         ],
       ),
     );
   }
 
   Widget _buildRedoButton() {
+    // Check if redo is available using the getter
+    final bool canRedo = drawToggle.canRedo;
+    final Color buttonColor = canRedo ? Colors.black : Colors.grey;
+
     return TextButton(
-      onPressed: () {
-        setState(() {
-          drawToggle.redo();
-        });
-      },
-      child: const Column(
+      onPressed: canRedo
+          ? () {
+              setState(() {
+                drawToggle.redo();
+              });
+            }
+          : null, // Disable button when can't redo
+      child: Column(
         children: [
-          Icon(Icons.redo, color: Colors.black),
-          Text('Redo', style: TextStyle(color: Colors.black)),
+          Icon(Icons.redo, color: buttonColor),
+          Text('Redo', style: TextStyle(color: buttonColor)),
         ],
       ),
     );

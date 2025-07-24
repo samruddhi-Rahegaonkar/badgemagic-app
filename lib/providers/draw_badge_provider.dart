@@ -10,10 +10,8 @@ class DrawBadgeProvider extends ChangeNotifier {
 
   List<List<bool>> _drawViewGrid =
       List.generate(11, (_) => List.generate(44, (_) => false));
-
   final List<List<bool>> _previewGrid =
       List.generate(11, (_) => List.generate(44, (_) => false));
-
   final List<List<List<bool>>> _undoStack = [];
   final List<List<List<bool>>> _redoStack = [];
 
@@ -35,12 +33,10 @@ class DrawBadgeProvider extends ChangeNotifier {
 
   DrawShape get selectedShape => _selectedShape;
   bool getIsDrawing() => isDrawing;
-
   bool get canUndo => _undoStack.isNotEmpty;
   bool get canRedo => _redoStack.isNotEmpty;
 
   // ========== STATE SETTERS ==========
-
   void toggleIsDrawing(bool drawing) {
     isDrawing = drawing;
     notifyListeners();
@@ -108,7 +104,6 @@ class DrawBadgeProvider extends ChangeNotifier {
   }
 
   // ========== UNDO / REDO ==========
-
   void _pushToUndoStack() {
     _undoStack.add(_copyGrid(_drawViewGrid));
     _redoStack.clear(); // Invalidate redo stack on new action
@@ -142,5 +137,6 @@ class DrawBadgeProvider extends ChangeNotifier {
 class GridPosition {
   final int x;
   final int y;
+
   GridPosition(this.x, this.y);
 }
