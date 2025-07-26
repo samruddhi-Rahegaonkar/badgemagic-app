@@ -76,23 +76,18 @@ class ScanState extends NormalBleState {
             toast.showToast('Device found. Connecting...');
 
             final foundName = foundDevice.device.name.trim();
-            String? resolvedAlias;
 
             for (final real in allowedNames) {
               final alias = aliasProvider.getAlias(real)?.trim();
               if (alias != null &&
                   alias.toLowerCase() == foundName.toLowerCase()) {
-                resolvedAlias = alias;
                 break;
               }
             }
 
-            final displayName = resolvedAlias ?? foundName;
-
             nextStateCompleter.complete(ConnectState(
               scanResult: foundDevice,
               manager: manager,
-              displayName: displayName,
             ));
           } catch (e) {
             logger.w("No matching device found in this batch: $e");
