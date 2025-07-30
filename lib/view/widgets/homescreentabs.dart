@@ -115,39 +115,7 @@ class _AnimationTabState extends State<AnimationTab> {
               ),
             ],
           ),
-          // New animations: group up to 3 per row
-          Row(
-            children: [
-              AniContainer(
-                animation: null, // No asset
-                icon: Icons.sports_esports, // Pacman icon
-                animationName: 'Pacman',
-                index: 9,
-              ),
-              AniContainer(
-                animation: null,
-                icon: Icons.chevron_left, // Chevron icon
-                animationName: 'Chevron',
-                index: 10,
-              ),
-              AniContainer(
-                animation: null,
-                icon: Icons.diamond, // Diamond icon
-                animationName: 'Diamond',
-                index: 11,
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              AniContainer(
-                animation: null,
-                icon: Icons.heart_broken, // Broken Hearts icon
-                animationName: 'Broken Hearts',
-                index: 12,
-              ),
-            ],
-          ),
+          // Special animations moved to Transition tab.
         ],
       ),
     );

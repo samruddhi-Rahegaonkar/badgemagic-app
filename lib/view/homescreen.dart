@@ -14,6 +14,7 @@ import 'package:badgemagic/providers/speed_dial_provider.dart';
 import 'package:badgemagic/view/special_text_field.dart';
 import 'package:badgemagic/view/widgets/common_scaffold_widget.dart';
 import 'package:badgemagic/view/widgets/homescreentabs.dart';
+import 'package:badgemagic/view/widgets/transitiontab.dart';
 import 'package:badgemagic/view/widgets/save_badge_dialog.dart';
 import 'package:badgemagic/view/widgets/speedial.dart';
 import 'package:badgemagic/view/widgets/vectorview.dart';
@@ -63,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen>
     });
     _startImageCaching();
     speedDialProvider = SpeedDialProvider(animationProvider);
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -234,6 +235,7 @@ class _HomeScreenState extends State<HomeScreen>
                     tabs: const [
                       Tab(text: 'Speed'),
                       Tab(text: 'Animation'),
+                      Tab(text: 'Transition'),
                       Tab(text: 'Effects'),
                     ],
                   ),
@@ -253,6 +255,7 @@ class _HomeScreenState extends State<HomeScreen>
                           child: RadialDial(),
                         ),
                         AnimationTab(),
+                        TransitionTab(),
                         EffectTab(),
                       ],
                     ),

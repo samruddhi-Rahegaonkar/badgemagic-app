@@ -16,6 +16,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get_it/get_it.dart';
 import 'package:logger/logger.dart';
 import 'package:badgemagic/badge_animation/ani_diamond.dart';
+import 'package:badgemagic/badge_animation/ani_cupid.dart';
 
 Map<int, Mode> modeValueMap = {
   0: Mode.left,
@@ -581,6 +582,49 @@ Future<void> transferBrokenHeartsAnimation(
     await badgeDataProvider.transferData(DataTransferManager(data));
   } catch (e, st) {
     logger.e('⛔ Broken Hearts animation transfer failed: $e\n$st');
+  }
+}
+
+Future<void> transferCupidAnimation(
+    BadgeMessageProvider badgeDataProvider, int speedLevel) async {
+  final adapterState = await FlutterBluePlus.adapterState.first;
+  if (adapterState != BluetoothAdapterState.on) {
+    ToastUtils().showErrorToast('Please turn on Bluetooth');
+    return;
+  }
+  const int badgeHeight = 11;
+  const int badgeWidth = 44;
+  final int hardwareFrameCount = 8;
+  final int logicalFrameCount =
+      CupidAnimation.frameCount(badgeWidth, badgeHeight);
+  final Speed selectedSpeed = speedMap[speedLevel] ?? Speed.eight;
+  final logger = Logger();
+  logger.i('Starting Cupid animation transfer...');
+  List<Message> cupidFrames = [];
+  for (int i = 0; i < hardwareFrameCount; i++) {
+    int logicalIdx = ((i * logicalFrameCount) / hardwareFrameCount).floor();
+    List<List<bool>> frameBitmap = List.generate(
+        badgeHeight, (_) => List.generate(badgeWidth, (_) => false));
+    CupidAnimation().processAnimation(
+        badgeHeight, badgeWidth, logicalIdx, frameBitmap, frameBitmap);
+    List<List<int>> intBitmap = boolToIntBitmap(frameBitmap);
+    List<String> hexList = Converters.convertBitmapToLEDHex(intBitmap, false);
+    logger.i(
+        '💘 Cupid Frame $i (logic $logicalIdx) hex: ${hexList.join(",")} speed: ${selectedSpeed.toString()} (hex: ${selectedSpeed.hexValue})');
+    cupidFrames.add(Message(
+      text: hexList,
+      mode: Mode.fixed,
+      speed: selectedSpeed,
+      flash: false,
+      marquee: false,
+    ));
+  }
+  Data data = Data(messages: cupidFrames);
+  logger.i('💘 Cupid Data object created. Starting transfer...');
+  try {
+    await badgeDataProvider.transferData(DataTransferManager(data));
+  } catch (e, st) {
+    logger.e('⛔ Cupid animation transfer failed: $e\n$st');
   }
 }
 

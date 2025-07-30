@@ -25,6 +25,8 @@ import 'package:badgemagic/badge_effect/marquee_effect.dart';
 import 'package:badgemagic/constants.dart';
 import 'package:flutter/material.dart';
 
+import 'package:badgemagic/badge_animation/ani_cupid.dart';
+
 Map<int, BadgeAnimation?> animationMap = {
   0: LeftAnimation(),
   1: RightAnimation(),
@@ -39,6 +41,7 @@ Map<int, BadgeAnimation?> animationMap = {
   10: LeftChevronAnimation(), // Chevron left
   11: DiamondAnimation(), // Diamond
   12: BrokenHeartsAnimation(), // Broken Hearts
+  13: CupidAnimation(), // Cupid
 };
 
 Map<int, BadgeEffect> effectMap = {
@@ -68,7 +71,7 @@ class AnimationBadgeProvider extends ChangeNotifier {
   // Helper: returns true if a special animation (custom) is selected
   bool isSpecialAnimationSelected() {
     int idx = getAnimationIndex() ?? 0;
-    return idx == 9 || idx == 10 || idx == 11 || idx == 12;
+    return idx == 9 || idx == 10 || idx == 11 || idx == 12 || idx == 13;
   }
 
   // Call this to reset to text animation (LeftAnimation)
@@ -161,10 +164,14 @@ class AnimationBadgeProvider extends ChangeNotifier {
   void startTimer() {
     _timer =
         Timer.periodic(Duration(microseconds: _animationSpeed), (Timer timer) {
-      // logger.i(
-      //     "New Grid set to: ${getNewGrid().map((e) => e.map((e) => e ? 1 : 0).toList()).toList()}");
       renderGrid(getNewGrid());
-      _animationIndex++;
+      if (_currentAnimation is CupidAnimation) {
+        int frameLimit =
+            CupidAnimation.frameCount(_paintGrid[0].length, _paintGrid.length);
+        _animationIndex = (_animationIndex + 1) % frameLimit;
+      } else {
+        _animationIndex++;
+      }
     });
   }
 
@@ -192,7 +199,8 @@ class AnimationBadgeProvider extends ChangeNotifier {
 
   void badgeAnimation(
       String message, Converters converters, bool isInverted) async {
-    if (message.isEmpty) {
+    bool isSpecial = isSpecialAnimationSelected();
+    if (message.isEmpty && !isSpecial) {
       stopAllAnimations();
       List<List<bool>> emptyGrid =
           List.generate(11, (i) => List.generate(44, (j) => false));
@@ -247,6 +255,11 @@ class AnimationBadgeProvider extends ChangeNotifier {
       await transferDiamondAnimation(badgeData, selectedSpeed);
     } else if (aniIndex == 12) {
       await transferBrokenHeartsAnimation(badgeData, selectedSpeed);
+    } else if (aniIndex == 13) {
+      await transferCupidAnimation(badgeData, selectedSpeed);
+      setAnimationMode(CupidAnimation());
+      _animationIndex = 0;
+      if (_timer == null || !_timer!.isActive) startTimer();
     } else {
       await badgeData.checkAndTransfer(
         inlineImageProvider.getController().text,
