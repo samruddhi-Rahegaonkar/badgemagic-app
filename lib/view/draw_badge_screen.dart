@@ -220,24 +220,22 @@ class _DrawBadgeState extends State<DrawBadge> {
                             .toList(),
                       ),
                       const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _buildDrawEraseButton(true, Icons.edit, 'Draw'),
-                          _buildDrawEraseButton(false, Icons.delete, 'Erase'),
-                          _buildResetButton(),
-                          _buildSaveButton(fileHelper),
-                          _buildShapesToggleButton(),
-
-                          // ✅ Updated Undo & Redo buttons with greyed out state
-                          _buildUndoButton(),
-                          _buildRedoButton(),
-                        ],
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _buildDrawEraseButton(true, Icons.edit, 'Draw'),
+                            _buildDrawEraseButton(false, Icons.delete, 'Erase'),
+                            _buildResetButton(),
+                            _buildSaveButton(fileHelper),
+                            _buildShapesToggleButton(),
+                            _buildUndoButton(),
+                            _buildRedoButton(),
+                          ],
+                        ),
                       ),
-
                       const SizedBox(height: 10),
-
-                      // Only show shapes when toggled
                       if (_showShapeOptions)
                         SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
@@ -257,7 +255,6 @@ class _DrawBadgeState extends State<DrawBadge> {
                             ],
                           ),
                         ),
-
                       const SizedBox(height: 20),
                     ],
                   ),
@@ -346,7 +343,6 @@ class _DrawBadgeState extends State<DrawBadge> {
         setState(() {
           _showShapeOptions = !_showShapeOptions;
 
-          // ✅ Reset to Freehand when hiding shape options
           if (!_showShapeOptions) {
             drawToggle.setShape(DrawShape.freehand);
           }
@@ -365,7 +361,6 @@ class _DrawBadgeState extends State<DrawBadge> {
   }
 
   Widget _buildUndoButton() {
-    // Check if undo is available using the getter
     final bool canUndo = drawToggle.canUndo;
     final Color buttonColor = canUndo ? Colors.black : Colors.grey;
 
@@ -376,7 +371,7 @@ class _DrawBadgeState extends State<DrawBadge> {
                 drawToggle.undo();
               });
             }
-          : null, // Disable button when can't undo
+          : null,
       child: Column(
         children: [
           Icon(Icons.undo, color: buttonColor),
@@ -387,7 +382,6 @@ class _DrawBadgeState extends State<DrawBadge> {
   }
 
   Widget _buildRedoButton() {
-    // Check if redo is available using the getter
     final bool canRedo = drawToggle.canRedo;
     final Color buttonColor = canRedo ? Colors.black : Colors.grey;
 
@@ -398,7 +392,7 @@ class _DrawBadgeState extends State<DrawBadge> {
                 drawToggle.redo();
               });
             }
-          : null, // Disable button when can't redo
+          : null,
       child: Column(
         children: [
           Icon(Icons.redo, color: buttonColor),
