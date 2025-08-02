@@ -11,12 +11,14 @@ import 'package:badgemagic/bademagic_module/models/data.dart';
 import 'package:badgemagic/bademagic_module/models/messages.dart';
 import 'package:badgemagic/bademagic_module/models/mode.dart';
 import 'package:badgemagic/bademagic_module/models/speed.dart';
+import 'package:badgemagic/badge_animation/ani_fish.dart';
 import 'package:badgemagic/providers/imageprovider.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get_it/get_it.dart';
 import 'package:logger/logger.dart';
 import 'package:badgemagic/badge_animation/ani_diamond.dart';
 import 'package:badgemagic/badge_animation/ani_cupid.dart';
+import 'package:badgemagic/badge_animation/ani_feet.dart';
 
 Map<int, Mode> modeValueMap = {
   0: Mode.left,
@@ -31,6 +33,9 @@ Map<int, Mode> modeValueMap = {
   9: Mode.pacman, // Add this line for Pacman
   10: Mode.chevronleft, // Chevron left mode (now defined in mode.dart)
   11: Mode.diamond, // Diamond animation mode
+  12: Mode.brokenhearts, // Broken Hearts mode (use fixed or define if needed)
+  13: Mode.cupid, // Cupid mode (use fixed or define if needed)
+  14: Mode.feet, // Feet animation mode
 };
 
 Map<int, Speed> speedMap = {
@@ -149,6 +154,69 @@ class BadgeMessageProvider {
   }
 }
 
+/// Transfers the Fish Kiss animation to the badge, even if the homescreen text box is empty.
+Future<void> transferFishAnimation(
+    BadgeMessageProvider badgeDataProvider, int speedLevel) async {
+  final adapterState = await FlutterBluePlus.adapterState.first;
+  if (adapterState != BluetoothAdapterState.on) {
+    ToastUtils().showErrorToast('Please turn on Bluetooth');
+    return;
+  }
+
+  const int badgeHeight = 11;
+  const int badgeWidth = 44;
+  final int hardwareFrameCount = 8;
+  final int logicalFrameCount =
+      FishAnimation.framesPerCycle; // Use the framesPerCycle from FishAnimation
+
+  // Use the same speed logic as Diamond/Cupid: always use Speed.eight for seamless animation
+  final Speed selectedSpeed = Speed.eight;
+  final logger = Logger();
+
+  logger.i('Starting Fish animation transfer...');
+
+  List<Message> fishFrames = [];
+
+  for (int i = 0; i < hardwareFrameCount; i++) {
+    int logicalIdx = ((i * logicalFrameCount) / hardwareFrameCount).floor();
+
+    List<List<bool>> frameBitmap = List.generate(
+        badgeHeight, (_) => List.generate(badgeWidth, (_) => false));
+
+    // Create empty processGrid (not used in FishAnimation but required by interface)
+    List<List<bool>> processGrid = List.generate(
+        badgeHeight, (_) => List.generate(badgeWidth, (_) => false));
+
+    // Process the fish animation frame
+    FishAnimation().processAnimation(
+        badgeHeight, badgeWidth, logicalIdx, processGrid, frameBitmap);
+
+    List<List<int>> intBitmap = boolToIntBitmap(frameBitmap);
+    List<String> hexList = Converters.convertBitmapToLEDHex(intBitmap, false);
+
+    logger.i(
+        '🐟 Fish Frame $i (logic $logicalIdx) hex: ${hexList.join(",")} speed: ${selectedSpeed.toString()} (hex: ${selectedSpeed.hexValue})');
+
+    fishFrames.add(Message(
+      text: hexList,
+      mode: Mode.fixed,
+      speed: selectedSpeed,
+      flash: false,
+      marquee: false,
+    ));
+  }
+
+  Data data = Data(messages: fishFrames);
+  logger.i('🐟 Fish Data object created. Starting transfer...');
+
+  try {
+    await badgeDataProvider.transferData(DataTransferManager(data));
+    logger.i('🐟 Fish animation transfer completed successfully!');
+  } catch (e, st) {
+    logger.e('⛔ Fish animation transfer failed: $e\n$st');
+  }
+}
+
 Future<void> transferPacmanAnimation(
     BadgeMessageProvider badgeDataProvider, int speedLevel) async {
   const int frameCount = 8; // Number of animation frames (max allowed)
@@ -161,7 +229,8 @@ Future<void> transferPacmanAnimation(
 
   final logger = Logger();
   logger.i('Starting Pacman animation transfer...');
-  final Speed selectedSpeed = speedMap[speedLevel] ?? Speed.eight;
+  // Use the same speed logic as Diamond: always use Speed.eight for seamless feet animation
+  final Speed selectedSpeed = Speed.eight;
   logger.i(
       'Pacman transfer: selectedSpeed =  [32m${selectedSpeed.toString()} [0m, hex = ${selectedSpeed.hexValue}');
 
@@ -352,7 +421,8 @@ Future<void> transferChevronAnimation(
     [false, false, true, false],
     [false, false, false, true],
   ];
-  final Speed selectedSpeed = speedMap[speedLevel] ?? Speed.eight;
+  // Use the same speed logic as Diamond: always use Speed.eight for seamless feet animation
+  final Speed selectedSpeed = Speed.eight;
   final logger = Logger();
   logger.i(
       'Chevron transfer: selectedSpeed = ${selectedSpeed.toString()}, hex = ${selectedSpeed.hexValue}');
@@ -585,6 +655,87 @@ Future<void> transferBrokenHeartsAnimation(
   }
 }
 
+Future<void> transferFeetAnimation(
+    BadgeMessageProvider badgeDataProvider, int speedLevel) async {
+  final adapterState = await FlutterBluePlus.adapterState.first;
+  if (adapterState != BluetoothAdapterState.on) {
+    ToastUtils().showErrorToast('Please turn on Bluetooth');
+    return;
+  }
+  const int badgeHeight = FeetAnimation.badgeHeight;
+  const int badgeWidth = FeetAnimation.badgeWidth;
+  const int badgeMaxFrames = 8;
+  // Use the same speed logic as Diamond: always use Speed.eight for seamless feet animation
+  final Speed selectedSpeed = Speed.eight;
+  final logger = Logger();
+  logger.i('Starting Feet animation transfer...');
+
+  // Find the best 8-frame segment that does not cross the wrap boundary
+  // This assumes wrap occurs at frame 20 (FeetAnimation.frameCount)
+  // So, sample frames 12-19 (last 8) to avoid the step-back glitch
+  List<int> sampledFrames = List.generate(
+      badgeMaxFrames, (i) => FeetAnimation.frameCount - badgeMaxFrames + i);
+  logger.i(
+      'Sampled frame indices for badge: \u001b[34m${sampledFrames.toString()}\u001b[0m');
+  if (sampledFrames.isNotEmpty) {
+    logger.i(
+        'Feet transfer: first frame index = \u001b[35m${sampledFrames.first}\u001b[0m, last frame index = \u001b[35m${sampledFrames.last}\u001b[0m');
+  }
+
+  List<Message> feetFrames = [];
+  final feetAnimation = FeetAnimation();
+
+  List<List<int>>? firstIntBitmap;
+  List<List<int>>? lastIntBitmap;
+  List<String>? firstHexList;
+  List<String>? lastHexList;
+  int i = 0;
+  for (final frame in sampledFrames) {
+    List<List<bool>> frameBitmap =
+        List.generate(badgeHeight, (_) => List.filled(badgeWidth, false));
+    feetAnimation.processAnimation(
+      badgeHeight,
+      badgeWidth,
+      frame,
+      List.generate(badgeHeight, (_) => List.filled(badgeWidth, false)),
+      frameBitmap,
+    );
+    List<List<int>> intBitmap = boolToIntBitmap(frameBitmap);
+    List<String> hexList = Converters.convertBitmapToLEDHex(intBitmap, false);
+    if (i == 0) {
+      firstIntBitmap = intBitmap;
+      firstHexList = hexList;
+    }
+    if (i == sampledFrames.length - 1) {
+      lastIntBitmap = intBitmap;
+      lastHexList = hexList;
+    }
+    logger.i(
+        '🦶 Sampled Frame $frame hex: \x1b[32m${hexList.join(",")}\x1b[0m speed: ${selectedSpeed.toString()} (hex: ${selectedSpeed.hexValue})');
+    feetFrames.add(Message(
+      text: hexList,
+      mode: Mode.fixed,
+      speed: selectedSpeed,
+      flash: false,
+      marquee: false,
+    ));
+    i++;
+  }
+  if (firstIntBitmap != null && lastIntBitmap != null) {
+    logger.w('First frame intBitmap: $firstIntBitmap');
+    logger.w('Last frame intBitmap: $lastIntBitmap');
+    logger.w('First frame hex: $firstHexList');
+    logger.w('Last frame hex: $lastHexList');
+  }
+  Data data = Data(messages: feetFrames);
+  logger.i('🦶 Feet Data object created. Starting transfer...');
+  try {
+    await badgeDataProvider.transferData(DataTransferManager(data));
+  } catch (e, st) {
+    logger.e('⛔ Feet animation transfer failed: $e\n$st');
+  }
+}
+
 Future<void> transferCupidAnimation(
     BadgeMessageProvider badgeDataProvider, int speedLevel) async {
   final adapterState = await FlutterBluePlus.adapterState.first;
@@ -597,7 +748,8 @@ Future<void> transferCupidAnimation(
   final int hardwareFrameCount = 8;
   final int logicalFrameCount =
       CupidAnimation.frameCount(badgeWidth, badgeHeight);
-  final Speed selectedSpeed = speedMap[speedLevel] ?? Speed.eight;
+  // Use the same speed logic as Diamond: always use Speed.eight for seamless feet animation
+  final Speed selectedSpeed = Speed.eight;
   final logger = Logger();
   logger.i('Starting Cupid animation transfer...');
   List<Message> cupidFrames = [];

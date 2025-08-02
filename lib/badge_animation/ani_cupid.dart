@@ -20,7 +20,9 @@ class CupidAnimation extends BadgeAnimation {
     int frameLimit = CupidAnimation.frameCount(bw, bh);
     idx = idx % frameLimit;
     for (int y = 0; y < bh; y++) {
-      for (int x = 0; x < bw; x++) c[y][x] = false;
+      for (int x = 0; x < bw; x++) {
+        c[y][x] = false;
+      }
     }
 
     int heartW = 9;
@@ -44,8 +46,9 @@ class CupidAnimation extends BadgeAnimation {
 
     for (int i = 0; i < _arrowLen - 1; i++) {
       int px = arrowX + i;
-      if (px >= 0 && px < bw && (px < heartLeft || px > heartRight))
+      if (px >= 0 && px < bw && (px < heartLeft || px > heartRight)) {
         c[midY][px] = true;
+      }
     }
 
     int tipX = arrowX + _arrowLen - 1;
@@ -65,16 +68,18 @@ class CupidAnimation extends BadgeAnimation {
   }
 
   void _drawBow(List<List<bool>> canvas, int x, int cy, int r, int w, int h) {
-    for (int y = cy - r; y <= cy + r; y++)
+    for (int y = cy - r; y <= cy + r; y++) {
       if (x >= 0 && x < w && y >= 0 && y < h) canvas[y][x] = true;
+    }
     int prev = x;
     for (int dy = -r; dy <= r; dy++) {
       int py = cy + dy;
       double norm = dy / r;
       int px = x + (r * (1 - norm * norm)).round();
       if (px >= 0 && px < w && py >= 0 && py < h) canvas[py][px] = true;
-      for (int fx = min(prev, px); fx <= max(prev, px); fx++)
+      for (int fx = min(prev, px); fx <= max(prev, px); fx++) {
         if (py >= 0 && py < h && fx >= 0 && fx < w) canvas[py][fx] = true;
+      }
       prev = px;
     }
   }

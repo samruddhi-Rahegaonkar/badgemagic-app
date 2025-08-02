@@ -10,7 +10,10 @@ enum Mode {
   laser('0x08'),
   pacman('0x09'), // Added Pacman mode
   chevronleft('0x0A'), // Chevron left mode
-  diamond('0x0B'); // Diamond animation mode
+  diamond('0x0B'), // Diamond animation mode
+  feet('0x0C'), // Feet animation mode
+  brokenhearts('0x0D'), // Broken Hearts animation mode
+  cupid('0x0E'); // Cupid animation mode
 
   final String hexValue;
   const Mode(this.hexValue);

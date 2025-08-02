@@ -26,6 +26,8 @@ import 'package:badgemagic/constants.dart';
 import 'package:flutter/material.dart';
 
 import 'package:badgemagic/badge_animation/ani_cupid.dart';
+import 'package:badgemagic/badge_animation/ani_feet.dart';
+import 'package:badgemagic/badge_animation/ani_fish.dart';
 
 Map<int, BadgeAnimation?> animationMap = {
   0: LeftAnimation(),
@@ -42,6 +44,8 @@ Map<int, BadgeAnimation?> animationMap = {
   11: DiamondAnimation(), // Diamond
   12: BrokenHeartsAnimation(), // Broken Hearts
   13: CupidAnimation(), // Cupid
+  14: FeetAnimation(), // Feet
+  15: FishAnimation(), // Fish
 };
 
 Map<int, BadgeEffect> effectMap = {
@@ -71,7 +75,12 @@ class AnimationBadgeProvider extends ChangeNotifier {
   // Helper: returns true if a special animation (custom) is selected
   bool isSpecialAnimationSelected() {
     int idx = getAnimationIndex() ?? 0;
-    return idx == 9 || idx == 10 || idx == 11 || idx == 12 || idx == 13;
+    return idx == 9 ||
+        idx == 10 ||
+        idx == 11 ||
+        idx == 12 ||
+        idx == 13 ||
+        idx == 14;
   }
 
   // Call this to reset to text animation (LeftAnimation)
@@ -260,6 +269,10 @@ class AnimationBadgeProvider extends ChangeNotifier {
       setAnimationMode(CupidAnimation());
       _animationIndex = 0;
       if (_timer == null || !_timer!.isActive) startTimer();
+    } else if (aniIndex == 14) {
+      await transferFeetAnimation(badgeData, selectedSpeed);
+    } else if (aniIndex == 15) {
+      await transferFishAnimation(badgeData, selectedSpeed);
     } else {
       await badgeData.checkAndTransfer(
         inlineImageProvider.getController().text,

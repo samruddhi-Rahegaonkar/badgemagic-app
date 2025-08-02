@@ -15,43 +15,68 @@ class _TransitionTabState extends State<TransitionTab> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          Row(
-            children: [
-              AniContainer(
-                animation: null,
-                icon: Icons.sports_esports, // Pacman icon
-                animationName: 'Pacman',
-                index: 9,
-              ),
-              AniContainer(
-                animation: null,
-                icon: Icons.chevron_left, // Chevron icon
-                animationName: 'Chevron',
-                index: 10,
-              ),
-              AniContainer(
-                animation: null,
-                icon: Icons.diamond, // Diamond icon
-                animationName: 'Diamond',
-                index: 11,
-              ),
-            ],
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: Row(
+              children: [
+                AniContainer(
+                  animation: null,
+                  icon: Icons.sports_esports, // Pacman icon
+                  animationName: 'Pacman',
+                  index: 9,
+                ),
+                AniContainer(
+                  animation: null,
+                  icon: Icons.chevron_left, // Chevron icon
+                  animationName: 'Chevron',
+                  index: 10,
+                ),
+                AniContainer(
+                  animation: null,
+                  icon: Icons.diamond, // Diamond icon
+                  animationName: 'Diamond',
+                  index: 11,
+                ),
+              ],
+            ),
           ),
-          Row(
-            children: [
-              AniContainer(
-                animation: null,
-                icon: Icons.heart_broken, // Broken Hearts icon
-                animationName: 'Broken Hearts',
-                index: 12,
-              ),
-              AniContainer(
-                animation: null,
-                icon: Icons.favorite_border, // Cupid icon
-                animationName: 'Cupid',
-                index: 13,
-              ),
-            ],
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: Row(
+              children: [
+                AniContainer(
+                  animation: null,
+                  icon: Icons.heart_broken, // Broken Hearts icon
+                  animationName: 'Broken Hearts',
+                  index: 12,
+                ),
+                AniContainer(
+                  animation: null,
+                  icon: Icons.favorite_border, // Cupid icon
+                  animationName: 'Cupid',
+                  index: 13,
+                ),
+                AniContainer(
+                  animation: null,
+                  icon: Icons.directions_walk, // Feet animation icon
+                  animationName: 'Feet',
+                  index: 14,
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: Row(
+              children: [
+                AniContainer(
+                  animation: null,
+                  icon: Icons.set_meal, // Fish icon
+                  animationName: 'Fish Kiss',
+                  index: 15,
+                ),
+              ],
+            ),
           ),
         ],
       ),
