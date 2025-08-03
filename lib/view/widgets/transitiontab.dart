@@ -75,6 +75,12 @@ class _TransitionTabState extends State<TransitionTab> {
                   animationName: 'Fish Kiss',
                   index: 15,
                 ),
+                AniContainer(
+                  animation: null,
+                  icon: Icons.change_history, // V shape icon
+                  animationName: 'Diagonal',
+                  index: 16,
+                ),
               ],
             ),
           ),

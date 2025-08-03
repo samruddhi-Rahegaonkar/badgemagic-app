@@ -28,6 +28,7 @@ import 'package:flutter/material.dart';
 import 'package:badgemagic/badge_animation/ani_cupid.dart';
 import 'package:badgemagic/badge_animation/ani_feet.dart';
 import 'package:badgemagic/badge_animation/ani_fish.dart';
+import 'package:badgemagic/badge_animation/ani_diagonal.dart';
 
 Map<int, BadgeAnimation?> animationMap = {
   0: LeftAnimation(),
@@ -46,6 +47,7 @@ Map<int, BadgeAnimation?> animationMap = {
   13: CupidAnimation(), // Cupid
   14: FeetAnimation(), // Feet
   15: FishAnimation(), // Fish
+  16: DiagonalAnimation(), // New special animation
 };
 
 Map<int, BadgeEffect> effectMap = {
