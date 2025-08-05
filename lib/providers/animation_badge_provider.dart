@@ -30,6 +30,8 @@ import 'package:badgemagic/badge_animation/ani_feet.dart';
 import 'package:badgemagic/badge_animation/ani_fish.dart';
 import 'package:badgemagic/badge_animation/ani_diagonal.dart';
 
+import 'package:badgemagic/badge_animation/ani_emergency.dart';
+
 Map<int, BadgeAnimation?> animationMap = {
   0: LeftAnimation(),
   1: RightAnimation(),
@@ -47,7 +49,8 @@ Map<int, BadgeAnimation?> animationMap = {
   13: CupidAnimation(), // Cupid
   14: FeetAnimation(), // Feet
   15: FishAnimation(), // Fish
-  16: DiagonalAnimation(), // New special animation
+  16: DiagonalAnimation(), // Diagonal
+  17: EmergencyAnimation(), // Emergency
 };
 
 Map<int, BadgeEffect> effectMap = {
@@ -275,6 +278,10 @@ class AnimationBadgeProvider extends ChangeNotifier {
       await transferFeetAnimation(badgeData, selectedSpeed);
     } else if (aniIndex == 15) {
       await transferFishAnimation(badgeData, selectedSpeed);
+    } else if (aniIndex == 16) {
+      await transferDiagonalAnimation(badgeData, selectedSpeed);
+    } else if (aniIndex == 17) {
+      await transferEmergencyAnimation(badgeData, selectedSpeed);
     } else {
       await badgeData.checkAndTransfer(
         inlineImageProvider.getController().text,

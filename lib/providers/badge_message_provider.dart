@@ -19,6 +19,8 @@ import 'package:logger/logger.dart';
 import 'package:badgemagic/badge_animation/ani_diamond.dart';
 import 'package:badgemagic/badge_animation/ani_cupid.dart';
 import 'package:badgemagic/badge_animation/ani_feet.dart';
+import 'package:badgemagic/badge_animation/ani_diagonal.dart';
+import 'package:badgemagic/badge_animation/ani_emergency.dart';
 
 Map<int, Mode> modeValueMap = {
   0: Mode.left,
@@ -151,6 +153,127 @@ class BadgeMessageProvider {
         ToastUtils().showToast('Please turn on Bluetooth');
       }
     }
+  }
+}
+
+Future<void> transferEmergencyAnimation(
+    BadgeMessageProvider badgeDataProvider, int speedLevel) async {
+  final adapterState = await FlutterBluePlus.adapterState.first;
+  if (adapterState != BluetoothAdapterState.on) {
+    ToastUtils().showErrorToast('Please turn on Bluetooth');
+    return;
+  }
+
+  const int badgeHeight = 11;
+  const int badgeWidth = 44;
+  const int hardwareFrameCount = 8;
+  final Speed selectedSpeed = Speed.eight;
+  final logger = Logger();
+
+  logger.i('Starting Emergency animation transfer...');
+
+  List<Message> emergencyFrames = [];
+
+  for (int i = 0; i < hardwareFrameCount; i++) {
+    List<List<bool>> frameBitmap = List.generate(
+        badgeHeight, (_) => List.generate(badgeWidth, (_) => false));
+    List<List<bool>> processGrid = List.generate(
+        badgeHeight, (_) => List.generate(badgeWidth, (_) => false));
+
+    EmergencyAnimation()
+        .processAnimation(badgeHeight, badgeWidth, i, processGrid, frameBitmap);
+
+    List<List<int>> intBitmap = boolToIntBitmap(frameBitmap);
+    List<String> hexList = Converters.convertBitmapToLEDHex(intBitmap, false);
+
+    logger.i(
+        'Emergency Frame $i hex: ${hexList.join(",")} speed: ${selectedSpeed.toString()} (hex: ${selectedSpeed.hexValue})');
+
+    emergencyFrames.add(Message(
+      text: hexList,
+      mode: Mode.fixed,
+      speed: selectedSpeed,
+      flash: false,
+      marquee: false,
+    ));
+  }
+
+  // Rotate so frame 6 is sent first, then 7, 0, 1, 2, 3, 4, 5
+  List<Message> rotatedFrames = [
+    emergencyFrames[6],
+    emergencyFrames[7],
+    emergencyFrames[0],
+    emergencyFrames[1],
+    emergencyFrames[2],
+    emergencyFrames[3],
+    emergencyFrames[4],
+    emergencyFrames[5],
+  ];
+
+  Data data = Data(messages: rotatedFrames);
+  DataTransferManager manager = DataTransferManager(data);
+  await badgeDataProvider.transferData(manager);
+  logger.i('💡 Emergency animation transfer completed successfully!');
+}
+
+/// Transfers the continuous diagonal V animation to the badge hardware.
+Future<void> transferDiagonalAnimation(
+    BadgeMessageProvider badgeDataProvider, int speedLevel) async {
+  final adapterState = await FlutterBluePlus.adapterState.first;
+  if (adapterState != BluetoothAdapterState.on) {
+    ToastUtils().showErrorToast('Please turn on Bluetooth');
+    return;
+  }
+
+  const int badgeHeight = 11;
+  const int badgeWidth = 44;
+  const int hardwareFrameCount = 8;
+  final Speed selectedSpeed = Speed.eight;
+  final logger = Logger();
+
+  logger
+      .i('Starting Diagonal animation transfer for seamless hardware loop...');
+
+  List<Message> diagonalFrames = [];
+
+  // Empirically determined: the densest diagonal frame (most shapes on badge)
+  // for badgeHeight=11, badgeWidth=44, vSpacing=4, speed=0.5 is at frame 38
+  const int densestFrameIdx = 38;
+
+  // Generate 8 frames starting from densestFrameIdx for a seamless hardware loop
+  for (int i = 0; i < hardwareFrameCount; i++) {
+    int logicalIdx = densestFrameIdx + i;
+    List<List<bool>> frameBitmap = List.generate(
+        badgeHeight, (_) => List.generate(badgeWidth, (_) => false));
+    List<List<bool>> processGrid = List.generate(
+        badgeHeight, (_) => List.generate(badgeWidth, (_) => false));
+
+    DiagonalAnimation().processAnimation(
+        badgeHeight, badgeWidth, logicalIdx, processGrid, frameBitmap);
+
+    List<List<int>> intBitmap = boolToIntBitmap(frameBitmap);
+    List<String> hexList = Converters.convertBitmapToLEDHex(intBitmap, false);
+
+    logger.i(
+        'V Diagonal Frame $i (logic $logicalIdx) hex: ${hexList.join(",")} speed: ${selectedSpeed.toString()} (hex: ${selectedSpeed.hexValue})');
+
+    diagonalFrames.add(Message(
+      text: hexList,
+      mode: Mode.fixed,
+      speed: selectedSpeed,
+      flash: false,
+      marquee: false,
+    ));
+  }
+
+  Data data = Data(messages: diagonalFrames);
+  logger.i('V Diagonal Data object created. Starting transfer...');
+
+  try {
+    await badgeDataProvider.transferData(DataTransferManager(data));
+    logger.i('V Diagonal animation transfer completed successfully!');
+  } catch (e, st) {
+    logger.e('⛔ V Diagonal animation transfer failed: $e\n$st');
   }
 }
 

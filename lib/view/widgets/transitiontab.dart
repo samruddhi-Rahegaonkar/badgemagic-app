@@ -81,6 +81,12 @@ class _TransitionTabState extends State<TransitionTab> {
                   animationName: 'Diagonal',
                   index: 16,
                 ),
+                AniContainer(
+                  animation: null,
+                  icon: Icons.warning, // Emergency/alert icon
+                  animationName: 'Emergency',
+                  index: 17,
+                ),
               ],
             ),
           ),

@@ -3,9 +3,10 @@ import 'package:badgemagic/badge_animation/animation_abstract.dart';
 class DiagonalAnimation extends BadgeAnimation {
   static const int badgeHeight = 11;
   static const int badgeWidth = 44;
-  static const int vHeight = 8;       // shape height
-  static const int vSpacing = 4;      // reduced vertical spacing between shapes
-  static const int frameCount = 0; // 0 indicates an infinite, non-repeating animation
+  static const int vHeight = badgeWidth ~/ 3 + 1; // shape height
+  static const int vSpacing = 4; // reduced vertical spacing between shapes
+  static const int frameCount =
+      0; // 0 indicates an infinite, non-repeating animation
 
   @override
   void processAnimation(
@@ -30,23 +31,33 @@ class DiagonalAnimation extends BadgeAnimation {
       birthFrames.add(f);
     }
 
+    double speed = 0.5; // 0.5 = half speed, adjust as needed
     for (final birth in birthFrames) {
-      int tipY = animationIndex - birth;
-      if (tipY < 0 || tipY - (vHeight - 1) >= badgeHeight) continue; // Only draw if any part is visible
+      double tipY = animationIndex * speed - birth;
+      if (tipY < 0 || tipY - (vHeight - 1) >= badgeHeight)
+        continue; // Only draw if any part is visible
 
-      int y1 = tipY;
-      int y2 = tipY - (vHeight - 1);
+      int y1 = tipY.round();
+      int y2 = (tipY - (vHeight - 1)).round();
 
-      double widenFactor = (tipY + 1).clamp(0, badgeHeight) / badgeHeight;
-      int endArmOffset = ((vHeight - 1) * (1 + widenFactor * 2)).round();
+      // Improved: arms reach the edges exactly when tip reaches the bottom
+      int maxArmOffset = centerX;
+      double minOffset = 1.0; // or 2.0 for a wider initial V
 
-      _drawLine(centerX, y1, centerX - endArmOffset, y2, canvas, badgeWidth, badgeHeight);
-      _drawLine(centerX, y1, centerX + endArmOffset, y2, canvas, badgeWidth, badgeHeight);
+      double progress = (tipY).clamp(0, badgeHeight - 1) / (badgeHeight - 1);
+      int endArmOffset =
+          (minOffset + progress * (maxArmOffset - minOffset)).round();
+
+      _drawLine(centerX, y1, centerX - endArmOffset, y2, canvas, badgeWidth,
+          badgeHeight);
+      _drawLine(centerX, y1, centerX + endArmOffset, y2, canvas, badgeWidth,
+          badgeHeight);
     }
   }
 
   // Simple line drawing function (like Bresenham's) to ensure no gaps
-  void _drawLine(int x1, int y1, int x2, int y2, List<List<bool>> canvas, int badgeWidth, int badgeHeight) {
+  void _drawLine(int x1, int y1, int x2, int y2, List<List<bool>> canvas,
+      int badgeWidth, int badgeHeight) {
     int dx = (x2 - x1).abs();
     int dy = (y2 - y1).abs();
     int sx = (x1 < x2) ? 1 : -1;
