@@ -31,6 +31,7 @@ import 'package:badgemagic/badge_animation/ani_fish.dart';
 import 'package:badgemagic/badge_animation/ani_diagonal.dart';
 
 import 'package:badgemagic/badge_animation/ani_emergency.dart';
+import 'package:badgemagic/badge_animation/ani_beating_hearts.dart';
 
 Map<int, BadgeAnimation?> animationMap = {
   0: LeftAnimation(),
@@ -51,6 +52,7 @@ Map<int, BadgeAnimation?> animationMap = {
   15: FishAnimation(), // Fish
   16: DiagonalAnimation(), // Diagonal
   17: EmergencyAnimation(), // Emergency
+  18: BeatingHeartsAnimation(), // Beating Hearts
 };
 
 Map<int, BadgeEffect> effectMap = {
@@ -80,12 +82,8 @@ class AnimationBadgeProvider extends ChangeNotifier {
   // Helper: returns true if a special animation (custom) is selected
   bool isSpecialAnimationSelected() {
     int idx = getAnimationIndex() ?? 0;
-    return idx == 9 ||
-        idx == 10 ||
-        idx == 11 ||
-        idx == 12 ||
-        idx == 13 ||
-        idx == 14;
+    // Add all special animation indices here:
+    return [9, 10, 11, 12, 13, 14, 15, 16, 17, 18].contains(idx);
   }
 
   // Call this to reset to text animation (LeftAnimation)
@@ -282,6 +280,8 @@ class AnimationBadgeProvider extends ChangeNotifier {
       await transferDiagonalAnimation(badgeData, selectedSpeed);
     } else if (aniIndex == 17) {
       await transferEmergencyAnimation(badgeData, selectedSpeed);
+    } else if (aniIndex == 18) {
+      await transferBeatingHeartsAnimation(badgeData, selectedSpeed);
     } else {
       await badgeData.checkAndTransfer(
         inlineImageProvider.getController().text,

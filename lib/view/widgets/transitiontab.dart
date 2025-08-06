@@ -90,6 +90,19 @@ class _TransitionTabState extends State<TransitionTab> {
               ],
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: Row(
+              children: [
+                AniContainer(
+                  animation: null,
+                  icon: Icons.favorite, // Heart icon
+                  animationName: 'Beating Hearts',
+                  index: 18,
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

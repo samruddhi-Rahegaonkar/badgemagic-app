@@ -34,8 +34,9 @@ class DiagonalAnimation extends BadgeAnimation {
     double speed = 0.5; // 0.5 = half speed, adjust as needed
     for (final birth in birthFrames) {
       double tipY = animationIndex * speed - birth;
-      if (tipY < 0 || tipY - (vHeight - 1) >= badgeHeight)
+      if (tipY < 0 || tipY - (vHeight - 1) >= badgeHeight) {
         continue; // Only draw if any part is visible
+      }
 
       int y1 = tipY.round();
       int y2 = (tipY - (vHeight - 1)).round();

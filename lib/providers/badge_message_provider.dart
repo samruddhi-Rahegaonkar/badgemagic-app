@@ -21,6 +21,7 @@ import 'package:badgemagic/badge_animation/ani_cupid.dart';
 import 'package:badgemagic/badge_animation/ani_feet.dart';
 import 'package:badgemagic/badge_animation/ani_diagonal.dart';
 import 'package:badgemagic/badge_animation/ani_emergency.dart';
+import 'package:badgemagic/badge_animation/ani_beating_hearts.dart';
 
 Map<int, Mode> modeValueMap = {
   0: Mode.left,
@@ -154,6 +155,54 @@ class BadgeMessageProvider {
       }
     }
   }
+}
+
+Future<void> transferBeatingHeartsAnimation(
+    BadgeMessageProvider badgeDataProvider, int speedLevel) async {
+  final adapterState = await FlutterBluePlus.adapterState.first;
+  if (adapterState != BluetoothAdapterState.on) {
+    ToastUtils().showErrorToast('Please turn on Bluetooth');
+    return;
+  }
+
+  const int badgeHeight = 11;
+  const int badgeWidth = 44;
+  const int hardwareFrameCount = 8;
+  final Speed selectedSpeed = Speed.eight;
+  final logger = Logger();
+
+  logger.i('Starting Beating Hearts animation transfer...');
+
+  List<Message> heartFrames = [];
+
+  for (int i = 0; i < hardwareFrameCount; i++) {
+    List<List<bool>> frameBitmap = List.generate(
+        badgeHeight, (_) => List.generate(badgeWidth, (_) => false));
+    List<List<bool>> processGrid = List.generate(
+        badgeHeight, (_) => List.generate(badgeWidth, (_) => false));
+
+    BeatingHeartsAnimation()
+        .processAnimation(badgeHeight, badgeWidth, i, processGrid, frameBitmap);
+
+    List<List<int>> intBitmap = boolToIntBitmap(frameBitmap);
+    List<String> hexList = Converters.convertBitmapToLEDHex(intBitmap, false);
+
+    logger.i(
+        'BeatingHearts Frame $i hex: ${hexList.join(",")} speed: ${selectedSpeed.toString()} (hex: ${selectedSpeed.hexValue})');
+
+    heartFrames.add(Message(
+      text: hexList,
+      mode: Mode.fixed,
+      speed: selectedSpeed,
+      flash: false,
+      marquee: false,
+    ));
+  }
+
+  Data data = Data(messages: heartFrames);
+  DataTransferManager manager = DataTransferManager(data);
+  await badgeDataProvider.transferData(manager);
+  logger.i('💡 Beating Hearts animation transfer completed successfully!');
 }
 
 Future<void> transferEmergencyAnimation(
