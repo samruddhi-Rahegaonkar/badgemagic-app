@@ -32,6 +32,7 @@ import 'package:badgemagic/badge_animation/ani_diagonal.dart';
 
 import 'package:badgemagic/badge_animation/ani_emergency.dart';
 import 'package:badgemagic/badge_animation/ani_beating_hearts.dart';
+import 'package:badgemagic/badge_animation/ani_fireworks.dart';
 
 Map<int, BadgeAnimation?> animationMap = {
   0: LeftAnimation(),
@@ -53,6 +54,7 @@ Map<int, BadgeAnimation?> animationMap = {
   16: DiagonalAnimation(), // Diagonal
   17: EmergencyAnimation(), // Emergency
   18: BeatingHeartsAnimation(), // Beating Hearts
+  19: FireworksAnimation(), // Fireworks
 };
 
 Map<int, BadgeEffect> effectMap = {
@@ -82,8 +84,8 @@ class AnimationBadgeProvider extends ChangeNotifier {
   // Helper: returns true if a special animation (custom) is selected
   bool isSpecialAnimationSelected() {
     int idx = getAnimationIndex() ?? 0;
-    // Add all special animation indices here:
-    return [9, 10, 11, 12, 13, 14, 15, 16, 17, 18].contains(idx);
+    // Add all special animation indices here (including Fireworks at 19):
+    return [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].contains(idx);
   }
 
   // Call this to reset to text animation (LeftAnimation)
@@ -188,10 +190,15 @@ class AnimationBadgeProvider extends ChangeNotifier {
   }
 
   void setAnimationMode(BadgeAnimation? animation) {
+    // Always reset the animation index and set the new animation
     _animationIndex = 0;
     _currentAnimation = animation ?? LeftAnimation();
+    // Stop the timer if running
+    _timer?.cancel();
+    // Start the timer for the new animation
+    startTimer();
     notifyListeners();
-    logger.i("Animation Mode set to: $_currentAnimation");
+    logger.i("Animation Mode set to: $_currentAnimation and timer restarted");
   }
 
   int? getAnimationIndex() {
@@ -282,6 +289,8 @@ class AnimationBadgeProvider extends ChangeNotifier {
       await transferEmergencyAnimation(badgeData, selectedSpeed);
     } else if (aniIndex == 18) {
       await transferBeatingHeartsAnimation(badgeData, selectedSpeed);
+    } else if (aniIndex == 19) {
+      await transferFireworksAnimation(badgeData, selectedSpeed);
     } else {
       await badgeData.checkAndTransfer(
         inlineImageProvider.getController().text,

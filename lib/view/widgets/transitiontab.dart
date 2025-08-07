@@ -100,6 +100,12 @@ class _TransitionTabState extends State<TransitionTab> {
                   animationName: 'Beating Hearts',
                   index: 18,
                 ),
+                AniContainer(
+                  animation: null,
+                  icon: Icons.celebration, // Fireworks icon
+                  animationName: 'Fireworks',
+                  index: 19,
+                ),
               ],
             ),
           ),

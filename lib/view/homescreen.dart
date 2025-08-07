@@ -107,6 +107,14 @@ class _HomeScreenState extends State<HomeScreen>
     final currentText = inlineimagecontroller.text;
     final selection = inlineimagecontroller.selection;
 
+    // If a special animation is selected and user starts typing, switch to text animation
+    if (animationProvider.isSpecialAnimationSelected() &&
+        currentText.isNotEmpty) {
+      animationProvider.resetToTextAnimation();
+      animationProvider.badgeAnimation(currentText, Converters(),
+          animationProvider.isEffectActive(InvertLEDEffect()));
+    }
+
     if (previousText.length > currentText.length) {
       final deletionIndex = selection.baseOffset;
       final regex = RegExp(r'<<\d+>>');
@@ -263,71 +271,118 @@ class _HomeScreenState extends State<HomeScreen>
                       ],
                     ),
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(vertical: 20.h),
-                        child: GestureDetector(
-                          onTap: () {
-                            if (inlineimagecontroller.text.trim().isEmpty) {
-                              ToastUtils()
-                                  .showErrorToast("Please enter a message");
-                              return;
-                            }
-                            showDialog(
-                              context: context,
-                              builder: (context) {
-                                return SaveBadgeDialog(
-                                  speed: speedDialProvider,
-                                  animationProvider: animationProvider,
-                                  textController: inlineimagecontroller,
-                                  isInverse: animationProvider
-                                      .isEffectActive(InvertLEDEffect()),
-                                );
-                              },
-                            );
-                          },
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 33.w, vertical: 8.h),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(2.r),
-                              color: mdGrey400,
+                  Consumer<AnimationBadgeProvider>(
+                    builder: (context, animationProvider, _) {
+                      final isSpecial =
+                          animationProvider.isSpecialAnimationSelected();
+                      if (isSpecial) {
+                        // Only show Transfer button, centered
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(vertical: 20.h),
+                              child: GestureDetector(
+                                onTap: () async {
+                                  await animationProvider
+                                      .handleAnimationTransfer(
+                                    badgeData: badgeData,
+                                    inlineImageProvider: inlineImageProvider,
+                                    speedDialProvider: speedDialProvider,
+                                    flash: animationProvider
+                                        .isEffectActive(FlashEffect()),
+                                    marquee: animationProvider
+                                        .isEffectActive(MarqueeEffect()),
+                                    invert: animationProvider
+                                        .isEffectActive(InvertLEDEffect()),
+                                  );
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 33.w, vertical: 8.h),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(2.r),
+                                    color: mdGrey400,
+                                  ),
+                                  child: const Text('Transfer'),
+                                ),
+                              ),
                             ),
-                            child: const Text('Save'),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 100.w),
-                      Container(
-                        padding: EdgeInsets.symmetric(vertical: 20.h),
-                        child: GestureDetector(
-                          onTap: () async {
-                            await animationProvider.handleAnimationTransfer(
-                              badgeData: badgeData,
-                              inlineImageProvider: inlineImageProvider,
-                              speedDialProvider: speedDialProvider,
-                              flash: animationProvider
-                                  .isEffectActive(FlashEffect()),
-                              marquee: animationProvider
-                                  .isEffectActive(MarqueeEffect()),
-                              invert: animationProvider
-                                  .isEffectActive(InvertLEDEffect()),
-                            );
-                          },
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 20.w, vertical: 8.h),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(2.r),
-                              color: mdGrey400,
+                          ],
+                        );
+                      } else {
+                        // Show both Save and Transfer as before
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(vertical: 20.h),
+                              child: GestureDetector(
+                                onTap: () {
+                                  if (inlineimagecontroller.text
+                                      .trim()
+                                      .isEmpty) {
+                                    ToastUtils().showErrorToast(
+                                        "Please enter a message");
+                                    return;
+                                  }
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return SaveBadgeDialog(
+                                        speed: speedDialProvider,
+                                        animationProvider: animationProvider,
+                                        textController: inlineimagecontroller,
+                                        isInverse: animationProvider
+                                            .isEffectActive(InvertLEDEffect()),
+                                      );
+                                    },
+                                  );
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 33.w, vertical: 8.h),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(2.r),
+                                    color: mdGrey400,
+                                  ),
+                                  child: const Text('Save'),
+                                ),
+                              ),
                             ),
-                            child: const Text('Transfer'),
-                          ),
-                        ),
-                      ),
-                    ],
+                            SizedBox(width: 100.w),
+                            Container(
+                              padding: EdgeInsets.symmetric(vertical: 20.h),
+                              child: GestureDetector(
+                                onTap: () async {
+                                  await animationProvider
+                                      .handleAnimationTransfer(
+                                    badgeData: badgeData,
+                                    inlineImageProvider: inlineImageProvider,
+                                    speedDialProvider: speedDialProvider,
+                                    flash: animationProvider
+                                        .isEffectActive(FlashEffect()),
+                                    marquee: animationProvider
+                                        .isEffectActive(MarqueeEffect()),
+                                    invert: animationProvider
+                                        .isEffectActive(InvertLEDEffect()),
+                                  );
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 20.w, vertical: 8.h),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(2.r),
+                                    color: mdGrey400,
+                                  ),
+                                  child: const Text('Transfer'),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                    },
                   ),
                 ],
               ),

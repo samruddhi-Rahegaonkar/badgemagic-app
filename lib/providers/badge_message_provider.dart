@@ -22,6 +22,7 @@ import 'package:badgemagic/badge_animation/ani_feet.dart';
 import 'package:badgemagic/badge_animation/ani_diagonal.dart';
 import 'package:badgemagic/badge_animation/ani_emergency.dart';
 import 'package:badgemagic/badge_animation/ani_beating_hearts.dart';
+import 'package:badgemagic/badge_animation/ani_fireworks.dart';
 
 Map<int, Mode> modeValueMap = {
   0: Mode.left,
@@ -117,8 +118,19 @@ class BadgeMessageProvider {
     }
 
     if (controllerData.getController().text.isEmpty && isSavedBadge == false) {
-      // Allow empty text if Pacman mode is selected
-      if (mode != Mode.pacman) {
+      // Allow empty text if Pacman or Fireworks mode is selected
+      // Fireworks: Mode.fixed and animation index 19
+      bool isFireworks = false;
+      try {
+        // Try to get animation index from modeValueMap
+        int fireworksIndex = 19;
+        if (mode == Mode.fixed &&
+            modeValueMap.containsKey(fireworksIndex) &&
+            modeValueMap[fireworksIndex] == Mode.fixed) {
+          isFireworks = true;
+        }
+      } catch (_) {}
+      if (mode != Mode.pacman && !isFireworks) {
         ToastUtils().showErrorToast("Please enter a message");
         return;
       }
@@ -155,6 +167,53 @@ class BadgeMessageProvider {
       }
     }
   }
+}
+
+Future<void> transferFireworksAnimation(
+    BadgeMessageProvider badgeDataProvider, int speedLevel) async {
+  final adapterState = await FlutterBluePlus.adapterState.first;
+  if (adapterState != BluetoothAdapterState.on) {
+    ToastUtils().showErrorToast('Please turn on Bluetooth');
+    return;
+  }
+
+  const int badgeHeight = 11;
+  const int badgeWidth = 44;
+  const int hardwareFrameCount = 8;
+  final Speed selectedSpeed = Speed.eight;
+  final logger = Logger();
+
+  logger.i('Starting Fireworks animation transfer...');
+
+  List<Message> frames = [];
+  for (int i = 0; i < hardwareFrameCount; i++) {
+    List<List<bool>> frameBitmap = List.generate(
+        badgeHeight, (_) => List.generate(badgeWidth, (_) => false));
+    List<List<bool>> processGrid = List.generate(
+        badgeHeight, (_) => List.generate(badgeWidth, (_) => false));
+
+    FireworksAnimation()
+        .processAnimation(badgeHeight, badgeWidth, i, processGrid, frameBitmap);
+
+    List<List<int>> intBitmap = boolToIntBitmap(frameBitmap);
+    List<String> hexList = Converters.convertBitmapToLEDHex(intBitmap, false);
+
+    logger.i(
+        'Fireworks Frame $i hex: ${hexList.join(",")} speed: ${selectedSpeed.toString()} (hex: ${selectedSpeed.hexValue})');
+
+    frames.add(Message(
+      text: hexList,
+      mode: Mode.fixed,
+      speed: selectedSpeed,
+      flash: false,
+      marquee: false,
+    ));
+  }
+
+  Data data = Data(messages: frames);
+  DataTransferManager manager = DataTransferManager(data);
+  await badgeDataProvider.transferData(manager);
+  logger.i('💡 Fireworks animation transfer completed successfully!');
 }
 
 Future<void> transferBeatingHeartsAnimation(
