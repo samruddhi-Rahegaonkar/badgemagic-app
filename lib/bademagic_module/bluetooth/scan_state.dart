@@ -69,19 +69,18 @@ class ScanState extends NormalBleState {
             FlutterBluePlus.stopScan();
             logger.e("Scan error: $e");
             toast.showErrorToast('Scan error occurred.');
-<<<<<<< HEAD
             nextStateCompleter.completeError(
               Exception("Error during scanning: $e"),
             );
-=======
-            nextStateCompleter.completeError(Exception("Scan error: $e"));
->>>>>>> f35b827 (chore(deps): upgrade Flutter to 3.32.1 (#1310))
           }
         },
       );
       await FlutterBluePlus.startScan(
         withServices: [Guid("0000fee0-0000-1000-8000-00805f9b34fb")],
-        removeIfGone: const Duration(seconds: 5),
+        removeIfGone: Duration(seconds: 5),
+        continuousUpdates: true,
+        timeout: const Duration(seconds: 15), // Reduced scan timeout.
+      );
 
       await Future.delayed(const Duration(seconds: 1));
 

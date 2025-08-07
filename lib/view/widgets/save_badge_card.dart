@@ -100,7 +100,7 @@ class SaveBadgeCard extends StatelessWidget {
                 child: Padding(
                   padding: EdgeInsets.only(
                       right: 8
-                          .w), // Adding some padding to separate text and buttons
+                          .w), // Adding some padding to separate text and buttons.
                   child: Text(
                     badgeData.key.substring(0, badgeData.key.length - 5),
                     style: const TextStyle(

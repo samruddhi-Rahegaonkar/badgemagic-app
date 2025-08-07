@@ -227,7 +227,6 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
                                             badgeData['messages'][0]);
                                         badgeDataList.add(message);
                                       }
-
                                       while (badgeDataList.length < 8) {
                                         badgeDataList.add(Message(text: []));
                                       }
