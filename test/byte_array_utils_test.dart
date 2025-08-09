@@ -36,7 +36,6 @@ void main() {
       final expectedBytes = [10, 20, 30, 40];
 
       final result = hexStringToByteArray(hexString);
-      print('hexStringToByteArray result: ' + result.toString());
       expect(result, equals(expectedBytes));
     });
 
