@@ -171,10 +171,7 @@ class SaveBadgeCard extends StatelessWidget {
                               String badgeFilename = badgeData.key;
                               Navigator.of(context).pushAndRemoveUntil(
                                 MaterialPageRoute(
-                                  builder: (context) => HomeScreen(
-                                    savedBadgeFilename: badgeFilename,
-                                    initialSpeed: speed, // Pass the speed value
-                                  ),
+                                  builder: (context) => const HomeScreen(),
                                 ),
                                 (route) => false, // Remove all previous routes
                               );
