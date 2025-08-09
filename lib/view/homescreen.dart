@@ -245,8 +245,8 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                     tabs: const [
                       Tab(text: 'Speed'),
-                      Tab(text: 'Animation'),
                       Tab(text: 'Transition'),
+                      Tab(text: 'Animation'),
                       Tab(text: 'Effects'),
                     ],
                   ),
@@ -265,8 +265,8 @@ class _HomeScreenState extends State<HomeScreen>
                               setState(() => isDialInteracting = false),
                           child: RadialDial(),
                         ),
-                        TransitionTab(),
-                        AnimationTab(),
+                        AnimationTab(), // 'Transition' tab now shows regular animations
+                        TransitionTab(), // 'Animation' tab now shows special animations
                         EffectTab(),
                       ],
                     ),
