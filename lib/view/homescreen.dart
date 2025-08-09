@@ -87,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen>
     _startImageCaching();
     super.initState();
 
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   // Loads badge data from disk and populates controllers/providers for editing
@@ -175,7 +175,7 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ],
       child: DefaultTabController(
-          length: 3,
+          length: 4,
           child: CommonScaffold(
             index: 0,
             title: 'Badge Magic',
@@ -246,8 +246,8 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                       tabs: const [
                         Tab(text: 'Speed'),
-                        Tab(text: 'Transition'),
                         Tab(text: 'Animation'),
+                        Tab(text: 'Transition'),
                         Tab(text: 'Effects'),
                       ],
                     ),
@@ -332,29 +332,67 @@ class _HomeScreenState extends State<HomeScreen>
                                       padding:
                                           EdgeInsets.symmetric(vertical: 20.h),
                                       child: GestureDetector(
-                                        onTap: () {
+                                        onTap: () async {
                                           if (inlineimagecontroller.text
                                               .trim()
                                               .isEmpty) {
-                                            ToastUtils().showErrorToast(
+                                            ToastUtils().showToast(
                                                 "Please enter a message");
                                             return;
                                           }
-                                          showDialog(
-                                            context: context,
-                                            builder: (context) {
-                                              return SaveBadgeDialog(
-                                                speed: speedDialProvider,
-                                                animationProvider:
-                                                    animationProvider,
-                                                textController:
-                                                    inlineimagecontroller,
-                                                isInverse: animationProvider
-                                                    .isEffectActive(
-                                                        InvertLEDEffect()),
-                                              );
-                                            },
-                                          );
+                                          // If we're editing an existing badge, update it instead of showing save dialog
+                                          if (widget.savedBadgeFilename !=
+                                              null) {
+                                            SavedBadgeProvider
+                                                savedBadgeProvider =
+                                                SavedBadgeProvider();
+                                            String baseFilename =
+                                                widget.savedBadgeFilename!;
+                                            if (baseFilename
+                                                .endsWith('.json')) {
+                                              baseFilename =
+                                                  baseFilename.substring(0,
+                                                      baseFilename.length - 5);
+                                            }
+                                            await savedBadgeProvider
+                                                .updateBadgeData(
+                                              baseFilename, // Pass the filename without .json extension
+                                              inlineimagecontroller.text,
+                                              animationProvider.isEffectActive(
+                                                  FlashEffect()),
+                                              animationProvider.isEffectActive(
+                                                  MarqueeEffect()),
+                                              animationProvider.isEffectActive(
+                                                  InvertLEDEffect()),
+                                              speedDialProvider.getOuterValue(),
+                                              animationProvider
+                                                      .getAnimationIndex() ??
+                                                  1,
+                                            );
+                                            ToastUtils().showToast(
+                                                "Badge Updated Successfully");
+                                            Navigator.pushNamedAndRemoveUntil(
+                                                context,
+                                                '/savedBadge',
+                                                (route) => false);
+                                          } else {
+                                            // Show save dialog for new badges
+                                            showDialog(
+                                              context: context,
+                                              builder: (context) {
+                                                return SaveBadgeDialog(
+                                                  speed: speedDialProvider,
+                                                  animationProvider:
+                                                      animationProvider,
+                                                  textController:
+                                                      inlineimagecontroller,
+                                                  isInverse: animationProvider
+                                                      .isEffectActive(
+                                                          InvertLEDEffect()),
+                                                );
+                                              },
+                                            );
+                                          }
                                         },
                                         child: Container(
                                           padding: EdgeInsets.symmetric(
