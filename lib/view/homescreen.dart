@@ -1,16 +1,20 @@
 import 'dart:async';
 
-import 'package:badgemagic/bademagic_module/utils/byte_array_utils.dart';
-import 'package:badgemagic/bademagic_module/utils/converters.dart';
-import 'package:badgemagic/bademagic_module/utils/image_utils.dart';
-import 'package:badgemagic/bademagic_module/utils/toast_utils.dart';
+import 'package:badgemagic/bademagic_module/utils/badge_loader_helper.dart';
 import 'package:badgemagic/badge_effect/flash_effect.dart';
 import 'package:badgemagic/badge_effect/invert_led_effect.dart';
 import 'package:badgemagic/badge_effect/marquee_effect.dart';
+import 'package:badgemagic/bademagic_module/utils/converters.dart';
+
+import 'package:badgemagic/bademagic_module/utils/image_utils.dart';
+import 'package:badgemagic/bademagic_module/utils/toast_utils.dart';
+import 'package:badgemagic/bademagic_module/models/speed.dart';
 import 'package:badgemagic/constants.dart';
 import 'package:badgemagic/providers/animation_badge_provider.dart';
-import 'package:badgemagic/providers/badge_message_provider.dart';
+import 'package:badgemagic/providers/badge_message_provider.dart'
+    hide modeValueMap, speedMap;
 import 'package:badgemagic/providers/imageprovider.dart';
+import 'package:badgemagic/providers/saved_badge_provider.dart';
 import 'package:badgemagic/providers/speed_dial_provider.dart';
 import 'package:badgemagic/view/special_text_field.dart';
 import 'package:badgemagic/view/widgets/common_scaffold_widget.dart';
@@ -27,14 +31,26 @@ import 'package:get_it/get_it.dart';
 import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  // Add parameters for saved badge data when editing
+
+  final String? savedBadgeFilename;
+  final int? initialSpeed;
+
+  const HomeScreen({
+    super.key,
+    this.savedBadgeFilename,
+    this.initialSpeed,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen>
-    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+    with
+        TickerProviderStateMixin,
+        AutomaticKeepAliveClientMixin,
+        WidgetsBindingObserver {
   late final TabController _tabController;
   AnimationBadgeProvider animationProvider = AnimationBadgeProvider();
   late SpeedDialProvider speedDialProvider;
@@ -54,59 +70,64 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     inlineimagecontroller.addListener(handleTextChange);
     _setPortraitOrientation();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    speedDialProvider = SpeedDialProvider(animationProvider);
+    // If initialSpeed is provided, set it immediately
+    if (widget.initialSpeed != null) {
+      speedDialProvider.setDialValue(widget.initialSpeed!);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       inlineImageProvider.setContext(context);
+
+      // Apply saved badge data if we're editing a saved badge
+      if (widget.savedBadgeFilename != null) {
+        await _loadBadgeDataFromDisk(widget.savedBadgeFilename!);
+      }
     });
     _startImageCaching();
-    speedDialProvider = SpeedDialProvider(animationProvider);
     super.initState();
 
     _tabController = TabController(length: 3, vsync: this);
   }
 
-  void handleTextChange() {
-    final currentText = inlineimagecontroller.text;
-    final selection = inlineimagecontroller.selection;
-
-    if (previousText.length > currentText.length) {
-      final deletionIndex = selection.baseOffset;
-
-      final regex = RegExp(r'<<\d+>>');
-      final matches = regex.allMatches(previousText);
-
-      bool placeholderDeleted = false;
-
-      for (final match in matches) {
-        if (deletionIndex > match.start && deletionIndex < match.end) {
-          inlineimagecontroller.text =
-              previousText.replaceRange(match.start, match.end, '');
-          inlineimagecontroller.selection =
-              TextSelection.collapsed(offset: match.start);
-          placeholderDeleted = true;
-          break;
-        }
+  // Loads badge data from disk and populates controllers/providers for editing
+  Future<void> _loadBadgeDataFromDisk(String badgeFilename) async {
+    try {
+      final (badgeText, badgeData, savedData) =
+          await BadgeLoaderHelper.loadBadgeDataAndText(badgeFilename);
+      // Set the text in the controller
+      inlineimagecontroller.text = badgeText;
+      // Set animation effects
+      animationProvider.removeEffect(effectMap[0]); // Invert
+      animationProvider.removeEffect(effectMap[1]); // Flash
+      animationProvider.removeEffect(effectMap[2]); // Marquee
+      final message = badgeData.messages[0];
+      if (message.flash) {
+        animationProvider.addEffect(effectMap[1]);
       }
-
-      if (!placeholderDeleted) {
-        previousText = inlineimagecontroller.text;
+      if (message.marquee) {
+        animationProvider.addEffect(effectMap[2]);
       }
-    } else {
-      previousText = currentText;
+      if (savedData != null &&
+          savedData.containsKey('invert') &&
+          savedData['invert'] == true) {
+        animationProvider.addEffect(effectMap[0]);
+      }
+      // Set animation mode
+      int modeValue = BadgeLoaderHelper.parseAnimationMode(message.mode);
+      animationProvider.setAnimationMode(animationMap[modeValue]);
+      // Set speed
+      try {
+        int speedDialValue = Speed.getIntValue(message.speed);
+        speedDialProvider.setDialValue(speedDialValue);
+      } catch (e) {
+        speedDialProvider.setDialValue(1);
+      }
+      ToastUtils().showToast(
+          "Editing badge: ${badgeFilename.substring(0, badgeFilename.length - 5)}");
+    } catch (e) {
+      print("Failed to load badge data: $e");
+      ToastUtils().showToast("Failed to load badge data");
     }
-  }
-
-  void _controllerListner() {
-    animationProvider.badgeAnimation(inlineImageProvider.getController().text,
-        Converters(), animationProvider.isEffectActive(InvertLEDEffect()));
-  }
-
-  @override
-  void dispose() {
-    inlineimagecontroller.removeListener(handleTextChange);
-    animationProvider.stopAnimation();
-    inlineImageProvider.getController().removeListener(_controllerListner);
-    _tabController.dispose();
-    super.dispose();
   }
 
   void _setPortraitOrientation() {
@@ -123,6 +144,15 @@ class _HomeScreenState extends State<HomeScreen>
         inlineImageProvider.isCacheInitialized = true;
       });
     }
+  }
+
+  @override
+  void dispose() {
+    inlineimagecontroller.removeListener(handleTextChange);
+    animationProvider.stopAnimation();
+    WidgetsBinding.instance.removeObserver(this);
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
@@ -254,29 +284,61 @@ class _HomeScreenState extends State<HomeScreen>
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               GestureDetector(
-                                onTap: () {
-                                  if (inlineimagecontroller.text
-                                      .trim()
+                                onTap: () async {
+                                  if (inlineImageProvider
+                                      .getController()
+                                      .text
                                       .isEmpty) {
-                                    ToastUtils().showErrorToast(
-                                        "Please enter a message");
+                                    ToastUtils()
+                                        .showToast("Please enter a message");
                                     return;
                                   }
-                                  logger.i(
-                                      'Save button clicked, showing dialog : ${animationProvider.isEffectActive(FlashEffect())}');
-                                  showDialog(
-                                      context: this.context,
-                                      builder: (context) {
-                                        return SaveBadgeDialog(
-                                          speed: speedDialProvider,
-                                          animationProvider: animationProvider,
-                                          textController: inlineImageProvider
-                                              .getController(),
-                                          isInverse:
-                                              animationProvider.isEffectActive(
-                                                  InvertLEDEffect()),
-                                        );
-                                      });
+                                  // If we're editing an existing badge, update it instead of showing save dialog
+                                  if (widget.savedBadgeFilename != null) {
+                                    SavedBadgeProvider savedBadgeProvider =
+                                        SavedBadgeProvider();
+                                    String baseFilename =
+                                        widget.savedBadgeFilename!;
+                                    if (baseFilename.endsWith('.json')) {
+                                      baseFilename = baseFilename.substring(
+                                          0, baseFilename.length - 5);
+                                    }
+
+                                    await savedBadgeProvider.updateBadgeData(
+                                        baseFilename, // Pass the filename without .json extension
+                                        inlineImageProvider
+                                            .getController()
+                                            .text,
+                                        animationProvider
+                                            .isEffectActive(FlashEffect()),
+                                        animationProvider
+                                            .isEffectActive(MarqueeEffect()),
+                                        animationProvider
+                                            .isEffectActive(InvertLEDEffect()),
+                                        speedDialProvider.getOuterValue(),
+                                        animationProvider.getAnimationIndex() ??
+                                            1);
+                                    ToastUtils().showToast(
+                                        "Badge Updated Successfully");
+                                    Navigator.pushNamedAndRemoveUntil(context,
+                                        '/savedBadge', (route) => false);
+                                  } else {
+                                    // Show save dialog for new badges
+                                    showDialog(
+                                        context: this.context,
+                                        builder: (context) {
+                                          return SaveBadgeDialog(
+                                            speed: speedDialProvider,
+                                            animationProvider:
+                                                animationProvider,
+                                            textController: inlineImageProvider
+                                                .getController(),
+                                            isInverse: animationProvider
+                                                .isEffectActive(
+                                                    InvertLEDEffect()),
+                                          );
+                                        });
+                                  }
                                 },
                                 child: Container(
                                   padding: EdgeInsets.symmetric(
@@ -339,6 +401,57 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
+  void handleTextChange() {
+    final currentText = inlineimagecontroller.text;
+    final selection = inlineimagecontroller.selection;
+
+    if (previousText.length > currentText.length) {
+      final deletionIndex = selection.baseOffset;
+
+      final regex = RegExp(r'<<\d+>>');
+      final matches = regex.allMatches(previousText);
+
+      bool placeholderDeleted = false;
+
+      for (final match in matches) {
+        if (deletionIndex > match.start && deletionIndex < match.end) {
+          inlineimagecontroller.text =
+              previousText.replaceRange(match.start, match.end, '');
+          inlineimagecontroller.selection =
+              TextSelection.collapsed(offset: match.start);
+          placeholderDeleted = true;
+          break;
+        }
+      }
+
+      if (!placeholderDeleted) {
+        previousText = inlineimagecontroller.text;
+      }
+    } else {
+      previousText = currentText;
+    }
+  }
+
+  void _controllerListner() {
+    animationProvider.badgeAnimation(inlineImageProvider.getController().text,
+        Converters(), animationProvider.isEffectActive(InvertLEDEffect()));
+  }
+
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      inlineimagecontroller.clear();
+      previousText = '';
+      animationProvider.stopAllAnimations.call(); // If method exists
+      animationProvider.initializeAnimation.call(); // If method exists
+      if (mounted) setState(() {});
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      animationProvider.stopAnimation();
+    }
+  }
 }
