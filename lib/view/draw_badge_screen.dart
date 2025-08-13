@@ -13,6 +13,7 @@ class DrawBadge extends StatefulWidget {
   final bool? isSavedCard;
   final bool? isSavedClipart;
   final List<List<int>>? badgeGrid;
+
   const DrawBadge({
     super.key,
     this.filename,
@@ -87,141 +88,6 @@ class _DrawBadgeState extends State<DrawBadge> {
                     ),
                   ),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Column(
-                      children: [
-                        const SizedBox(width: 100),
-                        BMBadge(
-                          providerInit: (provider) => drawToggle = provider,
-                          badgeGrid: widget.badgeGrid
-                              ?.map((e) => e.map((e) => e == 1).toList())
-                              .toList(),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              drawToggle.toggleIsDrawing(true);
-                            });
-                          },
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.edit,
-                                color: drawToggle.getIsDrawing()
-                                    ? colorPrimary
-                                    : Colors.black,
-                              ),
-                              Text(
-                                'Draw',
-                                style: TextStyle(
-                                  color: drawToggle.isDrawing
-                                      ? colorPrimary
-                                      : Colors.black,
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              drawToggle.toggleIsDrawing(false);
-                            });
-                          },
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.delete,
-                                color: drawToggle.isDrawing
-                                    ? Colors.black
-                                    : colorPrimary,
-                              ),
-                              Text(
-                                'Erase',
-                                style: TextStyle(
-                                  color: drawToggle.isDrawing
-                                      ? Colors.black
-                                      : colorPrimary,
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              drawToggle.resetDrawViewGrid();
-                            });
-                          },
-                          child: const Column(
-                            children: [
-                              Icon(
-                                Icons.refresh,
-                                color: Colors.black,
-                              ),
-                              Text(
-                                'Reset',
-                                style: TextStyle(color: Colors.black),
-                              )
-                            ],
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            List<List<int>> badgeGrid = drawToggle
-                                .getDrawViewGrid()
-                                .map((e) => e.map((e) => e ? 1 : 0).toList())
-                                .toList();
-                            List<String> hexString =
-                                Converters.convertBitmapToLEDHex(
-                                    badgeGrid, false);
-
-                            if (widget.isSavedCard!) {
-                              fileHelper.updateBadgeText(
-                                  widget.filename!, hexString);
-                            } else if (widget.isSavedClipart!) {
-                              fileHelper.updateClipart(
-                                  widget.filename!, badgeGrid);
-                            } else {
-                              fileHelper
-                                  .saveImage(drawToggle.getDrawViewGrid());
-                            }
-
-                            fileHelper.generateClipartCache();
-
-                            // Show toast first
-                            ToastUtils()
-                                .showToast("Clipart Saved Successfully");
-
-                            // Delay redirection slightly to ensure toast is visible
-                            Future.delayed(const Duration(milliseconds: 800),
-                                () {
-                              Navigator.of(context)
-                                  .popUntil((route) => route.isFirst);
-                            });
-                          },
-                          child: const Column(
-                            children: [
-                              Icon(
-                                Icons.save,
-                                color: Colors.black,
-                              ),
-                              Text('Save',
-                                  style: TextStyle(color: Colors.black))
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                child: IntrinsicHeight(
 
                 const SizedBox(height: 8),
 
@@ -233,23 +99,23 @@ class _DrawBadgeState extends State<DrawBadge> {
                     children: [
                       // First row - main action buttons
                       Row(
-  mainAxisAlignment: MainAxisAlignment.center,
-  children: [
-    _buildCompactButton(true, Icons.edit, 'Draw'),
-    const SizedBox(width: 8),
-    _buildCompactButton(false, Icons.delete, 'Erase'),
-    const SizedBox(width: 8),
-    _buildResetButton(),
-    const SizedBox(width: 8),
-    _buildSaveButton(fileHelper),
-    const SizedBox(width: 8),
-    _buildShapesToggleButton(),
-    const SizedBox(width: 8),
-    _buildUndoButton(),
-    const SizedBox(width: 8),
-    _buildRedoButton(),
-  ],
-),
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _buildCompactButton(true, Icons.edit, 'Draw'),
+                          const SizedBox(width: 8),
+                          _buildCompactButton(false, Icons.delete, 'Erase'),
+                          const SizedBox(width: 8),
+                          _buildResetButton(),
+                          const SizedBox(width: 8),
+                          _buildSaveButton(fileHelper),
+                          const SizedBox(width: 8),
+                          _buildShapesToggleButton(),
+                          const SizedBox(width: 8),
+                          _buildUndoButton(),
+                          const SizedBox(width: 8),
+                          _buildRedoButton(),
+                        ],
+                      ),
 
                       const SizedBox(height: 8),
                     ],
