@@ -97,31 +97,32 @@ class _DrawBadgeState extends State<DrawBadge> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // First row - main action buttons
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          _buildCompactButton(true, Icons.edit, 'Draw'),
-                          const SizedBox(width: 8),
-                          _buildCompactButton(false, Icons.delete, 'Erase'),
-                          const SizedBox(width: 8),
-                          _buildResetButton(),
-                          const SizedBox(width: 8),
-                          _buildSaveButton(fileHelper),
-                          const SizedBox(width: 8),
-                          _buildShapesToggleButton(),
-                          const SizedBox(width: 8),
-                          _buildUndoButton(),
-                          const SizedBox(width: 8),
-                          _buildRedoButton(),
+                          Flexible(
+                              child: _buildCompactButton(
+                                  true, Icons.edit, 'Draw')),
+                          const SizedBox(width: 4),
+                          Flexible(
+                              child: _buildCompactButton(
+                                  false, Icons.delete, 'Erase')),
+                          const SizedBox(width: 4),
+                          Flexible(child: _buildResetButton()),
+                          const SizedBox(width: 4),
+                          Flexible(child: _buildSaveButton(fileHelper)),
+                          const SizedBox(width: 4),
+                          Flexible(child: _buildShapesToggleButton()),
+                          const SizedBox(width: 4),
+                          Flexible(child: _buildUndoButton()),
+                          const SizedBox(width: 4),
+                          Flexible(child: _buildRedoButton()),
                         ],
                       ),
-
                       const SizedBox(height: 8),
                     ],
                   ),
                 ),
-
                 // Shape options - only show when toggled, fixed height
                 if (_showShapeOptions)
                   Container(
