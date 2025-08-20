@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:math';
-import 'dart:ui';
 import 'package:badgemagic/bademagic_module/bluetooth/base_ble_state.dart';
 import 'package:badgemagic/bademagic_module/bluetooth/datagenerator.dart';
 import 'package:badgemagic/bademagic_module/utils/converters.dart';
@@ -12,7 +11,9 @@ import 'package:badgemagic/bademagic_module/models/messages.dart';
 import 'package:badgemagic/bademagic_module/models/mode.dart';
 import 'package:badgemagic/bademagic_module/models/speed.dart';
 import 'package:badgemagic/badge_animation/ani_fish.dart';
+import 'package:badgemagic/providers/BadgeScanProvider.dart';
 import 'package:badgemagic/providers/imageprovider.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get_it/get_it.dart';
 import 'package:logger/logger.dart';
@@ -23,6 +24,7 @@ import 'package:badgemagic/badge_animation/ani_diagonal.dart';
 import 'package:badgemagic/badge_animation/ani_emergency.dart';
 import 'package:badgemagic/badge_animation/ani_beating_hearts.dart';
 import 'package:badgemagic/badge_animation/ani_fireworks.dart';
+import 'package:provider/provider.dart';
 
 Map<int, Mode> modeValueMap = {
   0: Mode.left,
@@ -91,14 +93,28 @@ class BadgeMessageProvider {
     }
   }
 
-  Future<void> transferData(DataTransferManager manager) async {
+  Future<void> transferData(
+    DataTransferManager manager,
+    BuildContext? context,
+  ) async {
+    final scanProvider = context != null
+        ? Provider.of<BadgeScanProvider>(context, listen: false)
+        : null;
+
+    final BleState? initialState = ScanState(
+      manager: manager,
+      mode: scanProvider!.mode,
+      allowedNames: scanProvider.badgeNames,
+    );
+
+    BleState? state = initialState;
     DateTime now = DateTime.now();
-    BleState? state = ScanState(manager: manager);
+
     while (state != null) {
       state = await state.process();
     }
 
-    logger.d("Time to transfer data is = ${DateTime.now().difference(now)}");
+    logger.d("Time to transfer data: ${DateTime.now().difference(now)}");
     logger.d(".......Data transfer completed.......");
   }
 
@@ -111,6 +127,7 @@ class BadgeMessageProvider {
       Mode? mode,
       Map<String, dynamic>? jsonData,
       bool isSavedBadge,
+      BuildContext context,
       {TextStyle? textStyle}) async {
     if (await FlutterBluePlus.isSupported == false) {
       ToastUtils().showErrorToast('Bluetooth is not supported by the device');
@@ -210,7 +227,7 @@ class BadgeMessageProvider {
     }
 
     DataTransferManager manager = DataTransferManager(data);
-    await transferData(manager);
+    await transferData(manager, context);
   }
 }
 
@@ -257,7 +274,7 @@ Future<void> transferFireworksAnimation(
 
   Data data = Data(messages: frames);
   DataTransferManager manager = DataTransferManager(data);
-  await badgeDataProvider.transferData(manager);
+  await badgeDataProvider.transferData(manager, null);
   logger.i('💡 Fireworks animation transfer completed successfully!');
 }
 
@@ -305,7 +322,7 @@ Future<void> transferBeatingHeartsAnimation(
 
   Data data = Data(messages: heartFrames);
   DataTransferManager manager = DataTransferManager(data);
-  await badgeDataProvider.transferData(manager);
+  await badgeDataProvider.transferData(manager, null);
   logger.i('💡 Beating Hearts animation transfer completed successfully!');
 }
 
@@ -365,7 +382,7 @@ Future<void> transferEmergencyAnimation(
 
   Data data = Data(messages: rotatedFrames);
   DataTransferManager manager = DataTransferManager(data);
-  await badgeDataProvider.transferData(manager);
+  await badgeDataProvider.transferData(manager, null);
   logger.i('💡 Emergency animation transfer completed successfully!');
 }
 
@@ -423,7 +440,7 @@ Future<void> transferDiagonalAnimation(
   logger.i('V Diagonal Data object created. Starting transfer...');
 
   try {
-    await badgeDataProvider.transferData(DataTransferManager(data));
+    await badgeDataProvider.transferData(DataTransferManager(data), null);
     logger.i('V Diagonal animation transfer completed successfully!');
   } catch (e, st) {
     logger.e('⛔ V Diagonal animation transfer failed: $e\n$st');
@@ -486,7 +503,7 @@ Future<void> transferFishAnimation(
   logger.i('🐟 Fish Data object created. Starting transfer...');
 
   try {
-    await badgeDataProvider.transferData(DataTransferManager(data));
+    await badgeDataProvider.transferData(DataTransferManager(data), null);
     logger.i('🐟 Fish animation transfer completed successfully!');
   } catch (e, st) {
     logger.e('⛔ Fish animation transfer failed: $e\n$st');
@@ -667,7 +684,7 @@ Future<void> transferPacmanAnimation(
   Data data = Data(messages: pacmanFrames);
   logger.i('💡 Data object created. Starting transfer...');
   try {
-    await badgeDataProvider.transferData(DataTransferManager(data));
+    await badgeDataProvider.transferData(DataTransferManager(data), null);
   } catch (e, st) {
     logger.e('⛔ Pacman animation transfer failed: $e\n$st');
   }
@@ -741,7 +758,7 @@ Future<void> transferChevronAnimation(
   Data data = Data(messages: chevronFrames);
   logger.i('💡 Data object created. Starting transfer...');
   try {
-    await badgeDataProvider.transferData(DataTransferManager(data));
+    await badgeDataProvider.transferData(DataTransferManager(data), null);
   } catch (e, st) {
     logger.e('⛔ Chevron animation transfer failed: $e\n$st');
   }
@@ -802,7 +819,7 @@ Future<void> transferDiamondAnimation(
   Data data = Data(messages: diamondFrames);
   logger.i('💡 Data object created. Starting transfer...');
   try {
-    await badgeDataProvider.transferData(DataTransferManager(data));
+    await badgeDataProvider.transferData(DataTransferManager(data), null);
   } catch (e, st) {
     logger.e('⛔ Diamond animation transfer failed: $e\n$st');
   }
@@ -925,7 +942,7 @@ Future<void> transferBrokenHeartsAnimation(
   Data data = Data(messages: heartFrames);
   logger.i('💡 Data object created. Starting transfer...');
   try {
-    await badgeDataProvider.transferData(DataTransferManager(data));
+    await badgeDataProvider.transferData(DataTransferManager(data), null);
   } catch (e, st) {
     logger.e('⛔ Broken Hearts animation transfer failed: $e\n$st');
   }
@@ -1006,7 +1023,7 @@ Future<void> transferFeetAnimation(
   Data data = Data(messages: feetFrames);
   logger.i('🦶 Feet Data object created. Starting transfer...');
   try {
-    await badgeDataProvider.transferData(DataTransferManager(data));
+    await badgeDataProvider.transferData(DataTransferManager(data), null);
   } catch (e, st) {
     logger.e('⛔ Feet animation transfer failed: $e\n$st');
   }
@@ -1050,7 +1067,7 @@ Future<void> transferCupidAnimation(
   Data data = Data(messages: cupidFrames);
   logger.i('💘 Cupid Data object created. Starting transfer...');
   try {
-    await badgeDataProvider.transferData(DataTransferManager(data));
+    await badgeDataProvider.transferData(DataTransferManager(data), null);
   } catch (e, st) {
     logger.e('⛔ Cupid animation transfer failed: $e\n$st');
   }
