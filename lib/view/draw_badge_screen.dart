@@ -279,29 +279,32 @@ class _DrawBadgeState extends State<DrawBadge> {
   }
 
   Widget _buildUndoButton() {
-    final bool canUndo = drawToggle.canUndo;
-    final Color buttonColor = canUndo ? Colors.black : Colors.grey;
+    return AnimatedBuilder(
+      animation: drawToggle,
+      builder: (context, _) {
+        final bool canUndo = drawToggle.canUndo;
+        final Color buttonColor = canUndo ? Colors.black : Colors.grey;
 
-    return TextButton(
-      onPressed: canUndo
-          ? () {
-              setState(() {
-                drawToggle.undo();
-              });
-            }
-          : null,
-      style: TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
-        minimumSize: const Size(60, 40),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.undo, color: buttonColor, size: 20),
-          const SizedBox(height: 2),
-          Text('Undo', style: TextStyle(color: buttonColor, fontSize: 10)),
-        ],
-      ),
+        return TextButton(
+          onPressed: canUndo
+              ? () {
+                  drawToggle.undo();
+                }
+              : null,
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+            minimumSize: const Size(60, 40),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.undo, color: buttonColor, size: 20),
+              const SizedBox(height: 2),
+              Text('Undo', style: TextStyle(color: buttonColor, fontSize: 10)),
+            ],
+          ),
+        );
+      },
     );
   }
 
