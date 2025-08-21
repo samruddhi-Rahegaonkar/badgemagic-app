@@ -309,29 +309,28 @@ class _DrawBadgeState extends State<DrawBadge> {
   }
 
   Widget _buildRedoButton() {
-    final bool canRedo = drawToggle.canRedo;
-    final Color buttonColor = canRedo ? Colors.black : Colors.grey;
+    return AnimatedBuilder(
+      animation: drawToggle,
+      builder: (context, _) {
+        final bool canRedo = drawToggle.canRedo;
+        final Color buttonColor = canRedo ? Colors.black : Colors.grey;
 
-    return TextButton(
-      onPressed: canRedo
-          ? () {
-              setState(() {
-                drawToggle.redo();
-              });
-            }
-          : null,
-      style: TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
-        minimumSize: const Size(60, 40),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.redo, color: buttonColor, size: 20),
-          const SizedBox(height: 2),
-          Text('Redo', style: TextStyle(color: buttonColor, fontSize: 10)),
-        ],
-      ),
+        return TextButton(
+          onPressed: canRedo ? drawToggle.redo : null,
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+            minimumSize: const Size(60, 40),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.redo, color: buttonColor, size: 20),
+              const SizedBox(height: 2),
+              Text('Redo', style: TextStyle(color: buttonColor, fontSize: 10)),
+            ],
+          ),
+        );
+      },
     );
   }
 
