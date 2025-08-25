@@ -22,7 +22,7 @@ class _TransitionTabState extends State<TransitionTab> {
     return Scrollbar(
         controller: _scrollController,
         thumbVisibility: true,
-        thickness: 12.0,
+        thickness: 6.0,
         radius: const Radius.circular(6),
         child: SingleChildScrollView(
           controller: _scrollController,
