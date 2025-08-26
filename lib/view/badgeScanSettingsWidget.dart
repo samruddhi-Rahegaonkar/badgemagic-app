@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class BadgeScanSettingsWidget extends StatefulWidget {
-  final Function(BadgeScanMode mode, List<String> names) onSave;
+  final Function(BadgeScanMode mode, List<String> names)? onSave;
 
-  const BadgeScanSettingsWidget({super.key, required this.onSave});
+  const BadgeScanSettingsWidget({super.key, this.onSave});
 
   @override
   State<BadgeScanSettingsWidget> createState() =>
@@ -21,9 +21,6 @@ class _BadgeScanSettingsWidgetState extends State<BadgeScanSettingsWidget> {
     super.initState();
     final provider = Provider.of<BadgeScanProvider>(context, listen: false);
     _mode = provider.mode;
-    for (var name in provider.badgeNames) {
-      _controllers.add(TextEditingController(text: name));
-    }
   }
 
   void _addBadgeName() {
@@ -38,7 +35,7 @@ class _BadgeScanSettingsWidgetState extends State<BadgeScanSettingsWidget> {
     });
   }
 
-  void _onSave() {
+  Future<void> _onSave() async {
     final updatedNames = _controllers
         .map((c) => c.text.trim())
         .where((name) => name.isNotEmpty)
@@ -52,82 +49,98 @@ class _BadgeScanSettingsWidgetState extends State<BadgeScanSettingsWidget> {
       const SnackBar(content: Text('Scan settings saved successfully')),
     );
 
-    widget.onSave(_mode, updatedNames);
-    Navigator.pop(context);
-  }
-
-  @override
-  void dispose() {
-    for (var c in _controllers) {
-      c.dispose();
-    }
-    super.dispose();
+    widget.onSave?.call(_mode, updatedNames);
+    if (mounted) Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Badge Scan Settings'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _onSave,
+    return Consumer<BadgeScanProvider>(
+      builder: (context, provider, child) {
+        if (!provider.isLoaded) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (_controllers.isEmpty) {
+          // Initialize controllers only after provider is loaded
+          for (var name in provider.badgeNames) {
+            _controllers.add(TextEditingController(text: name));
+          }
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Badge Scan Settings'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.save),
+                onPressed: _onSave,
+              ),
+            ],
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          RadioListTile<BadgeScanMode>(
-            title: const Text('Connect to any badge'),
-            value: BadgeScanMode.any,
-            groupValue: _mode,
-            onChanged: (val) => setState(() => _mode = val!),
-          ),
-          RadioListTile<BadgeScanMode>(
-            title: const Text('Connect to badges with the following names'),
-            value: BadgeScanMode.specific,
-            groupValue: _mode,
-            onChanged: (val) => setState(() => _mode = val!),
-          ),
-          if (_mode == BadgeScanMode.specific)
-            Expanded(
-              child: ListView.builder(
-                itemCount: _controllers.length,
-                itemBuilder: (context, index) {
-                  return Row(
-                    children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                          child: TextField(
-                            controller: _controllers[index],
-                            decoration: const InputDecoration(
-                              labelText: 'Badge Name',
+          body: Column(
+            children: [
+              RadioListTile<BadgeScanMode>(
+                title: const Text('Connect to any badge'),
+                value: BadgeScanMode.any,
+                groupValue: _mode,
+                onChanged: (val) => setState(() => _mode = val!),
+              ),
+              RadioListTile<BadgeScanMode>(
+                title: const Text('Connect to badges with the following names'),
+                value: BadgeScanMode.specific,
+                groupValue: _mode,
+                onChanged: (val) => setState(() => _mode = val!),
+              ),
+              if (_mode == BadgeScanMode.specific)
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: _controllers.length,
+                    itemBuilder: (context, index) {
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12.0),
+                              child: TextField(
+                                controller: _controllers[index],
+                                decoration: const InputDecoration(
+                                  labelText: 'Badge Name',
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.remove_circle_outline),
-                        onPressed: () => _removeBadgeName(index),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-          if (_mode == BadgeScanMode.specific)
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: ElevatedButton.icon(
-                onPressed: _addBadgeName,
-                icon: const Icon(Icons.add),
-                label: const Text("Add more"),
-              ),
-            ),
-        ],
-      ),
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle_outline),
+                            onPressed: () => _removeBadgeName(index),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              if (_mode == BadgeScanMode.specific)
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: ElevatedButton.icon(
+                    onPressed: _addBadgeName,
+                    icon: const Icon(Icons.add),
+                    label: const Text("Add more"),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
+  }
+
+  @override
+  void dispose() {
+    for (var c in _controllers) c.dispose();
+    super.dispose();
   }
 }
