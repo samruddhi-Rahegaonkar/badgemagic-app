@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:badgemagic/bademagic_module/utils/toast_utils.dart';
 import 'package:badgemagic/providers/badge_message_provider.dart';
 import 'package:badgemagic/providers/imageprovider.dart';
 import 'package:badgemagic/providers/speed_dial_provider.dart';
@@ -302,6 +303,40 @@ class AnimationBadgeProvider extends ChangeNotifier {
         null,
         false,
       );
+    }
+  }
+
+  /// Handles streaming transfer for next-gen badges
+  Future<void> handleStreamingTransfer({
+    required BadgeMessageProvider badgeData,
+    required InlineImageProvider inlineImageProvider,
+    required SpeedDialProvider speedDialProvider,
+    required bool flash,
+    required bool marquee,
+    required bool invert,
+  }) async {
+    final int aniIndex = getAnimationIndex() ?? 0;
+    final int selectedSpeed = speedDialProvider.getOuterValue();
+
+    try {
+      logger.i(
+          "Starting streaming transfer with aniIndex=$aniIndex, speed=$selectedSpeed");
+
+      await badgeData.checkAndTransfer(
+        inlineImageProvider.getController().text,
+        flash,
+        marquee,
+        invert,
+        selectedSpeed,
+        modeValueMap[aniIndex],
+        null,
+        true, // 🚨 IMPORTANT: mark streaming = true
+      );
+
+      ToastUtils().showToast("Streaming transfer started");
+    } catch (e) {
+      logger.e("Error in handleStreamingTransfer");
+      ToastUtils().showErrorToast("Streaming transfer failed: $e");
     }
   }
 }

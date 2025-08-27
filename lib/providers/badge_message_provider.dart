@@ -103,15 +103,17 @@ class BadgeMessageProvider {
   }
 
   Future<void> checkAndTransfer(
-      String? text,
-      bool? flash,
-      bool? marq,
-      bool? isInverted,
-      int? speed,
-      Mode? mode,
-      Map<String, dynamic>? jsonData,
-      bool isSavedBadge,
-      {TextStyle? textStyle}) async {
+    String? text,
+    bool? flash,
+    bool? marq,
+    bool? isInverted,
+    int? speed,
+    Mode? mode,
+    Map<String, dynamic>? jsonData,
+    bool isSavedBadge, {
+    TextStyle? textStyle,
+    bool useStreaming = false, // 👈 new param
+  }) async {
     if (await FlutterBluePlus.isSupported == false) {
       ToastUtils().showErrorToast('Bluetooth is not supported by the device');
       return;
@@ -119,10 +121,8 @@ class BadgeMessageProvider {
 
     if (controllerData.getController().text.isEmpty && isSavedBadge == false) {
       // Allow empty text if Pacman or Fireworks mode is selected
-      // Fireworks: Mode.fixed and animation index 19
       bool isFireworks = false;
       try {
-        // Try to get animation index from modeValueMap
         int fireworksIndex = 19;
         if (mode == Mode.fixed &&
             modeValueMap.containsKey(fireworksIndex) &&
@@ -138,13 +138,14 @@ class BadgeMessageProvider {
 
     final adapterState = await FlutterBluePlus.adapterState.first;
     if (adapterState == BluetoothAdapterState.on) {
+      // 🔹 Build the Data object
       Data data;
       if (jsonData != null) {
         data = fileHelper.jsonToData(jsonData);
         if (isSavedBadge && data.messages.isNotEmpty) {
           final old = data.messages[0];
           final newMessage = Message(
-            text: old.text, // use the already-padded hex string
+            text: old.text,
             flash: old.flash,
             marquee: old.marquee,
             speed: old.speed,
@@ -156,8 +157,32 @@ class BadgeMessageProvider {
         data = await generateData(
             text, flash, marq, isInverted, speedMap[speed], mode, jsonData);
       }
-      DataTransferManager manager = DataTransferManager(data);
-      await transferData(manager);
+
+      // 🔹 Explicit manager selection
+      DataTransferManager manager = useStreaming
+          ? DataTransferManager.forStreaming(data)
+          : DataTransferManager.forLegacy(data);
+
+      // 🔹 Start unified pipeline
+      try {
+        NormalBleState? state = ScanState(manager: manager);
+
+        while (state != null) {
+          state = (await state.processState()) as NormalBleState?;
+        }
+
+        if (useStreaming) {
+          ToastUtils().showToast("✅ Streaming transfer completed");
+        } else {
+          ToastUtils().showToast("✅ Legacy transfer completed");
+        }
+      } catch (e) {
+        if (useStreaming) {
+          ToastUtils().showErrorToast("❌ Streaming transfer failed: $e");
+        } else {
+          ToastUtils().showErrorToast("❌ Legacy transfer failed: $e");
+        }
+      }
     } else {
       if (Platform.isAndroid) {
         ToastUtils().showToast('Turning on Bluetooth...');

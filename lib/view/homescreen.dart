@@ -328,6 +328,7 @@ class _HomeScreenState extends State<HomeScreen>
                                 return Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
+                                    // Save button
                                     Container(
                                       padding:
                                           EdgeInsets.symmetric(vertical: 20.h),
@@ -340,7 +341,6 @@ class _HomeScreenState extends State<HomeScreen>
                                                 "Please enter a message");
                                             return;
                                           }
-                                          // If we're editing an existing badge, update it instead of showing save dialog
                                           if (widget.savedBadgeFilename !=
                                               null) {
                                             SavedBadgeProvider
@@ -356,7 +356,7 @@ class _HomeScreenState extends State<HomeScreen>
                                             }
                                             await savedBadgeProvider
                                                 .updateBadgeData(
-                                              baseFilename, // Pass the filename without .json extension
+                                              baseFilename,
                                               inlineimagecontroller.text,
                                               animationProvider.isEffectActive(
                                                   FlashEffect()),
@@ -376,21 +376,19 @@ class _HomeScreenState extends State<HomeScreen>
                                                 '/savedBadge',
                                                 (route) => false);
                                           } else {
-                                            // Show save dialog for new badges
                                             showDialog(
                                               context: context,
-                                              builder: (context) {
-                                                return SaveBadgeDialog(
-                                                  speed: speedDialProvider,
-                                                  animationProvider:
-                                                      animationProvider,
-                                                  textController:
-                                                      inlineimagecontroller,
-                                                  isInverse: animationProvider
-                                                      .isEffectActive(
-                                                          InvertLEDEffect()),
-                                                );
-                                              },
+                                              builder: (context) =>
+                                                  SaveBadgeDialog(
+                                                speed: speedDialProvider,
+                                                animationProvider:
+                                                    animationProvider,
+                                                textController:
+                                                    inlineimagecontroller,
+                                                isInverse: animationProvider
+                                                    .isEffectActive(
+                                                        InvertLEDEffect()),
+                                              ),
                                             );
                                           }
                                         },
@@ -406,7 +404,10 @@ class _HomeScreenState extends State<HomeScreen>
                                         ),
                                       ),
                                     ),
-                                    SizedBox(width: 100.w),
+
+                                    SizedBox(width: 50.w),
+
+                                    // Legacy Transfer button
                                     Container(
                                       padding:
                                           EdgeInsets.symmetric(vertical: 20.h),
@@ -438,6 +439,45 @@ class _HomeScreenState extends State<HomeScreen>
                                             color: mdGrey400,
                                           ),
                                           child: const Text('Transfer'),
+                                        ),
+                                      ),
+                                    ),
+
+                                    SizedBox(width: 20.w),
+
+                                    // Streaming Transfer button
+                                    Container(
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 20.h),
+                                      child: GestureDetector(
+                                        onTap: () async {
+                                          await animationProvider
+                                              .handleStreamingTransfer(
+                                            badgeData: badgeData,
+                                            inlineImageProvider:
+                                                inlineImageProvider,
+                                            speedDialProvider:
+                                                speedDialProvider,
+                                            flash: animationProvider
+                                                .isEffectActive(FlashEffect()),
+                                            marquee: animationProvider
+                                                .isEffectActive(
+                                                    MarqueeEffect()),
+                                            invert: animationProvider
+                                                .isEffectActive(
+                                                    InvertLEDEffect()),
+                                          );
+                                        },
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 20.w, vertical: 8.h),
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(2.r),
+                                            color: Colors
+                                                .green, // highlight streaming
+                                          ),
+                                          child: const Text('Stream'),
                                         ),
                                       ),
                                     ),
