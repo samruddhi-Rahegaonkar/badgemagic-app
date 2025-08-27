@@ -86,4 +86,62 @@ jobs:
         with:
           IPHONE_DEVICE_MODEL: ${{ env.IPHONE_DEVICE_MODEL }}
           IPAD_DEVICE_MODEL: ${{ env.IPAD_DEVICE_MODEL }}
+
+  macos:
+    name: Build MacOS App
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: stable
+      - run: flutter pub get
+      - run: flutter build macos --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-app
+          path: build/macos/Build/Products/Release/*.app
+  
+  windows:
+    name: Build Windows EXE
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: stable
+      - run: flutter pub get
+      - run: flutter build windows --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-exe
+          path: build/windows/x64/runner/Release/*.exe
+    
+  debian:
+    name: Build Debian Package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: stable
+      - run: flutter pub get
+      - run: flutter build linux --release
+      - name: Install fpm
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ruby-dev build-essential
+          sudo gem install --no-document fpm
+      - run: |
+          mkdir -p debian-out
+          fpm -s dir -t deb \
+            -n badgemagic \
+            -v 1.0.0 \
+            build/linux/x64/release/bundle/=/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: debian-package
+          path: "*.deb"
+
+
       
