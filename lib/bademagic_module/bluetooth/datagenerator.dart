@@ -65,7 +65,8 @@ class DataTransferManager {
     logger.d("Streaming ready state: $ready");
   }
 
-  Future<bool> processStreamingContent() async {
+  Future<bool> processStreamingContent(
+      {Function(int sent, int total)? onProgress}) async {
     if (_pendingStreamData == null) {
       logger.e("No pending stream data");
       return false;
@@ -73,34 +74,17 @@ class DataTransferManager {
 
     try {
       Map<String, dynamic> params = _pendingStreamData!;
-      logger.i("Processing streaming content: '${params['text']}'");
-
       String text = params['text'] ?? "";
-      if (text.isEmpty) {
-        logger.w("Empty text for streaming");
-        return false;
-      }
 
       List<String> hexStrings =
           await _converters.messageTohex(text, params['isInverted'] ?? false);
 
-      if (hexStrings.isEmpty) {
-        logger.w("No hex data generated for streaming");
-        return false;
-      }
-
-      logger.d("Generated ${hexStrings.length} hex strings for streaming");
-
       List<List<bool>> bitmap = hexStringToBool(hexStrings.join());
-
       List<int> columns = convertBitmapToColumns(bitmap);
 
-      logger.i("Streaming ${columns.length} columns");
-
-      bool success = await streamBitmap(columns);
+      bool success = await streamBitmap(columns, onProgress: onProgress);
 
       _pendingStreamData = null;
-
       return success;
     } catch (e) {
       logger.e("Error processing streaming content: $e");
@@ -153,7 +137,10 @@ class DataTransferManager {
     }
   }
 
-  Future<bool> streamBitmap(List<int> bitmap) async {
+  Future<bool> streamBitmap(
+    List<int> bitmap, {
+    Function(int sent, int total)? onProgress,
+  }) async {
     if (!isStreamingActive || streamingWriteCharacteristic == null) {
       logger.e("Streaming not active or characteristic unavailable");
       return false;
@@ -164,17 +151,20 @@ class DataTransferManager {
 
       List<int> command = [0x03];
 
-      for (int column in bitmap) {
+      for (int i = 0; i < bitmap.length; i++) {
+        int column = bitmap[i];
+        command.clear();
+        command.add(0x03);
         command.add(column & 0xFF);
         command.add((column >> 8) & 0xFF);
+
+        await streamingWriteCharacteristic!
+            .write(command, withoutResponse: false);
+
+        onProgress?.call(i + 1, bitmap.length);
+
+        await Future.delayed(const Duration(milliseconds: 50));
       }
-
-      logger.d("Sending ${command.length} bytes to streaming characteristic");
-
-      await streamingWriteCharacteristic!
-          .write(command, withoutResponse: false);
-
-      await Future.delayed(const Duration(milliseconds: 200));
 
       logger.i("Bitmap streamed successfully, ${bitmap.length} columns");
       return true;
