@@ -285,12 +285,10 @@ jobs:
           git clone --branch=app https://${{ github.repository_owner }}:${{ github.token }}@github.com/${{ github.repository }} app
           cd app
           branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
-
-          rm -rf badge-magic-$branch-linux*
-          cp -r ../build/linux/x64/release/bundle ./badge-magic-$branch-linux
-
+          rm -rf *
+          cp -r ../build/linux/x64/release/bundle/* .
           git checkout --orphan temporary
-          git add --all .
+          git add --all
           git commit -m "[Auto] Update Debian build from $branch ($(date +%Y-%m-%d.%H:%M:%S))"
           git branch -D app
           git branch -m app
@@ -325,15 +323,19 @@ jobs:
           cd app
           branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
 
-          rm -rf badge-magic-$branch-macos*
-          cp -r ../build/macos/Build/Products/Release ./badge-magic-$branch-macos
+          # Clean old files
+          rm -rf *
+
+          # Copy all macOS build artifacts to root
+          cp -r ../build/macos/Build/Products/Release/* .
 
           git checkout --orphan temporary
-          git add --all .
+          git add --all
           git commit -m "[Auto] Update macOS build from $branch ($(date +%Y-%m-%d.%H:%M:%S))"
           git branch -D app
           git branch -m app
           git push --force origin app
+
 
   windows:
     name: Windows Flutter Build
@@ -364,12 +366,16 @@ jobs:
           cd app
           branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
 
-          rm -rf badge-magic-$branch-windows*
-          cp -r ../build/windows/x64/runner/Release ./badge-magic-$branch-windows
+          # Clean old files
+          rm -rf *
+
+          # Copy all Windows build artifacts to root
+          cp -r ../build/windows/x64/runner/Release/* .
 
           git checkout --orphan temporary
-          git add --all .
+          git add --all
           git commit -m "[Auto] Update Windows build from $branch ($(date +%Y-%m-%d.%H:%M:%S))"
           git branch -D app
           git branch -m app
           git push --force origin app
+
