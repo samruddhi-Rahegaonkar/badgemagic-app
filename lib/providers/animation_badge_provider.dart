@@ -322,6 +322,7 @@ class AnimationBadgeProvider extends ChangeNotifier {
       logger.i(
           "Starting streaming transfer with aniIndex=$aniIndex, speed=$selectedSpeed");
 
+      // ✅ CRITICAL FIX: Use useStreaming parameter, not isSavedBadge
       await badgeData.checkAndTransfer(
         inlineImageProvider.getController().text,
         flash,
@@ -330,13 +331,13 @@ class AnimationBadgeProvider extends ChangeNotifier {
         selectedSpeed,
         modeValueMap[aniIndex],
         null,
-        true, // 🚨 IMPORTANT: mark streaming = true
+        false, // ✅ isSavedBadge should be false for new transfers
+        useStreaming: true, // ✅ THIS is the correct streaming parameter
       );
-
-      ToastUtils().showToast("Streaming transfer started");
     } catch (e) {
-      logger.e("Error in handleStreamingTransfer");
-      ToastUtils().showErrorToast("Streaming transfer failed: $e");
+      logger.e("Error in handleStreamingTransfer: $e");
+      ToastUtils().showErrorToast("❌ Streaming transfer failed: $e");
+      rethrow;
     }
   }
 }

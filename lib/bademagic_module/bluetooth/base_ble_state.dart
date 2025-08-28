@@ -18,7 +18,11 @@ abstract class NormalBleState extends BleState {
       return await processState();
     } on Exception catch (e) {
       String errorMessage = e.toString().replaceFirst('Exception: ', '');
-      return CompletedState(isSuccess: false, message: errorMessage);
+      return CompletedState(
+        isSuccess: false,
+        message: errorMessage,
+        shouldDisconnect: true, // Always disconnect on errors
+      );
     }
   }
 }
@@ -26,7 +30,6 @@ abstract class NormalBleState extends BleState {
 abstract class RetryBleState extends BleState {
   final logger = Logger();
   final toast = ToastUtils();
-
   final _maxRetries = 3;
 
   Future<BleState?> processState();
@@ -43,6 +46,7 @@ abstract class RetryBleState extends BleState {
         logger.e(e);
         lastException = e;
         attempt++;
+
         if (attempt < _maxRetries) {
           logger.d("Retrying ($attempt/$_maxRetries)...");
         } else {
@@ -53,9 +57,10 @@ abstract class RetryBleState extends BleState {
       }
     }
 
-    // After max retries, return a CompletedState indicating failure.
     return CompletedState(
-        isSuccess: false,
-        message: lastException?.toString() ?? "Unknown error");
+      isSuccess: false,
+      message: lastException?.toString() ?? "Unknown error",
+      shouldDisconnect: true, // Always disconnect after max retries
+    );
   }
 }

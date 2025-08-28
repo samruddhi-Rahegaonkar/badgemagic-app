@@ -61,7 +61,8 @@ class WriteState extends NormalBleState {
             isSuccess: true,
             message: "Data transferred successfully",
             mode: TransferMode.legacy,
-            shouldDisconnect: true, // ✅ disconnect after legacy
+            shouldDisconnect: true,
+            manager: manager, // Add this line
           );
         }
       }
@@ -129,11 +130,16 @@ class WriteState extends NormalBleState {
 
     if (success) {
       logger.d("Streaming mode activated successfully");
+
+      // CRITICAL: Mark streaming as ready for content processing
+      manager.setStreamingReady(true);
+
       return CompletedState(
         isSuccess: true,
-        message: "Streaming mode activated. Ready to stream bitmaps.",
+        message: "Streaming mode activated. Processing content...",
         mode: TransferMode.streaming,
-        shouldDisconnect: false, // ✅ stay connected for streaming
+        shouldDisconnect: false, // Keep connection alive
+        manager: manager,
       );
     } else {
       throw Exception("Failed to activate streaming mode");

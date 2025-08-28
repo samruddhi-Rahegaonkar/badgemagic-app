@@ -112,15 +112,15 @@ class BadgeMessageProvider {
     Map<String, dynamic>? jsonData,
     bool isSavedBadge, {
     TextStyle? textStyle,
-    bool useStreaming = false, // 👈 new param
+    bool useStreaming = false,
   }) async {
     if (await FlutterBluePlus.isSupported == false) {
       ToastUtils().showErrorToast('Bluetooth is not supported by the device');
       return;
     }
 
+    // Text validation
     if (controllerData.getController().text.isEmpty && isSavedBadge == false) {
-      // Allow empty text if Pacman or Fireworks mode is selected
       bool isFireworks = false;
       try {
         int fireworksIndex = 19;
@@ -130,6 +130,7 @@ class BadgeMessageProvider {
           isFireworks = true;
         }
       } catch (_) {}
+
       if (mode != Mode.pacman && !isFireworks) {
         ToastUtils().showErrorToast("Please enter a message");
         return;
@@ -137,8 +138,37 @@ class BadgeMessageProvider {
     }
 
     final adapterState = await FlutterBluePlus.adapterState.first;
-    if (adapterState == BluetoothAdapterState.on) {
-      // 🔹 Build the Data object
+    if (adapterState != BluetoothAdapterState.on) {
+      if (Platform.isAndroid) {
+        ToastUtils().showToast('Turning on Bluetooth...');
+        await FlutterBluePlus.turnOn();
+      } else if (Platform.isIOS) {
+        ToastUtils().showToast('Please turn on Bluetooth');
+      }
+      return;
+    }
+
+    // FIXED: Different data handling for streaming vs legacy
+    DataTransferManager manager;
+
+    if (useStreaming) {
+      // For streaming: Store parameters, don't create Data object
+      manager = DataTransferManager.forStreaming();
+
+      manager.setPendingStreamData({
+        'text': text,
+        'flash': flash,
+        'marq': marq,
+        'isInverted': isInverted,
+        'speed': speed,
+        'mode': mode,
+        'jsonData': jsonData,
+        'isSavedBadge': isSavedBadge,
+      });
+
+      ToastUtils().showToast("Starting streaming connection...");
+    } else {
+      // For legacy: Create data object as before
       Data data;
       if (jsonData != null) {
         data = fileHelper.jsonToData(jsonData);
@@ -149,7 +179,7 @@ class BadgeMessageProvider {
             flash: old.flash,
             marquee: old.marquee,
             speed: old.speed,
-            mode: Mode.animation, // Force seamless marquee
+            mode: Mode.animation,
           );
           data = Data(messages: [newMessage, ...data.messages.skip(1)]);
         }
@@ -157,39 +187,45 @@ class BadgeMessageProvider {
         data = await generateData(
             text, flash, marq, isInverted, speedMap[speed], mode, jsonData);
       }
+      manager = DataTransferManager.forLegacy(data);
+      ToastUtils().showToast("Starting legacy transfer...");
+    }
 
-      // 🔹 Explicit manager selection
-      DataTransferManager manager = useStreaming
-          ? DataTransferManager.forStreaming(data)
-          : DataTransferManager.forLegacy(data);
+    // Start state machine
+    try {
+      NormalBleState? state = ScanState(manager: manager);
 
-      // 🔹 Start unified pipeline
-      try {
-        NormalBleState? state = ScanState(manager: manager);
+      while (state != null) {
+        state = (await state.processState()) as NormalBleState?;
 
-        while (state != null) {
-          state = (await state.processState()) as NormalBleState?;
-        }
+        // FIXED: Check if streaming is ready and process content
+        if (useStreaming && manager.isStreamingConnectionReady()) {
+          ToastUtils().showToast(
+              "Streaming connection established! Processing content...");
 
-        if (useStreaming) {
-          ToastUtils().showToast("✅ Streaming transfer completed");
-        } else {
-          ToastUtils().showToast("✅ Legacy transfer completed");
-        }
-      } catch (e) {
-        if (useStreaming) {
-          ToastUtils().showErrorToast("❌ Streaming transfer failed: $e");
-        } else {
-          ToastUtils().showErrorToast("❌ Legacy transfer failed: $e");
+          bool success = await manager.processStreamingContent();
+
+          if (success) {
+            ToastUtils()
+                .showToast("Streaming transfer completed successfully!");
+          } else {
+            ToastUtils().showErrorToast("Failed to stream content");
+          }
+          return; // Exit after streaming
         }
       }
-    } else {
-      if (Platform.isAndroid) {
-        ToastUtils().showToast('Turning on Bluetooth...');
-        await FlutterBluePlus.turnOn();
-      } else if (Platform.isIOS) {
-        ToastUtils().showToast('Please turn on Bluetooth');
+
+      // Legacy mode completion
+      if (!useStreaming) {
+        ToastUtils().showToast("Legacy transfer completed");
+      } else {
+        ToastUtils().showErrorToast("Failed to establish streaming connection");
       }
+    } catch (e) {
+      String errorMsg = useStreaming
+          ? "Streaming transfer failed: $e"
+          : "Legacy transfer failed: $e";
+      ToastUtils().showErrorToast(errorMsg);
     }
   }
 }

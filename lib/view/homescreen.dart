@@ -17,6 +17,7 @@ import 'package:badgemagic/providers/imageprovider.dart';
 import 'package:badgemagic/providers/saved_badge_provider.dart';
 import 'package:badgemagic/providers/speed_dial_provider.dart';
 import 'package:badgemagic/view/special_text_field.dart';
+import 'package:badgemagic/view/widgets/StreamingButton.dart';
 import 'package:badgemagic/view/widgets/common_scaffold_widget.dart';
 import 'package:badgemagic/view/widgets/homescreentabs.dart';
 import 'package:badgemagic/view/widgets/transitiontab.dart';
@@ -444,13 +445,12 @@ class _HomeScreenState extends State<HomeScreen>
                                     ),
 
                                     SizedBox(width: 20.w),
-
                                     // Streaming Transfer button
                                     Container(
                                       padding:
                                           EdgeInsets.symmetric(vertical: 20.h),
-                                      child: GestureDetector(
-                                        onTap: () async {
+                                      child: StreamingButton(
+                                        onPressed: () async {
                                           await animationProvider
                                               .handleStreamingTransfer(
                                             badgeData: badgeData,
@@ -468,19 +468,8 @@ class _HomeScreenState extends State<HomeScreen>
                                                     InvertLEDEffect()),
                                           );
                                         },
-                                        child: Container(
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 20.w, vertical: 8.h),
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(2.r),
-                                            color: Colors
-                                                .green, // highlight streaming
-                                          ),
-                                          child: const Text('Stream'),
-                                        ),
                                       ),
-                                    ),
+                                    )
                                   ],
                                 );
                               }
