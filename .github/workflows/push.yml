@@ -375,9 +375,6 @@ jobs:
           cd app
           branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
 
-          # Clean old files
-          rm -rf *
-
           # Copy all Windows build artifacts to root
           cp -r ../build/windows/x64/runner/Release/* .
 
