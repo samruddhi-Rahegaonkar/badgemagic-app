@@ -95,6 +95,12 @@ class WriteState extends NormalBleState {
   }
 
   Future<BleState?> _setupStreamingService(BluetoothService service) async {
+    try {
+      int mtu = await device.requestMtu(512);
+      logger.i("[Streaming Setup] Requested MTU: $mtu");
+    } catch (e) {
+      logger.w("[Streaming Setup] Failed to request MTU: $e");
+    }
     BluetoothCharacteristic? writeChar;
     BluetoothCharacteristic? notifyChar;
 
