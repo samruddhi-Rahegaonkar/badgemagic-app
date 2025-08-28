@@ -79,6 +79,8 @@ class WriteState extends NormalBleState {
       return await _setupStreamingService(streamingService);
     } else {
       logger.d("Next-gen service not found, falling back to legacy mode");
+      toast.showToast(
+          "This badge does not support live streaming. Please use a badge with next-gen firmware.");
       manager.mode = TransferMode.legacy;
       return await _handleLegacyMode(services);
     }
@@ -111,6 +113,8 @@ class WriteState extends NormalBleState {
 
     if (writeChar == null) {
       logger.e("[Streaming Setup] Streaming write characteristic not found!");
+      toast.showToast(
+          "This badge does not support live streaming. Please use a badge with next-gen firmware.");
       throw Exception("Streaming write characteristic not found");
     }
 
