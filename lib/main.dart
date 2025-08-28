@@ -25,7 +25,7 @@ void main() {
       ChangeNotifierProvider<InlineImageProvider>(
           create: (context) => getIt<InlineImageProvider>()),
       ChangeNotifierProvider<BadgeScanProvider>(
-        create: (_) => getIt<BadgeScanProvider>(), 
+        create: (_) => getIt<BadgeScanProvider>(),
       ),
     ],
     child: const MyApp(),
