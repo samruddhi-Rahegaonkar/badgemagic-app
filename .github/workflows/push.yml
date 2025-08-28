@@ -335,9 +335,6 @@ jobs:
           cd app
           branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
 
-          # Clean old files
-          rm -rf *
-
           # Copy all macOS build artifacts to root
           cp -r ../build/macos/Build/Products/Release/* .
 
