@@ -21,7 +21,7 @@ abstract class NormalBleState extends BleState {
       return CompletedState(
         isSuccess: false,
         message: errorMessage,
-        shouldDisconnect: true, // Always disconnect on errors
+        shouldDisconnect: true,
       );
     }
   }
@@ -60,7 +60,7 @@ abstract class RetryBleState extends BleState {
     return CompletedState(
       isSuccess: false,
       message: lastException?.toString() ?? "Unknown error",
-      shouldDisconnect: true, // Always disconnect after max retries
+      shouldDisconnect: true,
     );
   }
 }

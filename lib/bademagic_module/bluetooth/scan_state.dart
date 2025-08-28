@@ -62,7 +62,6 @@ class ScanState extends NormalBleState {
         },
       );
 
-      // Start scan with proper services
       List<Guid> services = _getServicesForMode(manager.mode);
       await FlutterBluePlus.startScan(
         withServices: services,
@@ -71,7 +70,6 @@ class ScanState extends NormalBleState {
         timeout: const Duration(seconds: 15),
       );
 
-      // Instead of 1s fixed delay, let the scan timeout handle completion
       return await nextStateCompleter.future;
     } catch (e) {
       logger.e("Exception during scanning: $e");
@@ -90,15 +88,14 @@ class ScanState extends NormalBleState {
         return serviceUuids
             .contains(Guid("0000fee0-0000-1000-8000-00805f9b34fb"));
       case TransferMode.streaming:
-        // Prefer next-gen service, fallback to legacy
         if (serviceUuids
             .contains(Guid("0000f055-0000-1000-8000-00805f9b34fb"))) {
-          return true; // ✅ streaming
+          return true;
         }
         if (serviceUuids
             .contains(Guid("0000fee0-0000-1000-8000-00805f9b34fb"))) {
           logger.w("Streaming service not found, falling back to legacy.");
-          manager.mode = TransferMode.legacy; // switch mode internally
+          manager.mode = TransferMode.legacy;
           return true;
         }
         return false;
@@ -111,8 +108,8 @@ class ScanState extends NormalBleState {
         return [Guid("0000fee0-0000-1000-8000-00805f9b34fb")];
       case TransferMode.streaming:
         return [
-          Guid("0000f055-0000-1000-8000-00805f9b34fb"), // next-gen
-          Guid("0000fee0-0000-1000-8000-00805f9b34fb"), // legacy fallback
+          Guid("0000f055-0000-1000-8000-00805f9b34fb"),
+          Guid("0000fee0-0000-1000-8000-00805f9b34fb"),
         ];
     }
   }

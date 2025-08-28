@@ -306,7 +306,6 @@ class AnimationBadgeProvider extends ChangeNotifier {
     }
   }
 
-  /// Handles streaming transfer for next-gen badges
   Future<void> handleStreamingTransfer({
     required BadgeMessageProvider badgeData,
     required InlineImageProvider inlineImageProvider,
@@ -322,7 +321,6 @@ class AnimationBadgeProvider extends ChangeNotifier {
       logger.i(
           "Starting streaming transfer with aniIndex=$aniIndex, speed=$selectedSpeed");
 
-      // ✅ CRITICAL FIX: Use useStreaming parameter, not isSavedBadge
       await badgeData.checkAndTransfer(
         inlineImageProvider.getController().text,
         flash,
@@ -331,8 +329,8 @@ class AnimationBadgeProvider extends ChangeNotifier {
         selectedSpeed,
         modeValueMap[aniIndex],
         null,
-        false, // ✅ isSavedBadge should be false for new transfers
-        useStreaming: true, // ✅ THIS is the correct streaming parameter
+        false,
+        useStreaming: true,
       );
     } catch (e) {
       logger.e("Error in handleStreamingTransfer: $e");

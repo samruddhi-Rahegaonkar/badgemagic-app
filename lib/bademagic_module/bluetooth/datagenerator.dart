@@ -18,10 +18,8 @@ class DataTransferManager {
 
   BluetoothDevice? connectedDevice;
 
-  // Legacy characteristics
   BluetoothCharacteristic? legacyWriteCharacteristic;
 
-  // Streaming characteristics
   BluetoothCharacteristic? streamingWriteCharacteristic;
   BluetoothCharacteristic? streamingNotifyCharacteristic;
   StreamSubscription<List<int>>? notificationSubscription;
@@ -36,19 +34,16 @@ class DataTransferManager {
 
   bool isStreamingActive = false;
 
-  // NEW: Streaming state management
   Map<String, dynamic>? _pendingStreamData;
   bool _isStreamingReady = false;
 
   DataTransferManager(this.data, {this.mode = TransferMode.legacy});
 
-  // Factory constructors for convenience
   factory DataTransferManager.forLegacy(Data data) =>
       DataTransferManager(data, mode: TransferMode.legacy);
   factory DataTransferManager.forStreaming() =>
       DataTransferManager(null, mode: TransferMode.streaming);
 
-  // NEW: Store parameters for streaming use after connection
   void setPendingStreamData(Map<String, dynamic> streamData) {
     _pendingStreamData = streamData;
     logger.d("Stored pending stream data: ${streamData.keys}");
@@ -58,7 +53,6 @@ class DataTransferManager {
     return _pendingStreamData ?? {};
   }
 
-  // NEW: Check if streaming connection is established and ready
   bool isStreamingConnectionReady() {
     return _isStreamingReady &&
         connectedDevice != null &&
@@ -66,13 +60,11 @@ class DataTransferManager {
         isStreamingActive;
   }
 
-  // NEW: Mark streaming as ready (called from WriteState)
   void setStreamingReady(bool ready) {
     _isStreamingReady = ready;
     logger.d("Streaming ready state: $ready");
   }
 
-  // NEW: Process the actual streaming content using your Converters
   Future<bool> processStreamingContent() async {
     if (_pendingStreamData == null) {
       logger.e("No pending stream data");
@@ -89,7 +81,6 @@ class DataTransferManager {
         return false;
       }
 
-      // Use your existing Converters class for text to hex conversion
       List<String> hexStrings =
           await _converters.messageTohex(text, params['isInverted'] ?? false);
 
@@ -100,18 +91,14 @@ class DataTransferManager {
 
       logger.d("Generated ${hexStrings.length} hex strings for streaming");
 
-      // Convert hex to bitmap using your existing utility
       List<List<bool>> bitmap = hexStringToBool(hexStrings.join());
 
-      // Convert bitmap to column format for streaming
       List<int> columns = convertBitmapToColumns(bitmap);
 
       logger.i("Streaming ${columns.length} columns");
 
-      // Stream the bitmap
       bool success = await streamBitmap(columns);
 
-      // Clear pending data after processing
       _pendingStreamData = null;
 
       return success;
@@ -126,7 +113,6 @@ class DataTransferManager {
     return converter.convert(data!);
   }
 
-  /// Clear the currently connected device and cleanup
   void clearConnectedDevice() {
     connectedDevice = null;
     legacyWriteCharacteristic = null;
@@ -139,7 +125,6 @@ class DataTransferManager {
     _pendingStreamData = null;
   }
 
-  /// Handle error codes from streaming badge
   void handleStreamingErrorCode(int errorCode) {
     switch (errorCode) {
       case 0x00:
@@ -168,7 +153,6 @@ class DataTransferManager {
     }
   }
 
-  /// Stream bitmap data (enhanced with better logging)
   Future<bool> streamBitmap(List<int> bitmap) async {
     if (!isStreamingActive || streamingWriteCharacteristic == null) {
       logger.e("Streaming not active or characteristic unavailable");
@@ -178,9 +162,8 @@ class DataTransferManager {
     try {
       logger.i("Streaming bitmap with ${bitmap.length} columns");
 
-      List<int> command = [0x03]; // stream_bitmap function code
+      List<int> command = [0x03];
 
-      // Convert bitmap to 16-bit words (little-endian)
       for (int column in bitmap) {
         command.add(column & 0xFF);
         command.add((column >> 8) & 0xFF);
@@ -191,7 +174,6 @@ class DataTransferManager {
       await streamingWriteCharacteristic!
           .write(command, withoutResponse: false);
 
-      // Wait for processing
       await Future.delayed(const Duration(milliseconds: 200));
 
       logger.i("Bitmap streamed successfully, ${bitmap.length} columns");
@@ -202,7 +184,6 @@ class DataTransferManager {
     }
   }
 
-  /// Enter streaming mode (enhanced)
   Future<bool> enterStreamingMode() async {
     if (streamingWriteCharacteristic == null) {
       logger.e("Streaming write characteristic not available");
@@ -212,11 +193,10 @@ class DataTransferManager {
     try {
       logger.i("Entering streaming mode...");
 
-      List<int> command = [0x02, 0x00]; // Enter streaming mode
+      List<int> command = [0x02, 0x00];
       await streamingWriteCharacteristic!
           .write(command, withoutResponse: false);
 
-      // Wait for device to enter streaming mode
       await Future.delayed(const Duration(milliseconds: 200));
 
       isStreamingActive = true;
@@ -228,14 +208,13 @@ class DataTransferManager {
     }
   }
 
-  /// Exit streaming mode
   Future<bool> exitStreamingMode() async {
     if (streamingWriteCharacteristic == null) return false;
 
     try {
       logger.i("Exiting streaming mode...");
 
-      List<int> command = [0x02, 0x01]; // Exit streaming mode
+      List<int> command = [0x02, 0x01];
       await streamingWriteCharacteristic!
           .write(command, withoutResponse: false);
 
@@ -252,7 +231,6 @@ class DataTransferManager {
     }
   }
 
-  /// Convert 2D bitmap to column format for streaming
   List<int> convertBitmapToColumns(List<List<bool>> bitmap) {
     if (bitmap.isEmpty) return [];
 

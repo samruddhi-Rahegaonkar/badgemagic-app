@@ -33,7 +33,7 @@ class ConnectState extends NormalBleState {
         message: "Failed to connect to device. Please retry.",
         mode: manager.mode,
         shouldDisconnect: true,
-        manager: manager, // Add this line
+        manager: manager,
       );
     }
   }

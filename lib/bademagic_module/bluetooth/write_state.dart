@@ -96,7 +96,10 @@ class WriteState extends NormalBleState {
     BluetoothCharacteristic? writeChar;
     BluetoothCharacteristic? notifyChar;
 
+    logger.i("[Streaming Setup] Scanning for streaming characteristics...");
     for (BluetoothCharacteristic char in service.characteristics) {
+      logger.i(
+          "[Streaming Setup] Found characteristic: ${char.uuid} props: ${char.properties}");
       if (char.uuid == Guid("0000f057-0000-1000-8000-00805f9b34fb") &&
           char.properties.write) {
         writeChar = char;
@@ -107,13 +110,18 @@ class WriteState extends NormalBleState {
     }
 
     if (writeChar == null) {
+      logger.e("[Streaming Setup] Streaming write characteristic not found!");
       throw Exception("Streaming write characteristic not found");
     }
 
     manager.streamingWriteCharacteristic = writeChar;
+    logger.i(
+        "[Streaming Setup] Assigned streamingWriteCharacteristic: ${writeChar.uuid}");
 
     if (notifyChar != null) {
       manager.streamingNotifyCharacteristic = notifyChar;
+      logger.i(
+          "[Streaming Setup] Assigned streamingNotifyCharacteristic: ${notifyChar.uuid}");
       await notifyChar.setNotifyValue(true);
 
       manager.notificationSubscription = notifyChar.lastValueStream.listen(
@@ -124,6 +132,9 @@ class WriteState extends NormalBleState {
         },
         onError: (error) => logger.e("Notification error: $error"),
       );
+    } else {
+      logger.w(
+          "[Streaming Setup] Streaming notify characteristic not found (optional)");
     }
 
     bool success = await manager.enterStreamingMode();
@@ -131,17 +142,19 @@ class WriteState extends NormalBleState {
     if (success) {
       logger.d("Streaming mode activated successfully");
 
-      // CRITICAL: Mark streaming as ready for content processing
       manager.setStreamingReady(true);
 
+      logger.i(
+          "[Streaming Setup] Streaming is ready. Proceeding to content transfer.");
       return CompletedState(
         isSuccess: true,
         message: "Streaming mode activated. Processing content...",
         mode: TransferMode.streaming,
-        shouldDisconnect: false, // Keep connection alive
+        shouldDisconnect: false,
         manager: manager,
       );
     } else {
+      logger.e("[Streaming Setup] Failed to activate streaming mode");
       throw Exception("Failed to activate streaming mode");
     }
   }

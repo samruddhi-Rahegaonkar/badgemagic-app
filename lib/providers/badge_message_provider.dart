@@ -148,11 +148,9 @@ class BadgeMessageProvider {
       return;
     }
 
-    // FIXED: Different data handling for streaming vs legacy
     DataTransferManager manager;
 
     if (useStreaming) {
-      // For streaming: Store parameters, don't create Data object
       manager = DataTransferManager.forStreaming();
 
       manager.setPendingStreamData({
@@ -168,7 +166,6 @@ class BadgeMessageProvider {
 
       ToastUtils().showToast("Starting streaming connection...");
     } else {
-      // For legacy: Create data object as before
       Data data;
       if (jsonData != null) {
         data = fileHelper.jsonToData(jsonData);
@@ -190,15 +187,11 @@ class BadgeMessageProvider {
       manager = DataTransferManager.forLegacy(data);
       ToastUtils().showToast("Starting legacy transfer...");
     }
-
-    // Start state machine
     try {
       NormalBleState? state = ScanState(manager: manager);
 
       while (state != null) {
         state = (await state.processState()) as NormalBleState?;
-
-        // FIXED: Check if streaming is ready and process content
         if (useStreaming && manager.isStreamingConnectionReady()) {
           ToastUtils().showToast(
               "Streaming connection established! Processing content...");
@@ -211,11 +204,10 @@ class BadgeMessageProvider {
           } else {
             ToastUtils().showErrorToast("Failed to stream content");
           }
-          return; // Exit after streaming
+          return;
         }
       }
 
-      // Legacy mode completion
       if (!useStreaming) {
         ToastUtils().showToast("Legacy transfer completed");
       } else {
