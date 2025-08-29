@@ -189,41 +189,6 @@ class _HomeScreenState extends State<HomeScreen>
                 child: Column(
                   children: [
                     AnimationBadge(selectedSize: _selectedSize),
-                    Padding(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 15.w, vertical: 10.h),
-                      child: Row(
-                        children: [
-                          const Text("Screen Size: ",
-                              style: TextStyle(fontSize: 16)),
-                          const SizedBox(width: 10),
-                          DropdownButton<ScreenSize>(
-                            value: _selectedSize,
-                            onChanged: (newSize) {
-                              if (newSize != null) {
-                                setState(() {
-                                  _selectedSize = newSize;
-                                  animationProvider.initGrids(_selectedSize);
-                                  animationProvider.badgeAnimation(
-                                    inlineImageProvider.getController().text,
-                                    Converters(),
-                                    animationProvider
-                                        .isEffectActive(InvertLEDEffect()),
-                                    _selectedSize,
-                                  );
-                                });
-                              }
-                            },
-                            items: supportedScreenSizes.map((size) {
-                              return DropdownMenuItem<ScreenSize>(
-                                value: size,
-                                child: Text(size.name),
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                      ),
-                    ),
                     Container(
                       margin: EdgeInsets.all(15.w),
                       child: Material(
@@ -245,6 +210,48 @@ class _HomeScreenState extends State<HomeScreen>
                                 });
                               },
                               icon: const Icon(Icons.tag_faces_outlined),
+                            ),
+                            suffixIcon: PopupMenuButton<ScreenSize>(
+                              tooltip: "Select Screen Size",
+                              initialValue: _selectedSize,
+                              onSelected: (newSize) {
+                                setState(() {
+                                  _selectedSize = newSize;
+                                  animationProvider.initGrids(_selectedSize);
+                                  animationProvider.badgeAnimation(
+                                    inlineImageProvider.getController().text,
+                                    Converters(),
+                                    animationProvider
+                                        .isEffectActive(InvertLEDEffect()),
+                                    _selectedSize,
+                                  );
+                                });
+                              },
+                              itemBuilder: (context) {
+                                return supportedScreenSizes.map((size) {
+                                  return PopupMenuItem<ScreenSize>(
+                                    value: size,
+                                    child: Text(size.name,
+                                        style: const TextStyle(fontSize: 13)),
+                                  );
+                                }).toList();
+                              },
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 6.w),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.aspect_ratio,
+                                        size: 18, color: Colors.black54),
+                                    SizedBox(width: 4.w),
+                                    Text(
+                                      _selectedSize.name,
+                                      style: const TextStyle(
+                                          fontSize: 12, color: Colors.black87),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius:

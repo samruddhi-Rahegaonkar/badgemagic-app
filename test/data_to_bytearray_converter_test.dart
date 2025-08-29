@@ -282,8 +282,8 @@ void main() {
             ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
             scale: false,
           ),
-          speed: Speed.six,
-          mode: Mode.laser),
+          speed: Speed.five,
+          mode: Mode.animation),
       Message(
           text: await converters.messageTohex(
             'Hii',
@@ -292,7 +292,7 @@ void main() {
             ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
             scale: false,
           ),
-          speed: Speed.seven,
+          speed: Speed.six,
           mode: Mode.snowflake),
       Message(
           text: await converters.messageTohex(
@@ -302,14 +302,24 @@ void main() {
             ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
             scale: false,
           ),
-          speed: Speed.eight,
+          speed: Speed.seven,
           mode: Mode.picture),
+      Message(
+          text: await converters.messageTohex(
+            'Hii',
+            false,
+            badgeHeight,
+            ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+            scale: false,
+          ),
+          speed: Speed.eight,
+          mode: Mode.laser),
     ]);
 
     var result = converter.convert(data);
 
     expect(result[0].sublist(8, 16),
-        [0x01, 0x10, 0x22, 0x34, 0x58, 0x65, 0x76, 0x00]);
+        [0x01, 0x10, 0x22, 0x34, 0x56, 0x67, 0x78, 0x00]);
   });
 
   test(
