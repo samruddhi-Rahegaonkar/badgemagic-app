@@ -39,16 +39,15 @@ class _AnimationBadgeState extends State<AnimationBadge> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AnimationBadgeProvider>();
-    final aspectRatio = widget.selectedSize.width / widget.selectedSize.height;
-
     return AspectRatio(
-      aspectRatio: aspectRatio,
+      aspectRatio: 3.2,
       child: CustomPaint(
         painter: BadgePaint(grid: provider.getPaintGrid()),
       ),
     );
   }
 }
+
 // class AnimationBadgeROW extends LeafRenderObjectWidget {
 //   final AnimationBadgeProvider provider;
 

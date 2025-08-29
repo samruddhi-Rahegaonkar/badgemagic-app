@@ -196,70 +196,66 @@ class _HomeScreenState extends State<HomeScreen>
                         borderRadius: BorderRadius.circular(10.r),
                         elevation: 4,
                         child: ExtendedTextField(
-                          onChanged: (value) {},
-                          controller: inlineimagecontroller,
-                          specialTextSpanBuilder: ImageBuilder(),
-                          decoration: InputDecoration(
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10.r),
-                            ),
-                            prefixIcon: IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  isPrefixIconClicked = !isPrefixIconClicked;
-                                });
-                              },
-                              icon: const Icon(Icons.tag_faces_outlined),
-                            ),
-                            suffixIcon: PopupMenuButton<ScreenSize>(
-                              tooltip: "Select Screen Size",
-                              initialValue: _selectedSize,
-                              onSelected: (newSize) {
-                                setState(() {
-                                  _selectedSize = newSize;
-                                  animationProvider.initGrids(_selectedSize);
-                                  animationProvider.badgeAnimation(
-                                    inlineImageProvider.getController().text,
-                                    Converters(),
-                                    animationProvider
-                                        .isEffectActive(InvertLEDEffect()),
-                                    _selectedSize,
-                                  );
-                                });
-                              },
-                              itemBuilder: (context) {
-                                return supportedScreenSizes.map((size) {
-                                  return PopupMenuItem<ScreenSize>(
-                                    value: size,
-                                    child: Text(size.name,
-                                        style: const TextStyle(fontSize: 13)),
-                                  );
-                                }).toList();
-                              },
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 6.w),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.aspect_ratio,
-                                        size: 18, color: Colors.black54),
-                                    SizedBox(width: 4.w),
-                                    Text(
-                                      _selectedSize.name,
-                                      style: const TextStyle(
-                                          fontSize: 12, color: Colors.black87),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10.r)),
-                              borderSide: BorderSide(color: colorPrimary),
-                            ),
-                          ),
-                        ),
+  onChanged: (value) {},
+  controller: inlineimagecontroller,
+  specialTextSpanBuilder: ImageBuilder(),
+  decoration: InputDecoration(
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10.r),
+    ),
+    prefixIcon: IconButton(
+      onPressed: () {
+        setState(() {
+          isPrefixIconClicked = !isPrefixIconClicked;
+        });
+      },
+      icon: const Icon(Icons.tag_faces_outlined),
+    ),
+    suffixIcon: PopupMenuButton<ScreenSize>(
+      tooltip: "Select Screen Size",
+      initialValue: _selectedSize,
+      onSelected: (newSize) {
+        setState(() {
+          _selectedSize = newSize;
+          animationProvider.initGrids(_selectedSize);
+          animationProvider.badgeAnimation(
+            inlineImageProvider.getController().text,
+            Converters(),
+            animationProvider.isEffectActive(InvertLEDEffect()),
+            _selectedSize,
+          );
+        });
+      },
+      itemBuilder: (context) {
+        return supportedScreenSizes.map((size) {
+          return PopupMenuItem<ScreenSize>(
+            value: size,
+            child: Text(size.name, style: const TextStyle(fontSize: 13)),
+          );
+        }).toList();
+      },
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 6.w),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.aspect_ratio, size: 18, color: Colors.black54),
+            SizedBox(width: 4.w),
+            Text(
+              _selectedSize.name,
+              style: const TextStyle(fontSize: 12, color: Colors.black87),
+            ),
+          ],
+        ),
+      ),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.all(Radius.circular(10.r)),
+      borderSide: BorderSide(color: colorPrimary),
+    ),
+  ),
+),
+
                       ),
                     ),
                     Visibility(
