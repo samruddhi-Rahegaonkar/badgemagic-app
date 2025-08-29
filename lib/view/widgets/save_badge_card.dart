@@ -153,8 +153,7 @@ class SaveBadgeCard extends StatelessWidget {
                                         .messages[0]
                                         .text
                                         .join(),
-                                    selectedSize.height 
-                                    )
+                                    selectedSize.height)
                                 .map((e) => e.map((e) => e ? 1 : 0).toList())
                                 .cast<List<bool>>()
                                 .toList();
