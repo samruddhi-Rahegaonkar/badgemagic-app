@@ -51,9 +51,9 @@ class _EffectsTabState extends State<EffectTab> {
 
 //Animation tab to show animation choices for the user
 class AnimationTab extends StatefulWidget {
-  const AnimationTab({
-    super.key,
-  });
+  final ScreenSize selectedSize;
+
+  const AnimationTab({super.key, required this.selectedSize});
 
   @override
   State<AnimationTab> createState() => _AnimationTabState();
@@ -62,66 +62,78 @@ class AnimationTab extends StatefulWidget {
 class _AnimationTabState extends State<AnimationTab> {
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            AniContainer(
-              animation: aniLeft,
-              animationName: 'Left',
-              index: 0,
-            ),
-            AniContainer(
-              animation: aniRight,
-              animationName: 'Right',
-              index: 1,
-            ),
-            AniContainer(
-              animation: aniUp,
-              animationName: 'Up',
-              index: 2,
-            ),
-          ],
-        ),
-        Row(
-          children: [
-            AniContainer(
-              animation: aniDown,
-              animationName: 'Down',
-              index: 3,
-            ),
-            AniContainer(
-              animation: aniFixed,
-              animationName: 'Fixed',
-              index: 4,
-            ),
-            AniContainer(
-              animation: aniFixed,
-              animationName: 'Snowflake',
-              index: 5,
-            ),
-          ],
-        ),
-        Row(
-          children: [
-            AniContainer(
-              animation: aniPicture,
-              animationName: 'Picture',
-              index: 6,
-            ),
-            AniContainer(
-              animation: animation,
-              animationName: 'Animation',
-              index: 7,
-            ),
-            AniContainer(
-              animation: aniLaser,
-              animationName: 'Laser',
-              index: 8,
-            ),
-          ],
-        ),
-      ],
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          Row(
+            children: [
+              AniContainer(
+                animation: aniLeft,
+                animationName: 'Left',
+                index: 0,
+                screenSize: widget.selectedSize,
+              ),
+              AniContainer(
+                animation: aniRight,
+                animationName: 'Right',
+                index: 1,
+                screenSize: widget.selectedSize,
+              ),
+              AniContainer(
+                animation: aniUp,
+                animationName: 'Up',
+                index: 2,
+                screenSize: widget.selectedSize,
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              AniContainer(
+                animation: aniDown,
+                animationName: 'Down',
+                index: 3,
+                screenSize: widget.selectedSize,
+              ),
+              AniContainer(
+                animation: aniFixed,
+                animationName: 'Fixed',
+                index: 4,
+                screenSize: widget.selectedSize,
+              ),
+              AniContainer(
+                animation: animation,
+                animationName: 'Animation',
+                index: 5,
+                screenSize: widget.selectedSize,
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              AniContainer(
+                animation: aniSnowflake,
+                animationName: 'Snowflake',
+                index: 6,
+                screenSize: widget.selectedSize,
+              ),
+              AniContainer(
+                animation: aniPicture,
+                animationName: 'Picture',
+                index: 7,
+                screenSize: widget.selectedSize,
+              ),
+              AniContainer(
+                animation: aniLaser,
+                animationName: 'Laser',
+                index: 8,
+                screenSize: widget.selectedSize,
+              ),
+            ],
+          ),
+          // Special animations moved to Transition tab.
+        ],
+      ),
     );
   }
 }

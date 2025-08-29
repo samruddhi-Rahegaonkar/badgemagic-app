@@ -1,3 +1,5 @@
+// ignore_for_file: invalid_use_of_visible_for_testing_member
+
 import 'package:badgemagic/bademagic_module/models/screen_size.dart';
 import 'package:badgemagic/bademagic_module/utils/badge_utils.dart';
 import 'package:badgemagic/providers/draw_badge_provider.dart';
@@ -9,11 +11,13 @@ class BMBadge extends StatefulWidget {
   final void Function(DrawBadgeProvider provider)? providerInit;
   final List<List<bool>>? badgeGrid;
   final ScreenSize selectedSize;
-  const BMBadge(
-      {super.key,
-      this.providerInit,
-      this.badgeGrid,
-      required this.selectedSize});
+
+  const BMBadge({
+    super.key,
+    this.providerInit,
+    this.badgeGrid,
+    required this.selectedSize,
+  });
 
   @override
   State<BMBadge> createState() => _BMBadgeState();
@@ -22,6 +26,7 @@ class BMBadge extends StatefulWidget {
 class _BMBadgeState extends State<BMBadge> {
   BadgeUtils badgeUtils = BadgeUtils();
   late DrawBadgeProvider drawProvider;
+  Offset? dragStart;
 
   @override
   void initState() {
@@ -45,130 +50,178 @@ class _BMBadgeState extends State<BMBadge> {
     }
   }
 
+  // Convert global -> local coordinates
+  Offset _getLocalPosition(Offset globalPosition) {
+    final renderBox = context.findRenderObject() as RenderBox;
+    return renderBox.globalToLocal(globalPosition);
+  }
+
+  void _handlePanStart(DragStartDetails details) {
+    dragStart = _getLocalPosition(details.globalPosition);
+  }
+
   void _handlePanUpdate(DragUpdateDetails details) {
-    RenderBox renderBox = context.findRenderObject() as RenderBox;
-    Offset localPosition = renderBox.globalToLocal(details.globalPosition);
+    final renderBox = context.findRenderObject() as RenderBox;
+    final localPosition = renderBox.globalToLocal(details.globalPosition);
 
-    final int rows = widget.selectedSize.height;
-    final int cols = widget.selectedSize.width;
+    final rows = widget.selectedSize.height;
+    final cols = widget.selectedSize.width;
 
-    MapEntry<double, double> badgeOffsetBackground =
+    // Background offsets + badge scaling
+    final badgeOffsetBackground =
         badgeUtils.getBadgeOffsetBackground(renderBox.size);
-    double offsetHeightBadgeBackground = badgeOffsetBackground.key;
-    double offsetWidthBadgeBackground = badgeOffsetBackground.value;
+    final offsetHeightBadgeBackground = badgeOffsetBackground.key;
+    final offsetWidthBadgeBackground = badgeOffsetBackground.value;
 
-    MapEntry<double, double> badgeSize = badgeUtils.getBadgeSize(
-        offsetHeightBadgeBackground,
+    final badgeSize = badgeUtils.getBadgeSize(offsetHeightBadgeBackground,
+        offsetWidthBadgeBackground, renderBox.size);
+    final badgeHeight = badgeSize.key;
+    final badgeWidth = badgeSize.value;
+
+    final cellSize = badgeWidth / cols;
+
+    final cellStartCoordinate = badgeUtils.getCellStartCoordinate(
         offsetWidthBadgeBackground,
-        renderBox.size);
-    double badgeHeight = badgeSize.key;
-    double badgeWidth = badgeSize.value;
+        offsetHeightBadgeBackground,
+        badgeWidth,
+        badgeHeight);
+    final cellStartX = cellStartCoordinate.key;
+    final cellStartY = cellStartCoordinate.value;
 
-    var cellSize = badgeWidth / cols;
+    final cellEndX = cellStartX + (cellSize * cols);
+    final cellEndY = cellStartY + ((cellSize * 0.93) * rows);
 
-    MapEntry<double, double> cellStartCoordinate =
-        badgeUtils.getCellStartCoordinate(offsetWidthBadgeBackground,
-            offsetHeightBadgeBackground, badgeWidth, badgeHeight);
-    double cellStartX = cellStartCoordinate.key;
-    double cellStartY = cellStartCoordinate.value;
-
-    double cellEnd = cellStartX + (cellSize * cols);
-    double cellEndY = cellStartY + ((cellSize * 0.93) * rows);
-
-    if (localPosition.dx > cellStartX &&
-        localPosition.dx > cellStartY &&
-        localPosition.dx < cellEnd &&
+    if (localPosition.dx >= cellStartX &&
+        localPosition.dy >= cellStartY &&
+        localPosition.dx < cellEndX &&
         localPosition.dy < cellEndY * 1.1) {
-      int col = ((localPosition.dx - cellStartX) / (cellSize * 0.93))
-          .floor()
-          .clamp(0, cols - 1);
-      int row = ((localPosition.dy - cellStartY) / cellSize)
-          .floor()
-          .clamp(0, rows - 1);
-      drawProvider.setDrawViewGrid(row, col);
-    }
+      final shape = drawProvider.selectedShape;
 
-    setState(() {});
+      final start = drawProvider.getGridPosition(dragStart!, cellSize);
+      final end = drawProvider.getGridPosition(localPosition, cellSize);
+
+      drawProvider.clearPreviewGrid();
+
+      switch (shape) {
+        case DrawShape.freehand:
+          _drawLine(start.row, start.col, end.row, end.col, preview: false);
+          dragStart = localPosition;
+          drawProvider.commitGridUpdate();
+          break;
+        case DrawShape.square:
+          final size =
+              ((end.row - start.row).abs() + (end.col - start.col).abs()) ~/ 2;
+          _drawSquare(start.row, start.col, size, preview: true);
+          break;
+        case DrawShape.rectangle:
+          final w = (end.col - start.col).abs() ~/ 2;
+          final h = (end.row - start.row).abs() ~/ 2;
+          _drawRectangle(start.row, start.col, h, w, preview: true);
+          break;
+        case DrawShape.circle:
+          final radius =
+              ((end.row - start.row).abs() + (end.col - start.col).abs()) ~/ 2;
+          _drawCircle(start.row, start.col, radius, preview: true);
+          break;
+        case DrawShape.triangle:
+          final height = (end.row - start.row).abs();
+          _drawTriangle(start.col, start.col, height, preview: true);
+          break;
+      }
+
+      // ignore: invalid_use_of_protected_member
+      drawProvider.notifyListeners();
+    }
+  }
+
+  void _handlePanEnd(DragEndDetails details) {
+    drawProvider.commitGridUpdate();
+    dragStart = null;
+  }
+
+  // === Shape drawing helpers ===
+  void _drawLine(int r1, int c1, int r2, int c2, {bool preview = false}) {
+    int dx = (c2 - c1).abs(), dy = (r2 - r1).abs();
+    int sx = c1 < c2 ? 1 : -1;
+    int sy = r1 < r2 ? 1 : -1;
+    int err = dx - dy, x = c1, y = r1;
+
+    while (true) {
+      drawProvider.setCell(y, x, drawProvider.getIsDrawing(), preview: preview);
+      if (x == c2 && y == r2) break;
+      int e2 = 2 * err;
+      if (e2 > -dy) {
+        err -= dy;
+        x += sx;
+      }
+      if (e2 < dx) {
+        err += dx;
+        y += sy;
+      }
+    }
+  }
+
+  void _drawSquare(int row, int col, int radius, {bool preview = false}) {
+    for (int i = -radius; i <= radius; i++) {
+      for (int j = -radius; j <= radius; j++) {
+        drawProvider.setCell(row + i, col + j, drawProvider.getIsDrawing(),
+            preview: preview);
+      }
+    }
+  }
+
+  void _drawRectangle(int row, int col, int h, int w, {bool preview = false}) {
+    for (int i = -h; i <= h; i++) {
+      for (int j = -w; j <= w; j++) {
+        drawProvider.setCell(row + i, col + j, drawProvider.getIsDrawing(),
+            preview: preview);
+      }
+    }
+  }
+
+  void _drawCircle(int row, int col, int radius, {bool preview = false}) {
+    for (int i = -radius; i <= radius; i++) {
+      for (int j = -radius; j <= radius; j++) {
+        if ((i * i + j * j) <= radius * radius) {
+          drawProvider.setCell(row + i, col + j, drawProvider.getIsDrawing(),
+              preview: preview);
+        }
+      }
+    }
+  }
+
+  void _drawTriangle(int row, int col, int height, {bool preview = false}) {
+    for (int i = 0; i <= height; i++) {
+      for (int j = -i; j <= i; j++) {
+        drawProvider.setCell(row + i, col + j, drawProvider.getIsDrawing(),
+            preview: preview);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final aspectRatio = widget.selectedSize.width / widget.selectedSize.height;
-    var width = MediaQuery.of(context).size.width;
-    Size size = Size(width, width / aspectRatio);
+    final width = MediaQuery.of(context).size.width;
+    final size = Size(width, width / aspectRatio);
 
     return ChangeNotifierProvider.value(
       value: drawProvider,
       child: GestureDetector(
-          onPanUpdate: _handlePanUpdate,
-          child: AspectRatio(
-            aspectRatio: aspectRatio,
-            child: Consumer<DrawBadgeProvider>(
-              builder: (context, value, child) => CustomPaint(
-                  painter: BadgePaint(grid: value.getDrawViewGrid()),
-                  size: size),
+        behavior: HitTestBehavior.opaque,
+        onPanStart: _handlePanStart,
+        onPanUpdate: _handlePanUpdate,
+        onPanEnd: _handlePanEnd,
+        child: AspectRatio(
+          aspectRatio: aspectRatio,
+          child: Consumer<DrawBadgeProvider>(
+            builder: (_, value, __) => CustomPaint(
+              painter: BadgePaint(grid: value.getDrawViewGrid()),
+              size: size,
             ),
-          )),
+          ),
+        ),
+      ),
     );
   }
 }
-// class AnimationBadgeROW extends LeafRenderObjectWidget {
-//   final DrawBadgeProvider provider;
-
-//   const AnimationBadgeROW({super.key, required this.provider});
-
-//   @override
-//   RenderObject createRenderObject(BuildContext context) {
-//     final renderObject = BadgeRenderObject(provider: provider);
-//     provider.addListener(renderObject.onProviderUpdate);
-//     return renderObject;
-//   }
-
-//   @override
-//   void updateRenderObject(
-//       BuildContext context, covariant BadgeRenderObject renderObject) {
-//     renderObject.provider = provider;
-//   }
-// }
-
-// class BadgeRenderObject extends RenderBox with RenderObjectWithChildMixin {
-//   DrawBadgeProvider provider;
-
-//   BadgeRenderObject({required this.provider});
-
-//   @override
-//   void performLayout() {
-//     var width = constraints.maxWidth;
-//     var height = constraints.maxHeight;
-
-//     // Maintain aspect ratio but ensure it fits within the available height
-//     var desiredHeight = width / 3.2;
-//     if (desiredHeight > height) {
-//       desiredHeight = height;
-//     }
-
-//     size = constraints.constrain(Size(width, desiredHeight));
-//   }
-
-//   @override
-//   void paint(PaintingContext context, Offset offset) {
-//     final Canvas canvas = context.canvas;
-//     BadgePaint(grid: provider.getDrawViewGrid()).paint(canvas, size);
-//   }
-
-//   @override
-//   bool get alwaysNeedsCompositing => true;
-
-//   void onProviderUpdate() {
-//     markNeedsPaint();
-//   }
-
-//   @override
-//   bool hitTest(BoxHitTestResult result, {required Offset position}) {
-//     if (size.contains(position)) {
-//       result.add(BoxHitTestEntry(this, position));
-//       return true;
-//     }
-//     return false;
-//   }
-// }

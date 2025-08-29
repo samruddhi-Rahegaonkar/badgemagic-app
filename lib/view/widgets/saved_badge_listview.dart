@@ -1,12 +1,15 @@
 import 'package:badgemagic/bademagic_module/models/screen_size.dart';
 import 'package:badgemagic/view/widgets/save_badge_card.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:badgemagic/providers/badge_slot_provider..dart';
 
 class BadgeListView extends StatelessWidget {
   final Future<List<MapEntry<String, Map<String, dynamic>>>> futureBadges;
   final bool isTransferEnabled;
   final Future<void> Function(MapEntry<String, Map<String, dynamic>>)
-      refreshBadgesCallback; // Add callback for refreshing badges
+      refreshBadgesCallback;
+  final void Function()? onSelectionChanged;
   final ScreenSize selectedSize;
 
   const BadgeListView(
@@ -14,8 +17,8 @@ class BadgeListView extends StatelessWidget {
       required this.isTransferEnabled,
       required this.futureBadges,
       required this.refreshBadgesCallback,
-      required this.selectedSize // Require the callback
-      });
+      this.onSelectionChanged,
+      required this.selectedSize});
 
   @override
   Widget build(BuildContext context) {
@@ -25,19 +28,36 @@ class BadgeListView extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         } else {
-          List<MapEntry<String, Map<String, dynamic>>> savedBadges =
-              snapshot.data!;
-          return Padding(
-            padding: EdgeInsets.only(bottom: isTransferEnabled ? 75.0 : 0),
-            child: ListView.builder(
-              itemCount: savedBadges.length,
-              itemBuilder: (context, index) {
-                return SaveBadgeCard(
-                  badgeData: savedBadges[index],
-                  refreshBadgesCallback: refreshBadgesCallback,
-                  selectedSize: selectedSize, // Pass callback to card
-                );
-              },
+          List<MapEntry<String, Map<String, dynamic>>> savedBadges = snapshot
+              .data!
+              .where((entry) => entry.key != 'badge_original_texts.json')
+              .toList();
+          return Consumer<BadgeSlotProvider>(
+            builder: (context, slotProvider, _) => Padding(
+              padding: EdgeInsets.only(bottom: isTransferEnabled ? 75.0 : 0),
+              child: ListView.builder(
+                itemCount: savedBadges.length,
+                itemBuilder: (context, index) {
+                  final badgeKey = savedBadges[index].key;
+                  final isSelected = slotProvider.isSelected(badgeKey);
+                  return SaveBadgeCard(
+                    badgeData: savedBadges[index],
+                    refreshBadgesCallback: refreshBadgesCallback,
+                    isSelected: isSelected,
+                    onLongPress: () {
+                      slotProvider.toggleSelection(badgeKey);
+                      if (onSelectionChanged != null) onSelectionChanged!();
+                    },
+                    onTap: () {
+                      if (slotProvider.selectedBadges.isNotEmpty) {
+                        slotProvider.toggleSelection(badgeKey);
+                        if (onSelectionChanged != null) onSelectionChanged!();
+                      }
+                    },
+                    selectedSize: selectedSize,
+                  );
+                },
+              ),
             ),
           );
         }
