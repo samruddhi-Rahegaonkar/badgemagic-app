@@ -23,6 +23,7 @@ import 'package:badgemagic/badge_animation/ani_diagonal.dart';
 import 'package:badgemagic/badge_animation/ani_emergency.dart';
 import 'package:badgemagic/badge_animation/ani_beating_hearts.dart';
 import 'package:badgemagic/badge_animation/ani_fireworks.dart';
+import 'package:flutter/foundation.dart';
 
 Map<int, Mode> modeValueMap = {
   0: Mode.left,
@@ -53,7 +54,7 @@ Map<int, Speed> speedMap = {
   8: Speed.eight, // Add superfast for the highest speed
 };
 
-class BadgeMessageProvider {
+class BadgeMessageProvider extends ChangeNotifier {
   static final Logger logger = Logger();
   InlineImageProvider controllerData =
       GetIt.instance.get<InlineImageProvider>();

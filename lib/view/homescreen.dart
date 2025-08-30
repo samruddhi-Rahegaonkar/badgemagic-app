@@ -10,6 +10,7 @@ import 'package:badgemagic/bademagic_module/utils/image_utils.dart';
 import 'package:badgemagic/bademagic_module/utils/toast_utils.dart';
 import 'package:badgemagic/bademagic_module/models/speed.dart';
 import 'package:badgemagic/constants.dart';
+import 'package:badgemagic/providers/StreamingProvider.dart';
 import 'package:badgemagic/providers/animation_badge_provider.dart';
 import 'package:badgemagic/providers/badge_message_provider.dart'
     hide modeValueMap, speedMap;
@@ -17,7 +18,6 @@ import 'package:badgemagic/providers/imageprovider.dart';
 import 'package:badgemagic/providers/saved_badge_provider.dart';
 import 'package:badgemagic/providers/speed_dial_provider.dart';
 import 'package:badgemagic/view/special_text_field.dart';
-import 'package:badgemagic/view/widgets/StreamingButton.dart';
 import 'package:badgemagic/view/widgets/common_scaffold_widget.dart';
 import 'package:badgemagic/view/widgets/homescreentabs.dart';
 import 'package:badgemagic/view/widgets/transitiontab.dart';
@@ -293,22 +293,47 @@ class _HomeScreenState extends State<HomeScreen>
                                           EdgeInsets.symmetric(vertical: 20.h),
                                       child: GestureDetector(
                                         onTap: () async {
-                                          await animationProvider
-                                              .handleAnimationTransfer(
-                                            badgeData: badgeData,
-                                            inlineImageProvider:
-                                                inlineImageProvider,
-                                            speedDialProvider:
-                                                speedDialProvider,
-                                            flash: animationProvider
-                                                .isEffectActive(FlashEffect()),
-                                            marquee: animationProvider
-                                                .isEffectActive(
-                                                    MarqueeEffect()),
-                                            invert: animationProvider
-                                                .isEffectActive(
-                                                    InvertLEDEffect()),
-                                          );
+                                          final streamingProvider =
+                                              context.read<StreamingProvider>();
+
+                                          if (streamingProvider.isStreaming) {
+                                            await animationProvider
+                                                .handleStreamingTransfer(
+                                              badgeData: badgeData,
+                                              inlineImageProvider:
+                                                  inlineImageProvider,
+                                              speedDialProvider:
+                                                  speedDialProvider,
+                                              flash: animationProvider
+                                                  .isEffectActive(
+                                                      FlashEffect()),
+                                              marquee: animationProvider
+                                                  .isEffectActive(
+                                                      MarqueeEffect()),
+                                              invert: animationProvider
+                                                  .isEffectActive(
+                                                      InvertLEDEffect()),
+                                            );
+                                          } else {
+                                            // Normal transfer
+                                            await animationProvider
+                                                .handleAnimationTransfer(
+                                              badgeData: badgeData,
+                                              inlineImageProvider:
+                                                  inlineImageProvider,
+                                              speedDialProvider:
+                                                  speedDialProvider,
+                                              flash: animationProvider
+                                                  .isEffectActive(
+                                                      FlashEffect()),
+                                              marquee: animationProvider
+                                                  .isEffectActive(
+                                                      MarqueeEffect()),
+                                              invert: animationProvider
+                                                  .isEffectActive(
+                                                      InvertLEDEffect()),
+                                            );
+                                          }
                                         },
                                         child: Container(
                                           padding: EdgeInsets.symmetric(
@@ -412,64 +437,76 @@ class _HomeScreenState extends State<HomeScreen>
                                     Container(
                                       padding:
                                           EdgeInsets.symmetric(vertical: 20.h),
-                                      child: GestureDetector(
-                                        onTap: () async {
-                                          await animationProvider
-                                              .handleAnimationTransfer(
-                                            badgeData: badgeData,
-                                            inlineImageProvider:
-                                                inlineImageProvider,
-                                            speedDialProvider:
-                                                speedDialProvider,
-                                            flash: animationProvider
-                                                .isEffectActive(FlashEffect()),
-                                            marquee: animationProvider
-                                                .isEffectActive(
-                                                    MarqueeEffect()),
-                                            invert: animationProvider
-                                                .isEffectActive(
-                                                    InvertLEDEffect()),
+                                      child: Consumer<StreamingProvider>(
+                                        builder:
+                                            (context, streamingProvider, _) {
+                                          final isStreaming =
+                                              streamingProvider.isStreaming;
+
+                                          // 🔹 Disable button whenever streaming is ON
+                                          final bool isDisabled = isStreaming;
+
+                                          return GestureDetector(
+                                            onTap: () async {
+                                              if (isDisabled) {
+                                                // 🔹 Show feedback instead of doing nothing
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                        "Streaming active – manual transfer disabled"),
+                                                    duration:
+                                                        Duration(seconds: 2),
+                                                  ),
+                                                );
+                                                return;
+                                              }
+
+                                              // 🔹 Normal transfer
+                                              await animationProvider
+                                                  .handleAnimationTransfer(
+                                                badgeData: badgeData,
+                                                inlineImageProvider:
+                                                    inlineImageProvider,
+                                                speedDialProvider:
+                                                    speedDialProvider,
+                                                flash: animationProvider
+                                                    .isEffectActive(
+                                                        FlashEffect()),
+                                                marquee: animationProvider
+                                                    .isEffectActive(
+                                                        MarqueeEffect()),
+                                                invert: animationProvider
+                                                    .isEffectActive(
+                                                        InvertLEDEffect()),
+                                              );
+                                            },
+                                            child: Container(
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal: 20.w,
+                                                  vertical: 8.h),
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(2.r),
+                                                color: isDisabled
+                                                    ? Colors.grey.shade400
+                                                    : mdGrey400,
+                                              ),
+                                              child: Text(
+                                                'Transfer',
+                                                style: TextStyle(
+                                                  color: isDisabled
+                                                      ? Colors.grey.shade200
+                                                      : Colors.black,
+                                                ),
+                                              ),
+                                            ),
                                           );
                                         },
-                                        child: Container(
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 20.w, vertical: 8.h),
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(2.r),
-                                            color: mdGrey400,
-                                          ),
-                                          child: const Text('Transfer'),
-                                        ),
                                       ),
                                     ),
 
                                     SizedBox(width: 20.w),
-                                    // Streaming Transfer button
-                                    Container(
-                                      padding:
-                                          EdgeInsets.symmetric(vertical: 20.h),
-                                      child: StreamingButton(
-                                        onPressed: () async {
-                                          await animationProvider
-                                              .handleStreamingTransfer(
-                                            badgeData: badgeData,
-                                            inlineImageProvider:
-                                                inlineImageProvider,
-                                            speedDialProvider:
-                                                speedDialProvider,
-                                            flash: animationProvider
-                                                .isEffectActive(FlashEffect()),
-                                            marquee: animationProvider
-                                                .isEffectActive(
-                                                    MarqueeEffect()),
-                                            invert: animationProvider
-                                                .isEffectActive(
-                                                    InvertLEDEffect()),
-                                          );
-                                        },
-                                      ),
-                                    )
                                   ],
                                 );
                               }
@@ -487,7 +524,7 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  void handleTextChange() {
+  void handleTextChange() async {
     final currentText = inlineimagecontroller.text;
     final selection = inlineimagecontroller.selection;
 
@@ -521,6 +558,25 @@ class _HomeScreenState extends State<HomeScreen>
       }
     } else {
       previousText = currentText;
+    }
+
+    // 🔹 Auto-streaming
+    final streamingProvider =
+        Provider.of<StreamingProvider>(context, listen: false);
+
+    if (streamingProvider.isStreaming && streamingProvider.isConnected) {
+      try {
+        await animationProvider.handleStreamingTransfer(
+          badgeData: badgeData,
+          inlineImageProvider: inlineImageProvider,
+          speedDialProvider: speedDialProvider,
+          flash: animationProvider.isEffectActive(FlashEffect()),
+          marquee: animationProvider.isEffectActive(MarqueeEffect()),
+          invert: animationProvider.isEffectActive(InvertLEDEffect()),
+        );
+      } catch (e) {
+        print("Streaming error on text change: $e");
+      }
     }
   }
 

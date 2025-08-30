@@ -240,4 +240,16 @@ class DataTransferManager {
 
     return columns;
   }
+
+  Future<void> disconnect() async {
+    try {
+      if (connectedDevice != null) {
+        await connectedDevice!.disconnect();
+      }
+    } catch (e) {
+      logger.e("Error while disconnecting: $e");
+    } finally {
+      clearConnectedDevice();
+    }
+  }
 }

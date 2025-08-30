@@ -1,6 +1,11 @@
+import 'package:badgemagic/providers/StreamingProvider.dart';
+import 'package:badgemagic/providers/animation_badge_provider.dart';
+import 'package:badgemagic/providers/badge_message_provider.dart';
 import 'package:badgemagic/providers/getitlocator.dart';
 import 'package:badgemagic/providers/imageprovider.dart';
+import 'package:badgemagic/providers/speed_dial_provider.dart';
 import 'package:badgemagic/view/about_us_screen.dart';
+import 'package:badgemagic/view/badgeconfig_screen.dart';
 import 'package:badgemagic/view/draw_badge_screen.dart';
 import 'package:badgemagic/view/homescreen.dart';
 import 'package:badgemagic/view/save_badge_screen.dart';
@@ -19,13 +24,26 @@ void main() {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  runApp(MultiProvider(
-    providers: [
-      ChangeNotifierProvider<InlineImageProvider>(
-          create: (context) => getIt<InlineImageProvider>()),
-    ],
-    child: const MyApp(),
-  ));
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<InlineImageProvider>(
+            create: (_) => InlineImageProvider()),
+        ChangeNotifierProvider<AnimationBadgeProvider>(
+            create: (_) => AnimationBadgeProvider()),
+        ChangeNotifierProvider<BadgeMessageProvider>(
+            create: (_) => BadgeMessageProvider()),
+        ChangeNotifierProvider<SpeedDialProvider>(
+          create: (context) => SpeedDialProvider(
+              Provider.of<AnimationBadgeProvider>(context, listen: false)),
+        ),
+        ChangeNotifierProvider<StreamingProvider>(
+            create: (_) => StreamingProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -51,6 +69,7 @@ class MyApp extends StatelessWidget {
             '/savedClipart': (context) => const SavedClipart(),
             '/aboutUs': (context) => const AboutUsScreen(),
             '/settings': (context) => const SettingsScreen(),
+            '/badgeconfiguration': (context) => const BadgeconfigScreen(),
           },
         );
       },
