@@ -188,30 +188,16 @@ class _HomeScreenState extends State<HomeScreen>
                     : const AlwaysScrollableScrollPhysics(),
                 child: Column(
                   children: [
-                    AnimationBadge(selectedSize: _selectedSize),
-                    Container(
-                      margin: EdgeInsets.all(15.w),
-                      child: Material(
-                        color: drawerHeaderTitle,
-                        borderRadius: BorderRadius.circular(10.r),
-                        elevation: 4,
-                        child: ExtendedTextField(
-                          onChanged: (value) {},
-                          controller: inlineimagecontroller,
-                          specialTextSpanBuilder: ImageBuilder(),
-                          decoration: InputDecoration(
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10.r),
-                            ),
-                            prefixIcon: IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  isPrefixIconClicked = !isPrefixIconClicked;
-                                });
-                              },
-                              icon: const Icon(Icons.tag_faces_outlined),
-                            ),
-                            suffixIcon: PopupMenuButton<ScreenSize>(
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        AnimationBadge(selectedSize: _selectedSize),
+                        Padding(
+                          padding: EdgeInsets.only(right: 15.w),
+                          child: Material(
+                            color: Colors.white.withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(5.r),
+                            child: PopupMenuButton<ScreenSize>(
                               tooltip: "Select Screen Size",
                               initialValue: _selectedSize,
                               onSelected: (newSize) {
@@ -237,12 +223,13 @@ class _HomeScreenState extends State<HomeScreen>
                                 }).toList();
                               },
                               child: Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 6.w),
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 6.w, vertical: 3.h),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     const Icon(Icons.aspect_ratio,
-                                        size: 18, color: Colors.black54),
+                                        size: 16, color: Colors.black54),
                                     SizedBox(width: 4.w),
                                     Text(
                                       _selectedSize.name,
@@ -252,6 +239,32 @@ class _HomeScreenState extends State<HomeScreen>
                                   ],
                                 ),
                               ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      margin: EdgeInsets.all(15.w),
+                      child: Material(
+                        color: drawerHeaderTitle,
+                        borderRadius: BorderRadius.circular(10.r),
+                        elevation: 4,
+                        child: ExtendedTextField(
+                          onChanged: (value) {},
+                          controller: inlineimagecontroller,
+                          specialTextSpanBuilder: ImageBuilder(),
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.r),
+                            ),
+                            prefixIcon: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  isPrefixIconClicked = !isPrefixIconClicked;
+                                });
+                              },
+                              icon: const Icon(Icons.tag_faces_outlined),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius:
