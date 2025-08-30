@@ -1,4 +1,3 @@
-import 'package:badgemagic/bademagic_module/utils/byte_array_utils.dart';
 import 'package:badgemagic/bademagic_module/utils/toast_utils.dart';
 import 'package:badgemagic/badge_effect/flash_effect.dart';
 import 'package:badgemagic/badge_effect/marquee_effect.dart';
@@ -11,261 +10,263 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:badgemagic/bademagic_module/models/screen_size.dart';
 
-class SaveBadgeDialog extends StatelessWidget {
+class SaveBadgeDialog extends StatefulWidget {
   final SpeedDialProvider speed;
   final bool isInverse;
-  final AnimationBadgeProvider animationProvider; // Restore this field
+  final AnimationBadgeProvider animationProvider;
   final TextEditingController textController;
-  final ScreenSize selectedSize;
 
   const SaveBadgeDialog({
     super.key,
     required this.textController,
     required this.isInverse,
-    required this.animationProvider, // Restore this parameter
+    required this.animationProvider,
     required this.speed,
-    required this.selectedSize, // <-- Required parameter
+    required ScreenSize selectedSize,
   });
+
+  @override
+  State<SaveBadgeDialog> createState() => _SaveBadgeDialogState();
+}
+
+class _SaveBadgeDialogState extends State<SaveBadgeDialog> {
+  ScreenSize? selectedSize;
+  TextEditingController badgeNameController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    badgeNameController.text = DateTime.now().toString();
+  }
 
   @override
   Widget build(BuildContext context) {
     SavedBadgeProvider savedBadgeProvider = SavedBadgeProvider();
-    TextEditingController badgeNameController = TextEditingController();
-    badgeNameController.text = DateTime.now().toString();
+
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(5.r),
       ),
       child: Container(
-        height: 150.h, // Increase height for TextField space
-        width: 300.w, // Increased width
-        padding: EdgeInsets.symmetric(
-            horizontal: 20.w,
-            vertical: 10.h), // Added padding for better layout
+        height: 250.h,
+        width: 300.w,
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Expanded(
-              flex: 1,
-              child: const Text(
-                'Save Badge',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
+            const Text(
+              'Save Badge',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
+            const SizedBox(height: 10),
             const Text(
               'File Name',
-              style: TextStyle(
-                fontWeight: FontWeight.w400,
-                color: Colors.red,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w400, color: Colors.red),
             ),
-            const SizedBox(
-                height: 10), // Space between file name and text field
             TextField(
               controller: badgeNameController,
               autofocus: true,
-              onTap: () {
-                // Select all text when the TextField is tapped
-                textController.selection = TextSelection(
-                  baseOffset: 0,
-                  extentOffset: textController.text.length,
-                );
-              },
-              decoration: const InputDecoration(
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.red),
-                ),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(
-                      color: Colors.red,
-                      width: 2), // Thicker border when focused
-                ),
-              ),
             ),
+            const SizedBox(height: 10),
+            const Text(
+              'Select Screen Size',
+              style: TextStyle(fontWeight: FontWeight.w400, color: Colors.red),
+            ),
+            DropdownButton<ScreenSize>(
+              value: selectedSize,
+              hint: const Text("Choose size"),
+              isExpanded: true,
+              items: supportedScreenSizes.map((size) {
+                return DropdownMenuItem<ScreenSize>(
+                  value: size,
+                  child: Text(size.name),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  selectedSize = value;
+                });
+              },
+            ),
+            const Spacer(),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(color: Colors.red),
-                    )),
+                  onPressed: () => Navigator.pop(context),
+                  child:
+                      const Text('Cancel', style: TextStyle(color: Colors.red)),
+                ),
                 TextButton(
-                  onPressed: () async {
-                    logger.i("Flash Effect ${animationProvider.isEffectActive(
-                      FlashEffect(),
-                    )} , Marquee Effect ${animationProvider.isEffectActive(
-                      MarqueeEffect(),
-                    )} , invert $isInverse , speed ${speed.getOuterValue()} , animation ${animationProvider.getAnimationIndex() ?? 1}");
-
-                    final directory = await getApplicationDocumentsDirectory();
-                    final trimmedBadgeName = badgeNameController.text.trim();
-                    final filePath = '${directory.path}/$trimmedBadgeName.json';
-                    final file = File(filePath);
-
-                    // Check for any file(s) with the same name (case-insensitive, ignoring spaces around the base name)
-                    final files = directory.listSync();
-                    List<String> caseInsensitiveMatches = [];
-                    for (var f in files) {
-                      if (f is File) {
-                        final filename =
-                            f.path.split(Platform.pathSeparator).last;
-                        if (filename.toLowerCase().endsWith('.json')) {
-                          final baseName =
-                              filename.substring(0, filename.length - 5).trim();
-                          if (baseName.toLowerCase() ==
-                              trimmedBadgeName.toLowerCase()) {
-                            caseInsensitiveMatches.add(filename);
+                  onPressed: selectedSize == null
+                      ? null
+                      : () async {
+                          final trimmedBadgeName =
+                              badgeNameController.text.trim();
+                          if (trimmedBadgeName.isEmpty) {
+                            ToastUtils()
+                                .showToast("Please enter a valid badge name.");
+                            return;
                           }
-                        }
-                      }
-                    }
-                    String? caseInsensitiveMatch =
-                        caseInsensitiveMatches.isNotEmpty
-                            ? caseInsensitiveMatches.first
-                            : null;
 
-                    // Check for exact (case-sensitive) match
-                    bool caseSensitiveExists = await file.exists();
+                          final directory =
+                              await getApplicationDocumentsDirectory();
+                          final filePath =
+                              '${directory.path}/$trimmedBadgeName.json';
+                          final file = File(filePath);
 
-                    if (caseSensitiveExists) {
-                      // Exact same file exists (case-sensitive)
-                      // Show dialog: Rename or Update
-                      final result = await showDialog<String>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Badge name exists'),
-                          content: const Text(
-                              'A badge with this name already exists. What would you like to do?'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, 'rename'),
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, 'update'),
-                              child: const Text('Overwrite'),
-                            ),
-                          ],
-                        ),
-                      );
-                      if (result == 'rename') {
-                        // Do nothing, let user change the name
-                        ToastUtils()
-                            .showToast('Please enter a new badge name.');
-                        return;
-                      } else if (result == 'update') {
-                        // Overwrite existing badge
-                        savedBadgeProvider.saveBadgeData(
-                            badgeNameController.text,
-                            textController.text,
-                            animationProvider.isEffectActive(FlashEffect()),
-                            animationProvider.isEffectActive(MarqueeEffect()),
-                            isInverse,
-                            speed.getOuterValue(),
-                            animationProvider.getAnimationIndex() ?? 1,
-                            selectedSize.height,
-                            selectedSize.width);
-                        ToastUtils().showToast('Badge updated successfully.');
-                        Future.delayed(const Duration(milliseconds: 100), () {
-                          Navigator.of(context, rootNavigator: true)
-                              .pushNamedAndRemoveUntil(
-                                  '/savedBadge', (route) => false);
-                        });
-                        return;
-                      } else {
-                        // Dialog dismissed
-                        return;
-                      }
-                    } else if (caseInsensitiveMatch != null) {
-                      // Case-insensitive match exists but not exact match
-                      final result = await showDialog<String>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Similar badge name exists'),
-                          content: Text(
-                              "A badge with a similar name already exists: '${caseInsensitiveMatch.substring(0, caseInsensitiveMatch.length - 5)}'. What would you like to do?"),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, 'rename'),
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, 'update'),
-                              child: const Text('Overwrite'),
-                            ),
-                          ],
-                        ),
-                      );
-                      if (result == 'rename') {
-                        ToastUtils()
-                            .showToast('Please enter a new badge name.');
-                        return;
-                      } else if (result == 'update') {
-                        // Overwrite the existing file with the actual filename (preserving its case)
-                        final existingFilePath =
-                            '${directory.path}/$caseInsensitiveMatch';
-                        final existingFile = File(existingFilePath);
-                        await existingFile.writeAsString(
-                            ''); // Optionally clear file before saving new data, or just overwrite below
-                        savedBadgeProvider.saveBadgeData(
-                            caseInsensitiveMatch.substring(
-                                0,
-                                caseInsensitiveMatch.length -
-                                    5), // Remove .json
-                            textController.text,
-                            animationProvider.isEffectActive(FlashEffect()),
-                            animationProvider.isEffectActive(MarqueeEffect()),
-                            isInverse,
-                            speed.getOuterValue(),
-                            animationProvider.getAnimationIndex() ?? 1,
-                            selectedSize.height,
-                            selectedSize.width);
-                        ToastUtils().showToast('Badge updated successfully.');
-                        Future.delayed(const Duration(milliseconds: 100), () {
-                          Navigator.of(context, rootNavigator: true)
-                              .pushNamedAndRemoveUntil(
-                                  '/savedBadge', (route) => false);
-                        });
-                        return;
-                      } else {
-                        // Dialog dismissed
-                        return;
-                      }
-                    } else {
-                      // File does not exist, save as new
-                      savedBadgeProvider.saveBadgeData(
-                          badgeNameController.text,
-                          textController.text,
-                          animationProvider.isEffectActive(
-                            FlashEffect(),
-                          ),
-                          animationProvider.isEffectActive(
-                            MarqueeEffect(),
-                          ),
-                          isInverse,
-                          speed.getOuterValue(),
-                          animationProvider.getAnimationIndex() ?? 1,
-                          selectedSize.height,
-                          selectedSize.width);
-                      ToastUtils().showToast('Badge saved successfully.');
-                      Navigator.of(context).pop();
-                    }
-                  },
-                  child: const Text(
-                    'Save',
-                    style: TextStyle(color: Colors.red),
-                  ),
+                          // Check for any file(s) with the same name (case-insensitive)
+                          final files = directory.listSync();
+                          List<String> caseInsensitiveMatches = [];
+                          for (var f in files) {
+                            if (f is File) {
+                              final filename =
+                                  f.path.split(Platform.pathSeparator).last;
+                              if (filename.toLowerCase().endsWith('.json')) {
+                                final baseName = filename
+                                    .substring(0, filename.length - 5)
+                                    .trim();
+                                if (baseName.toLowerCase() ==
+                                    trimmedBadgeName.toLowerCase()) {
+                                  caseInsensitiveMatches.add(filename);
+                                }
+                              }
+                            }
+                          }
+                          String? caseInsensitiveMatch =
+                              caseInsensitiveMatches.isNotEmpty
+                                  ? caseInsensitiveMatches.first
+                                  : null;
+
+                          // Check for exact (case-sensitive) match
+                          bool caseSensitiveExists = await file.exists();
+
+                          if (caseSensitiveExists) {
+                            // Exact same file exists
+                            final result = await showDialog<String>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Badge name exists'),
+                                content: const Text(
+                                    'A badge with this name already exists. What would you like to do?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, 'rename'),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, 'update'),
+                                    child: const Text('Overwrite'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (result == 'rename') {
+                              ToastUtils()
+                                  .showToast('Please enter a new badge name.');
+                              return;
+                            } else if (result == 'update') {
+                              // Overwrite existing badge
+                              savedBadgeProvider.saveBadgeData(
+                                  badgeNameController.text,
+                                  widget.textController.text,
+                                  widget.animationProvider
+                                      .isEffectActive(FlashEffect()),
+                                  widget.animationProvider
+                                      .isEffectActive(MarqueeEffect()),
+                                  widget.isInverse,
+                                  widget.speed.getOuterValue(),
+                                  widget.animationProvider
+                                          .getAnimationIndex() ??
+                                      1,
+                                  selectedSize!.height,
+                                  selectedSize!.width);
+                              ToastUtils()
+                                  .showToast('Badge updated successfully.');
+                              Navigator.of(context).pop();
+                              return;
+                            } else {
+                              return;
+                            }
+                          } else if (caseInsensitiveMatch != null) {
+                            // Case-insensitive match exists but not exact match
+                            final result = await showDialog<String>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Similar badge name exists'),
+                                content: Text(
+                                    "A badge with a similar name already exists: '${caseInsensitiveMatch.substring(0, caseInsensitiveMatch.length - 5)}'. What would you like to do?"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, 'rename'),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, 'update'),
+                                    child: const Text('Overwrite'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (result == 'rename') {
+                              ToastUtils()
+                                  .showToast('Please enter a new badge name.');
+                              return;
+                            } else if (result == 'update') {
+                              final existingFilePath =
+                                  '${directory.path}/$caseInsensitiveMatch';
+                              final existingFile = File(existingFilePath);
+                              await existingFile.writeAsString('');
+                              savedBadgeProvider.saveBadgeData(
+                                  caseInsensitiveMatch.substring(
+                                      0, caseInsensitiveMatch.length - 5),
+                                  widget.textController.text,
+                                  widget.animationProvider
+                                      .isEffectActive(FlashEffect()),
+                                  widget.animationProvider
+                                      .isEffectActive(MarqueeEffect()),
+                                  widget.isInverse,
+                                  widget.speed.getOuterValue(),
+                                  widget.animationProvider
+                                          .getAnimationIndex() ??
+                                      1,
+                                  selectedSize!.height,
+                                  selectedSize!.width);
+                              ToastUtils()
+                                  .showToast('Badge updated successfully.');
+                              Navigator.of(context).pop();
+                              return;
+                            } else {
+                              return;
+                            }
+                          } else {
+                            // File does not exist, save as new
+                            savedBadgeProvider.saveBadgeData(
+                                badgeNameController.text,
+                                widget.textController.text,
+                                widget.animationProvider
+                                    .isEffectActive(FlashEffect()),
+                                widget.animationProvider
+                                    .isEffectActive(MarqueeEffect()),
+                                widget.isInverse,
+                                widget.speed.getOuterValue(),
+                                widget.animationProvider.getAnimationIndex() ??
+                                    1,
+                                selectedSize!.height,
+                                selectedSize!.width);
+                            ToastUtils().showToast('Badge saved successfully.');
+                            Navigator.of(context).pop();
+                          }
+                        },
+                  child:
+                      const Text('Save', style: TextStyle(color: Colors.red)),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),
