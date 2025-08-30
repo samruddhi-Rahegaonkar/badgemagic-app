@@ -57,6 +57,7 @@ class _BadgeconfigScreenState extends State<BadgeconfigScreen> {
       appBar: AppBar(
         title: const Text("Badge Configuration"),
         backgroundColor: colorPrimary,
+        foregroundColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
