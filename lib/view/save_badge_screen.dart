@@ -188,7 +188,6 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
                 children: [
                   Column(
                     children: [
-
                       AnimationBadge(selectedSize: _previewSize),
                       Expanded(
                         child: Selector<BadgeSlotProvider, bool>(
