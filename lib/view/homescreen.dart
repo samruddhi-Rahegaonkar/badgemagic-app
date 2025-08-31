@@ -97,8 +97,21 @@ class _HomeScreenState extends State<HomeScreen>
     try {
       final (badgeText, badgeData, savedData) =
           await BadgeLoaderHelper.loadBadgeDataAndText(badgeFilename);
-      // Set the text in the controller
-      inlineimagecontroller.text = badgeText;
+      // Set screen size from saved data first
+      if (savedData != null &&
+          savedData.containsKey('height') &&
+          savedData.containsKey('width')) {
+        final height = savedData['height'] as int?;
+        final width = savedData['width'] as int?;
+        if (height != null && width != null) {
+          final matchedSize = supportedScreenSizes.firstWhere(
+              (size) => size.height == height && size.width == width,
+              orElse: () => _selectedSize);
+          setState(() {
+            _selectedSize = matchedSize;
+          });
+        }
+      }
       // Set animation effects
       animationProvider.removeEffect(effectMap[0]); // Invert
       animationProvider.removeEffect(effectMap[1]); // Flash
@@ -125,6 +138,8 @@ class _HomeScreenState extends State<HomeScreen>
       } catch (e) {
         speedDialProvider.setDialValue(1);
       }
+      // Set the text in the controller (this triggers badgeAnimation with correct settings)
+      inlineimagecontroller.text = badgeText;
       ToastUtils().showToast(
           "Editing badge: ${badgeFilename.substring(0, badgeFilename.length - 5)}");
     } catch (e) {
@@ -198,6 +213,7 @@ class _HomeScreenState extends State<HomeScreen>
                             color: Colors.white.withOpacity(0.9),
                             borderRadius: BorderRadius.circular(5.r),
                             child: PopupMenuButton<ScreenSize>(
+                              key: ValueKey(_selectedSize),
                               tooltip: "Select Screen Size",
                               initialValue: _selectedSize,
                               onSelected: (newSize) {

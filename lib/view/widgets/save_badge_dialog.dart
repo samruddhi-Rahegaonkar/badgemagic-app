@@ -15,6 +15,7 @@ class SaveBadgeDialog extends StatefulWidget {
   final bool isInverse;
   final AnimationBadgeProvider animationProvider;
   final TextEditingController textController;
+  final ScreenSize selectedSize;
 
   const SaveBadgeDialog({
     super.key,
@@ -22,7 +23,7 @@ class SaveBadgeDialog extends StatefulWidget {
     required this.isInverse,
     required this.animationProvider,
     required this.speed,
-    required ScreenSize selectedSize,
+    required this.selectedSize,
   });
 
   @override
@@ -30,12 +31,13 @@ class SaveBadgeDialog extends StatefulWidget {
 }
 
 class _SaveBadgeDialogState extends State<SaveBadgeDialog> {
-  ScreenSize? selectedSize;
+  late ScreenSize selectedSize;
   TextEditingController badgeNameController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    selectedSize = widget.selectedSize;
     badgeNameController.text = DateTime.now().toString();
   }
 
@@ -83,9 +85,11 @@ class _SaveBadgeDialogState extends State<SaveBadgeDialog> {
                 );
               }).toList(),
               onChanged: (value) {
-                setState(() {
-                  selectedSize = value;
-                });
+                if (value != null) {
+                  setState(() {
+                    selectedSize = value;
+                  });
+                }
               },
             ),
             const Spacer(),
@@ -98,9 +102,7 @@ class _SaveBadgeDialogState extends State<SaveBadgeDialog> {
                       const Text('Cancel', style: TextStyle(color: Colors.red)),
                 ),
                 TextButton(
-                  onPressed: selectedSize == null
-                      ? null
-                      : () async {
+                  onPressed: () async {
                           final trimmedBadgeName =
                               badgeNameController.text.trim();
                           if (trimmedBadgeName.isEmpty) {
@@ -181,8 +183,8 @@ class _SaveBadgeDialogState extends State<SaveBadgeDialog> {
                                   widget.animationProvider
                                           .getAnimationIndex() ??
                                       1,
-                                  selectedSize!.height,
-                                  selectedSize!.width);
+                                  selectedSize.height,
+                                  selectedSize.width);
                               ToastUtils()
                                   .showToast('Badge updated successfully.');
                               Navigator.of(context).pop();
@@ -234,8 +236,8 @@ class _SaveBadgeDialogState extends State<SaveBadgeDialog> {
                                   widget.animationProvider
                                           .getAnimationIndex() ??
                                       1,
-                                  selectedSize!.height,
-                                  selectedSize!.width);
+                                  selectedSize.height,
+                                  selectedSize.width);
                               ToastUtils()
                                   .showToast('Badge updated successfully.');
                               Navigator.of(context).pop();
@@ -256,8 +258,8 @@ class _SaveBadgeDialogState extends State<SaveBadgeDialog> {
                                 widget.speed.getOuterValue(),
                                 widget.animationProvider.getAnimationIndex() ??
                                     1,
-                                selectedSize!.height,
-                                selectedSize!.width);
+                                selectedSize.height,
+                                selectedSize.width);
                             ToastUtils().showToast('Badge saved successfully.');
                             Navigator.of(context).pop();
                           }

@@ -10,7 +10,7 @@ class BadgeListView extends StatelessWidget {
   final Future<void> Function(MapEntry<String, Map<String, dynamic>>)
       refreshBadgesCallback;
   final void Function()? onSelectionChanged;
-  final ScreenSize selectedSize;
+  final void Function(ScreenSize)? onPreviewSizeChanged;
 
   const BadgeListView(
       {super.key,
@@ -18,7 +18,7 @@ class BadgeListView extends StatelessWidget {
       required this.futureBadges,
       required this.refreshBadgesCallback,
       this.onSelectionChanged,
-      required this.selectedSize});
+      this.onPreviewSizeChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +54,7 @@ class BadgeListView extends StatelessWidget {
                         if (onSelectionChanged != null) onSelectionChanged!();
                       }
                     },
-                    selectedSize: selectedSize,
+                    onPreviewSizeChanged: onPreviewSizeChanged,
                   );
                 },
               ),

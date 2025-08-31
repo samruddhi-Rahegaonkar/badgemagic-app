@@ -43,7 +43,7 @@ Map<int, Mode> modeValueMap = {
 class SavedBadgeProvider extends ChangeNotifier {
   /// Applies saved badge data to the UI providers and controllers.
   /// Moves logic out of HomeScreen._applySavedBadgeData for better separation of concerns.
-  Future<void> applySavedBadgeDataToUI({
+  Future<ScreenSize?> applySavedBadgeDataToUI({
     required Map<String, dynamic> savedData,
     required String? savedBadgeFilename,
     required AnimationBadgeProvider animationProvider,
@@ -160,6 +160,19 @@ class SavedBadgeProvider extends ChangeNotifier {
     // Notify that we're editing an existing badge
     ToastUtils().showToast(
         "Editing badge: ${savedBadgeFilename != null ? savedBadgeFilename.substring(0, savedBadgeFilename.length - 5) : ""}");
+
+    // Extract screen size from saved data
+    ScreenSize? savedScreenSize;
+    if (savedData.containsKey('height') && savedData.containsKey('width')) {
+      final height = savedData['height'] as int?;
+      final width = savedData['width'] as int?;
+      if (height != null && width != null) {
+        savedScreenSize = supportedScreenSizes.firstWhere(
+            (size) => size.height == height && size.width == width,
+            orElse: () => supportedScreenSizes.first);
+      }
+    }
+    return savedScreenSize;
   }
 
   Converters converters = Converters();
@@ -317,7 +330,7 @@ class SavedBadgeProvider extends ChangeNotifier {
         speed: speed,
         mode: mode,
       )
-    ]);
+    ], height: badgeHeight, width: badgeWidth);
     return data;
   }
 

@@ -26,17 +26,32 @@ class SaveBadgeCard extends StatelessWidget {
   final bool isSelected;
   final VoidCallback? onLongPress;
   final VoidCallback? onTap;
+  final void Function(ScreenSize)? onPreviewSizeChanged;
 
-  final ScreenSize selectedSize;
   SaveBadgeCard({
     super.key,
     required this.badgeData,
     required this.refreshBadgesCallback,
-    required this.selectedSize,
     this.isSelected = false,
     this.onLongPress,
     this.onTap,
+    this.onPreviewSizeChanged,
   });
+
+  // Get the screen size from badge data, default to first supported size
+  ScreenSize getBadgeScreenSize() {
+    final data = badgeData.value;
+    if (data.containsKey('height') && data.containsKey('width')) {
+      final height = data['height'] as int?;
+      final width = data['width'] as int?;
+      if (height != null && width != null) {
+        return supportedScreenSizes.firstWhere(
+            (size) => size.height == height && size.width == width,
+            orElse: () => supportedScreenSizes.first);
+      }
+    }
+    return supportedScreenSizes.first;
+  }
 
   // Helper methods to safely access badge data properties
   bool _safeGetFlashValue(Map<String, dynamic> data) {
@@ -79,7 +94,7 @@ class SaveBadgeCard extends StatelessWidget {
         onLongPress: onLongPress,
         onTap: onTap,
         child: Container(
-          width: 370.w,
+          width: 380.w,
           padding: EdgeInsets.all(6.dg),
           margin: EdgeInsets.all(10.dg),
           decoration: BoxDecoration(
@@ -137,8 +152,9 @@ class SaveBadgeCard extends StatelessWidget {
                               badgeData.value,
                               Provider.of<AnimationBadgeProvider>(context,
                                   listen: false),
-                              selectedSize.height,
+                              getBadgeScreenSize().height,
                             );
+                            onPreviewSizeChanged?.call(getBadgeScreenSize());
                           },
                         ),
                         IconButton(
@@ -153,9 +169,8 @@ class SaveBadgeCard extends StatelessWidget {
                                         .messages[0]
                                         .text
                                         .join(),
-                                    selectedSize.height)
-                                .map((e) => e.map((e) => e ? 1 : 0).toList())
-                                .cast<List<bool>>()
+                                    getBadgeScreenSize().height)
+                                .map((e) => e.map((v) => v == 1).toList())
                                 .toList();
                             final shouldEdit = await showDialog<bool>(
                               context: context,
@@ -216,8 +231,8 @@ class SaveBadgeCard extends StatelessWidget {
                                 null,
                                 badgeData.value,
                                 true,
-                                selectedSize.height,
-                                selectedSize.width);
+                                getBadgeScreenSize().height,
+                                getBadgeScreenSize().width);
                           },
                         ),
                         IconButton(
@@ -253,132 +268,149 @@ class SaveBadgeCard extends StatelessWidget {
                 ],
               ),
               SizedBox(height: 8.h),
+              // Solution 1: Wrap the Row in a SingleChildScrollView for horizontal scrolling
               Row(
                 children: [
-                  Row(
-                    children: [
-                      Visibility(
-                        visible: _safeGetFlashValue(badgeData.value),
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 10.w, vertical: 4.h),
-                          decoration: BoxDecoration(
-                            color: colorPrimary,
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                          child: Row(
-                            children: [
-                              Image.asset(
-                                "assets/icons/flash.png",
-                                color: Colors.white,
-                                height: 14.h,
-                              )
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 8.w,
-                      ),
-                      Visibility(
-                        visible: _safeGetMarqueeValue(badgeData.value),
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 12.w, vertical: 4.h),
-                          decoration: BoxDecoration(
-                            color: colorPrimary,
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                          child: Row(
-                            children: [
-                              Image.asset(
-                                "assets/icons/square.png",
-                                color: Colors.white,
-                                height: 14.h,
-                              )
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 8.w,
-                      ),
-                      Visibility(
-                        visible: _safeGetInvertValue(badgeData.value),
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 12.w, vertical: 4.h),
-                          decoration: BoxDecoration(
-                            color: colorPrimary,
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                          child: Row(
-                            children: [
-                              Image.asset(
-                                "assets/icons/t_invert.png",
-                                color: Colors.white,
-                                height: 14.h,
-                              )
-                            ],
-                          ),
-                        ),
-                      )
-                    ],
-                  ),
-                  SizedBox(width: 8.w),
-                  GestureDetector(
-                    onTap: () {},
-                    child: Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-                      decoration: BoxDecoration(
-                        color: colorPrimary,
-                        borderRadius: BorderRadius.circular(100),
-                      ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          Image.asset(
-                            "assets/icons/t_double.png",
-                            color: Colors.white,
-                            height: 14.h,
+                          Visibility(
+                            visible: _safeGetFlashValue(badgeData.value),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 10.w, vertical: 4.h),
+                              decoration: BoxDecoration(
+                                color: colorPrimary,
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              child: Row(
+                                children: [
+                                  Image.asset(
+                                    "assets/icons/flash.png",
+                                    color: Colors.white,
+                                    height: 14.h,
+                                  )
+                                ],
+                              ),
+                            ),
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            Speed.getIntValue(file
+                          SizedBox(width: 8.w),
+                          Visibility(
+                            visible: _safeGetMarqueeValue(badgeData.value),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 12.w, vertical: 4.h),
+                              decoration: BoxDecoration(
+                                color: colorPrimary,
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              child: Row(
+                                children: [
+                                  Image.asset(
+                                    "assets/icons/square.png",
+                                    color: Colors.white,
+                                    height: 14.h,
+                                  )
+                                ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          Visibility(
+                            visible: _safeGetInvertValue(badgeData.value),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 12.w, vertical: 4.h),
+                              decoration: BoxDecoration(
+                                color: colorPrimary,
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              child: Row(
+                                children: [
+                                  Image.asset(
+                                    "assets/icons/t_invert.png",
+                                    color: Colors.white,
+                                    height: 14.h,
+                                  )
+                                ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          GestureDetector(
+                            onTap: () {},
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 12.w, vertical: 4.h),
+                              decoration: BoxDecoration(
+                                color: colorPrimary,
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              child: Row(
+                                children: [
+                                  Image.asset(
+                                    "assets/icons/t_double.png",
+                                    color: Colors.white,
+                                    height: 14.h,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    Speed.getIntValue(file
+                                            .jsonToData(badgeData.value)
+                                            .messages[0]
+                                            .speed)
+                                        .toString(),
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          GestureDetector(
+                            onTap: () {},
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 12.w, vertical: 4.h),
+                              decoration: BoxDecoration(
+                                color: colorPrimary,
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              child: Text(
+                                file
                                     .jsonToData(badgeData.value)
                                     .messages[0]
-                                    .speed)
-                                .toString(),
-                            style: const TextStyle(color: Colors.white),
+                                    .mode
+                                    .toString()
+                                    .split('.')
+                                    .last
+                                    .toUpperCase(),
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          GestureDetector(
+                            onTap: () {},
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 12.w, vertical: 4.h),
+                              decoration: BoxDecoration(
+                                color: colorPrimary,
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              child: Text(
+                                getBadgeScreenSize().name,
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  SizedBox(width: 8.w),
-                  GestureDetector(
-                    onTap: () {},
-                    child: Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-                      decoration: BoxDecoration(
-                        color: colorPrimary,
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                      child: Text(
-                        file
-                            .jsonToData(badgeData.value)
-                            .messages[0]
-                            .mode
-                            .toString()
-                            .split('.')
-                            .last
-                            .toUpperCase(),
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
                   Consumer<BadgeSlotProvider>(
                     builder: (context, selectionProvider, _) {
                       final isSelected =
@@ -395,7 +427,7 @@ class SaveBadgeCard extends StatelessWidget {
                     },
                   ),
                 ],
-              ),
+              )
             ],
           ),
         ));

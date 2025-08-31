@@ -2,11 +2,16 @@ import 'messages.dart';
 
 class Data {
   final List<Message> messages;
-  Data({required this.messages});
+  final int? height;
+  final int? width;
+
+  Data({required this.messages, this.height, this.width});
 
   // Convert Data object to JSON
   Map<String, dynamic> toJson() => {
         'messages': messages.map((message) => message.toJson()).toList(),
+        if (height != null) 'height': height,
+        if (width != null) 'width': width,
       };
 
   // Convert JSON to Data object
@@ -32,6 +37,10 @@ class Data {
     List<Message> messageList =
         messagesFromJson.map((message) => Message.fromJson(message)).toList();
 
-    return Data(messages: messageList);
+    return Data(
+      messages: messageList,
+      height: json['height'] as int?,
+      width: json['width'] as int?,
+    );
   }
 }
