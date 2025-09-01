@@ -121,6 +121,11 @@ class _TransitionTabState extends State<TransitionTab> {
                   index: 19,
                   screenSize: widget.selectedSize,
                 ),
+                AniContainer(
+                  animationName: 'Equalizer',
+                  index: 20, // This MUST match the index in your animationMap
+                  icon: Icons.equalizer,
+                )
               ],
             ),
           ),
