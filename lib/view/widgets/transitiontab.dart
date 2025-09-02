@@ -93,6 +93,11 @@ class _TransitionTabState extends State<TransitionTab> {
                   icon: Icons.celebration,
                   animationName: 'Fireworks',
                   index: 19),
+              AniContainer(
+                  animation: null,
+                  icon: Icons.equalizer,
+                  animationName: 'Equalizer',
+                  index: 20),
             ]),
           ],
         ),
