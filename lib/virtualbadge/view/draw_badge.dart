@@ -75,7 +75,9 @@ class _BMBadgeState extends State<BMBadge> {
   }
 
   void _handlePanEnd(DragEndDetails details) {
-    drawProvider.commitGridUpdate(); // Apply shape or last freehand segment
+    if (drawProvider.selectedShape != DrawShape.freehand) {
+      drawProvider.commitGridUpdate();
+    }
     dragStart = null;
   }
 
