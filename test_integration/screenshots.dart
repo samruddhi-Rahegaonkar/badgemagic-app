@@ -95,7 +95,7 @@ void main() async {
             (widget.child as Padding).child is Image,
       );
 
-      final targetCard = gridViewCard.at(17);
+      final targetCard = gridViewCard.first;
       await tester.tap(targetCard);
       await tester.pumpAndSettle();
       await tester.tap(prefixIcon);
