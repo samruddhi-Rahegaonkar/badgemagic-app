@@ -24,6 +24,7 @@ import 'package:badgemagic/badge_animation/ani_emergency.dart';
 import 'package:badgemagic/badge_animation/ani_beating_hearts.dart';
 import 'package:badgemagic/badge_animation/ani_fireworks.dart';
 import 'package:flutter/foundation.dart';
+import 'package:badgemagic/badge_animation/ani_equalizer.dart'; // Import the new EqualizerAnimation
 
 Map<int, Mode> modeValueMap = {
   0: Mode.left,
@@ -31,9 +32,9 @@ Map<int, Mode> modeValueMap = {
   2: Mode.up,
   3: Mode.down,
   4: Mode.fixed,
-  5: Mode.snowflake,
-  6: Mode.picture,
-  7: Mode.animation,
+  5: Mode.animation,
+  6: Mode.snowflake,
+  7: Mode.picture,
   8: Mode.laser,
   9: Mode.pacman, // Add this line for Pacman
   10: Mode.chevronleft, // Chevron left mode (now defined in mode.dart)
@@ -178,12 +179,57 @@ class BadgeMessageProvider extends ChangeNotifier {
             marquee: old.marquee,
             speed: old.speed,
             mode: Mode.animation,
+    BluetoothAdapterState adapterState =
+        await FlutterBluePlus.adapterState.first;
+    if (adapterState != BluetoothAdapterState.on) {
+      if (Platform.isAndroid) {
+        ToastUtils().showToast('Turning on Bluetooth...');
+        try {
+          await FlutterBluePlus.turnOn();
+        } catch (e) {
+          ToastUtils().showErrorToast('Failed to enable Bluetooth: $e');
+          logger.e('Bluetooth turnOn() failed: $e');
+          return;
+        }
+
+        try {
+          adapterState = await FlutterBluePlus.adapterState
+              .where((state) => state == BluetoothAdapterState.on)
+              .first
+              .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              ToastUtils().showErrorToast('Bluetooth did not turn on in time.');
+              throw Exception('Bluetooth enable timeout');
+            },
           );
-          data = Data(messages: [newMessage, ...data.messages.skip(1)]);
+        } catch (e) {
+          logger.e('Error while waiting for Bluetooth to turn on: $e');
+          return;
+        }
+      } else if (Platform.isIOS) {
+        ToastUtils().showErrorToast(
+          'Bluetooth is OFF. Please enable it from Settings.',
+        );
+
+        try {
+          adapterState = await FlutterBluePlus.adapterState
+              .where((state) => state == BluetoothAdapterState.on)
+              .first
+              .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              ToastUtils().showErrorToast('Bluetooth did not turn on in time.');
+              throw Exception('Bluetooth enable timeout');
+            },
+          );
+        } catch (e) {
+          logger.e('Error while waiting for Bluetooth to turn on: $e');
+          return;
         }
       } else {
-        data = await generateData(
-            text, flash, marq, isInverted, speedMap[speed], mode, jsonData);
+        ToastUtils().showErrorToast("Unsupported platform");
+        return;
       }
       manager = DataTransferManager.forLegacy(data);
       ToastUtils().showToast("Starting legacy transfer...");
@@ -220,6 +266,28 @@ class BadgeMessageProvider extends ChangeNotifier {
           : "Legacy transfer failed: $e";
       ToastUtils().showErrorToast(errorMsg);
     }
+
+    Data data;
+    if (jsonData != null) {
+      data = fileHelper.jsonToData(jsonData);
+      if (isSavedBadge && data.messages.isNotEmpty) {
+        final old = data.messages[0];
+        final newMessage = Message(
+          text: old.text, // use the already-padded hex string
+          flash: old.flash,
+          marquee: old.marquee,
+          speed: old.speed,
+          mode: Mode.animation, // Force seamless marquee
+        );
+        data = Data(messages: [newMessage, ...data.messages.skip(1)]);
+      }
+    } else {
+      data = await generateData(
+          text, flash, marq, isInverted, speedMap[speed], mode, jsonData);
+    }
+
+    DataTransferManager manager = DataTransferManager(data);
+    await transferData(manager);
   }
 }
 
@@ -1091,4 +1159,57 @@ void _drawDestroyEffect(
       }
     }
   }
+}
+
+/// Transfers the Equalizer animation to the badge hardware.
+Future<void> transferEqualizerAnimation(
+    BadgeMessageProvider badgeDataProvider, int speedLevel) async {
+  final adapterState = await FlutterBluePlus.adapterState.first;
+  if (adapterState != BluetoothAdapterState.on) {
+    ToastUtils().showErrorToast('Please turn on Bluetooth');
+    return;
+  }
+
+  const int badgeHeight = 11;
+  const int badgeWidth = 44;
+  const int hardwareFrameCount = 8; // The badge can store up to 8 frames
+  final Speed selectedSpeed = Speed.eight;
+  final logger = Logger();
+
+  logger.i('Starting Equalizer animation transfer...');
+
+  List<Message> equalizerFrames = [];
+
+  //  Create the animation object *before* the loop because it's stateful.
+  final equalizerAnimation = EqualizerAnimation();
+
+  for (int i = 0; i < hardwareFrameCount; i++) {
+    List<List<bool>> frameBitmap = List.generate(
+        badgeHeight, (_) => List.generate(badgeWidth, (_) => false));
+
+    List<List<bool>> processGrid = List.generate(
+        badgeHeight, (_) => List.generate(badgeWidth, (_) => false));
+
+    equalizerAnimation.processAnimation(
+        badgeHeight, badgeWidth, i, processGrid, frameBitmap);
+
+    // Convert the boolean bitmap to a hex string
+    List<List<int>> intBitmap = boolToIntBitmap(frameBitmap);
+    List<String> hexList = Converters.convertBitmapToLEDHex(intBitmap, false);
+
+    logger.i('📊 Equalizer Frame $i hex: ${hexList.join(",")}');
+
+    equalizerFrames.add(Message(
+      text: hexList,
+      mode: Mode.fixed, // Each frame is sent as a fixed image
+      speed: selectedSpeed,
+      flash: false,
+      marquee: false,
+    ));
+  }
+
+  Data data = Data(messages: equalizerFrames);
+  DataTransferManager manager = DataTransferManager(data);
+  await badgeDataProvider.transferData(manager);
+  logger.i('💡 Equalizer animation transfer completed successfully!');
 }
