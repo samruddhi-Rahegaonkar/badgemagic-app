@@ -232,7 +232,12 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
                                       }
 
                                       while (badgeDataList.length < 8) {
-                                        badgeDataList.add(Message(text: [], flash: false, marquee: false, speed: Speed.one, mode: Mode.left));
+                                        badgeDataList.add(Message(
+                                            text: [],
+                                            flash: false,
+                                            marquee: false,
+                                            speed: Speed.one,
+                                            mode: Mode.left));
                                       }
                                       if (badgeDataList
                                               .where(

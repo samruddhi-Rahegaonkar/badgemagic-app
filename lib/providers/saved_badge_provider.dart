@@ -46,10 +46,9 @@ Map<int, Mode> modeValueMap = {
   14: Mode.feet,
 };
 
-
-
 class SavedBadgeProvider extends ChangeNotifier {
   Logger logger = Logger();
+
   /// Applies saved badge data to the UI providers and controllers.
   /// Moves logic out of HomeScreen._applySavedBadgeData for better separation of concerns.
   Future<void> applySavedBadgeDataToUI({
