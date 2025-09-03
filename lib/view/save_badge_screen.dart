@@ -1,6 +1,7 @@
 import 'package:badgemagic/bademagic_module/models/data.dart';
 import 'package:badgemagic/bademagic_module/models/messages.dart';
-import 'package:badgemagic/bademagic_module/utils/byte_array_utils.dart';
+import 'package:badgemagic/bademagic_module/models/mode.dart';
+import 'package:badgemagic/bademagic_module/models/speed.dart';
 import 'package:badgemagic/bademagic_module/utils/converters.dart';
 import 'package:badgemagic/bademagic_module/utils/file_helper.dart';
 import 'package:badgemagic/bademagic_module/utils/toast_utils.dart';
@@ -20,6 +21,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
+import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 
 class SaveBadgeScreen extends StatefulWidget {
@@ -30,6 +32,7 @@ class SaveBadgeScreen extends StatefulWidget {
 }
 
 class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
+  Logger logger = Logger();
   List<MapEntry<String, Map<String, dynamic>>> badgeData = [];
   InlineImageProvider imageProvider = GetIt.instance<InlineImageProvider>();
   ToastUtils toastUtils = ToastUtils();
@@ -229,7 +232,7 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
                                       }
 
                                       while (badgeDataList.length < 8) {
-                                        badgeDataList.add(Message(text: []));
+                                        badgeDataList.add(Message(text: [], flash: false, marquee: false, speed: Speed.one, mode: Mode.left));
                                       }
                                       if (badgeDataList
                                               .where(

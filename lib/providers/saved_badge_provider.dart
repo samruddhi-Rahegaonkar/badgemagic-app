@@ -15,6 +15,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:badgemagic/providers/animation_badge_provider.dart';
 import 'package:badgemagic/providers/imageprovider.dart';
 import 'package:get_it/get_it.dart';
+import 'package:logger/logger.dart';
 
 Map<int, Speed> speedMap = {
   1: Speed.one,
@@ -36,10 +37,19 @@ Map<int, Mode> modeValueMap = {
   5: Mode.snowflake,
   6: Mode.picture,
   7: Mode.animation,
-  8: Mode.laser
+  8: Mode.laser,
+  9: Mode.pacman,
+  10: Mode.chevronleft,
+  11: Mode.diamond,
+  12: Mode.brokenhearts,
+  13: Mode.cupid,
+  14: Mode.feet,
 };
 
+
+
 class SavedBadgeProvider extends ChangeNotifier {
+  Logger logger = Logger();
   /// Applies saved badge data to the UI providers and controllers.
   /// Moves logic out of HomeScreen._applySavedBadgeData for better separation of concerns.
   Future<void> applySavedBadgeDataToUI({
@@ -127,6 +137,27 @@ class SavedBadgeProvider extends ChangeNotifier {
               break;
             case 'animation':
               modeValue = 7;
+              break;
+            case 'laser':
+              modeValue = 8;
+              break;
+            case 'pacman':
+              modeValue = 9;
+              break;
+            case 'chevronleft':
+              modeValue = 10;
+              break;
+            case 'diamond':
+              modeValue = 11;
+              break;
+            case 'brokenhearts':
+              modeValue = 12;
+              break;
+            case 'cupid':
+              modeValue = 13;
+              break;
+            case 'feet':
+              modeValue = 14;
               break;
             default:
               modeValue = 0; // Default to left
