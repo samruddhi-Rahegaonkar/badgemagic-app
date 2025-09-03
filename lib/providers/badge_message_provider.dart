@@ -94,17 +94,17 @@ class BadgeMessageProvider {
   }
 
   Future<void> transferData(
-    DataTransferManager manager,
+    DataTransferManager manager, {
     BuildContext? context,
-  ) async {
+  }) async {
     final scanProvider = context != null
         ? Provider.of<BadgeScanProvider>(context, listen: false)
         : null;
 
     final BleState? initialState = ScanState(
       manager: manager,
-      mode: scanProvider!.mode,
-      allowedNames: scanProvider.badgeNames,
+      mode: scanProvider?.mode ?? BadgeScanMode.any,
+      allowedNames: scanProvider?.badgeNames ?? <String>[],
     );
 
     BleState? state = initialState;
@@ -227,7 +227,7 @@ class BadgeMessageProvider {
     }
 
     DataTransferManager manager = DataTransferManager(data);
-    await transferData(manager, context);
+    await transferData(manager);
   }
 }
 
@@ -274,7 +274,7 @@ Future<void> transferFireworksAnimation(
 
   Data data = Data(messages: frames);
   DataTransferManager manager = DataTransferManager(data);
-  await badgeDataProvider.transferData(manager, null);
+  await badgeDataProvider.transferData(manager);
   logger.i('💡 Fireworks animation transfer completed successfully!');
 }
 
@@ -322,7 +322,7 @@ Future<void> transferBeatingHeartsAnimation(
 
   Data data = Data(messages: heartFrames);
   DataTransferManager manager = DataTransferManager(data);
-  await badgeDataProvider.transferData(manager, null);
+  await badgeDataProvider.transferData(manager);
   logger.i('💡 Beating Hearts animation transfer completed successfully!');
 }
 
@@ -382,7 +382,7 @@ Future<void> transferEmergencyAnimation(
 
   Data data = Data(messages: rotatedFrames);
   DataTransferManager manager = DataTransferManager(data);
-  await badgeDataProvider.transferData(manager, null);
+  await badgeDataProvider.transferData(manager);
   logger.i('💡 Emergency animation transfer completed successfully!');
 }
 
@@ -440,7 +440,7 @@ Future<void> transferDiagonalAnimation(
   logger.i('V Diagonal Data object created. Starting transfer...');
 
   try {
-    await badgeDataProvider.transferData(DataTransferManager(data), null);
+    await badgeDataProvider.transferData(DataTransferManager(data));
     logger.i('V Diagonal animation transfer completed successfully!');
   } catch (e, st) {
     logger.e('⛔ V Diagonal animation transfer failed: $e\n$st');
@@ -503,7 +503,7 @@ Future<void> transferFishAnimation(
   logger.i('🐟 Fish Data object created. Starting transfer...');
 
   try {
-    await badgeDataProvider.transferData(DataTransferManager(data), null);
+    await badgeDataProvider.transferData(DataTransferManager(data));
     logger.i('🐟 Fish animation transfer completed successfully!');
   } catch (e, st) {
     logger.e('⛔ Fish animation transfer failed: $e\n$st');
@@ -684,7 +684,7 @@ Future<void> transferPacmanAnimation(
   Data data = Data(messages: pacmanFrames);
   logger.i('💡 Data object created. Starting transfer...');
   try {
-    await badgeDataProvider.transferData(DataTransferManager(data), null);
+    await badgeDataProvider.transferData(DataTransferManager(data));
   } catch (e, st) {
     logger.e('⛔ Pacman animation transfer failed: $e\n$st');
   }
@@ -758,7 +758,7 @@ Future<void> transferChevronAnimation(
   Data data = Data(messages: chevronFrames);
   logger.i('💡 Data object created. Starting transfer...');
   try {
-    await badgeDataProvider.transferData(DataTransferManager(data), null);
+    await badgeDataProvider.transferData(DataTransferManager(data));
   } catch (e, st) {
     logger.e('⛔ Chevron animation transfer failed: $e\n$st');
   }
@@ -819,7 +819,7 @@ Future<void> transferDiamondAnimation(
   Data data = Data(messages: diamondFrames);
   logger.i('💡 Data object created. Starting transfer...');
   try {
-    await badgeDataProvider.transferData(DataTransferManager(data), null);
+    await badgeDataProvider.transferData(DataTransferManager(data));
   } catch (e, st) {
     logger.e('⛔ Diamond animation transfer failed: $e\n$st');
   }
@@ -942,7 +942,7 @@ Future<void> transferBrokenHeartsAnimation(
   Data data = Data(messages: heartFrames);
   logger.i('💡 Data object created. Starting transfer...');
   try {
-    await badgeDataProvider.transferData(DataTransferManager(data), null);
+    await badgeDataProvider.transferData(DataTransferManager(data));
   } catch (e, st) {
     logger.e('⛔ Broken Hearts animation transfer failed: $e\n$st');
   }
@@ -1023,7 +1023,7 @@ Future<void> transferFeetAnimation(
   Data data = Data(messages: feetFrames);
   logger.i('🦶 Feet Data object created. Starting transfer...');
   try {
-    await badgeDataProvider.transferData(DataTransferManager(data), null);
+    await badgeDataProvider.transferData(DataTransferManager(data));
   } catch (e, st) {
     logger.e('⛔ Feet animation transfer failed: $e\n$st');
   }
@@ -1067,7 +1067,7 @@ Future<void> transferCupidAnimation(
   Data data = Data(messages: cupidFrames);
   logger.i('💘 Cupid Data object created. Starting transfer...');
   try {
-    await badgeDataProvider.transferData(DataTransferManager(data), null);
+    await badgeDataProvider.transferData(DataTransferManager(data));
   } catch (e, st) {
     logger.e('⛔ Cupid animation transfer failed: $e\n$st');
   }
