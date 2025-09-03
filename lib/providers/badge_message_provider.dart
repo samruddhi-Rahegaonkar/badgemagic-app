@@ -1069,6 +1069,13 @@ List<List<int>> boolToIntBitmap(List<List<bool>> bitmap) {
   return bitmap.map((row) => row.map((b) => b ? 1 : 0).toList()).toList();
 }
 
+Future<void> transferEqualizerAnimation(
+    BadgeMessageProvider badgeDataProvider, int speedLevel) async {
+  // Placeholder for EqualizerAnimation transfer
+  // Implement similar to other transfer functions
+  // For now, do nothing or add basic implementation
+}
+
 void _drawDestroyEffect(
     List<List<bool>> canvas, int cx, int cy, int frame, int w, int h) {
   int length = frame + 1;
