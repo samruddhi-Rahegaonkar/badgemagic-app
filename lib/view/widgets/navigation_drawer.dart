@@ -88,7 +88,7 @@ class _BMDrawerState extends State<BMDrawer> {
             routeName: '/settings',
           ),
           _buildListTile(
-            index: 5,
+            index: 6,
             assetIcon: "assets/icons/r_team.png",
             title: 'About Us',
             routeName: '/aboutUs',
