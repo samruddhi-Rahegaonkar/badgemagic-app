@@ -78,20 +78,20 @@ class _BMDrawerState extends State<BMDrawer> {
           _buildListTile(
             index: 4,
             assetIcon: "assets/icons/setting.png",
-            title: 'Badge Configurations',
-            routeName: '/badgeconfiguration',
-          ),
-          _buildListTile(
-            index: 5,
-            assetIcon: "assets/icons/setting.png",
             title: 'Settings',
             routeName: '/settings',
           ),
           _buildListTile(
-            index: 6,
+            index: 5,
             assetIcon: "assets/icons/r_team.png",
             title: 'About Us',
             routeName: '/aboutUs',
+          ),
+          _buildListTile(
+            index: 6,
+            assetIcon: "assets/icons/setting.png",
+            title: 'Badge Configurations',
+            routeName: '/badgeconfiguration',
           ),
           const Divider(),
           const Padding(
