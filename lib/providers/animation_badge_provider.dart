@@ -31,6 +31,7 @@ import 'package:badgemagic/badge_effect/invert_led_effect.dart';
 import 'package:badgemagic/badge_effect/marquee_effect.dart';
 import 'package:badgemagic/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:badgemagic/badge_animation/ani_equalizer.dart'; // new import of EqualizerAnimation
 
 Map<int, BadgeAnimation?> animationMap = {
   0: LeftAnimation(),
@@ -53,6 +54,7 @@ Map<int, BadgeAnimation?> animationMap = {
   17: EmergencyAnimation(), // Emergency
   18: BeatingHeartsAnimation(), // Beating Hearts
   19: FireworksAnimation(), // Fireworks
+  20: EqualizerAnimation(), // Digital Rain
 };
 
 Map<int, BadgeEffect> effectMap = {
@@ -82,8 +84,8 @@ class AnimationBadgeProvider extends ChangeNotifier {
   // Helper: returns true if a special animation (custom) is selected
   bool isSpecialAnimationSelected() {
     int idx = getAnimationIndex() ?? 0;
-    // Add all special animation indices here (including Fireworks at 19):
-    return [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].contains(idx);
+    // Add all special animation indices here (including Equalizer at 20):
+    return [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].contains(idx);
   }
 
   // Call this to reset to text animation (LeftAnimation)
@@ -95,7 +97,8 @@ class AnimationBadgeProvider extends ChangeNotifier {
   void calculateDuration(int speed) {
     int idx = getAnimationIndex() ?? 0;
     int newSpeed;
-    if (idx == 9 || idx == 10 || idx == 11 || idx == 12) {
+    if (idx == 9 || idx == 10 || idx == 11 || idx == 12 || idx == 20) {
+      //added EqualizerAnimation
       // Use slower mapping for custom animations
       // (aniSpeedStrategy already uses the slower mapping if you want, or you can hardcode)
       newSpeed = aniSpeedStrategy(speed - 1); // keep as is, or adjust if needed
@@ -290,6 +293,8 @@ class AnimationBadgeProvider extends ChangeNotifier {
       await transferBeatingHeartsAnimation(badgeData, selectedSpeed);
     } else if (aniIndex == 19) {
       await transferFireworksAnimation(badgeData, selectedSpeed);
+    } else if (aniIndex == 20) {
+      await transferEqualizerAnimation(badgeData, selectedSpeed);
     } else {
       await badgeData.checkAndTransfer(
         inlineImageProvider.getController().text,
