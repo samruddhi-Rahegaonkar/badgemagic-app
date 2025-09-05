@@ -71,6 +71,7 @@ class AnimationBadgeProvider extends ChangeNotifier {
   int _animationIndex = 0;
   int _animationSpeed = aniSpeedStrategy(0);
   Timer? _timer;
+  bool _isDisposed = false; // Track disposal state
 
   List<List<bool>> _paintGrid = [];
   List<List<bool>> _newGrid = [];
@@ -82,6 +83,7 @@ class AnimationBadgeProvider extends ChangeNotifier {
 
   List<List<bool>> getPaintGrid() => _paintGrid;
   List<List<bool>> getNewGrid() => _newGrid;
+
   // Helper: returns true if a special animation (custom) is selected
   bool isSpecialAnimationSelected() {
     int idx = getAnimationIndex() ?? 0;
@@ -96,6 +98,8 @@ class AnimationBadgeProvider extends ChangeNotifier {
 
   //function to calculate duration for the animation
   void calculateDuration(int speed) {
+    if (_isDisposed) return; // Safety check
+
     int idx = getAnimationIndex() ?? 0;
     int newSpeed;
     if (idx == 9 || idx == 10 || idx == 11 || idx == 12 || idx == 20) {
@@ -118,6 +122,8 @@ class AnimationBadgeProvider extends ChangeNotifier {
   }
 
   void initGrids(ScreenSize size) {
+    if (_isDisposed) return; // Safety check
+
     _paintGrid = List.generate(
         size.height, (_) => List.generate(size.width, (_) => false));
     _newGrid = List.generate(
@@ -126,6 +132,8 @@ class AnimationBadgeProvider extends ChangeNotifier {
   }
 
   void setNewGrid(List<List<bool>> grid) {
+    if (_isDisposed) return; // Safety check
+
     _newGrid = grid;
     _animationIndex = 0;
     notifyListeners();
@@ -135,17 +143,23 @@ class AnimationBadgeProvider extends ChangeNotifier {
 
   /// Clears all currently active effects
   void clearAllEffects() {
+    if (_isDisposed) return; // Safety check
+
     _currentEffect.clear();
     notifyListeners();
   }
 
   void addEffect(BadgeEffect? effect) {
+    if (_isDisposed) return; // Safety check
+
     _currentEffect.add(effect);
     logger.i("Effect Added: $effect : $_currentEffect");
     notifyListeners();
   }
 
   void removeEffect(BadgeEffect? effect) {
+    if (_isDisposed) return; // Safety check
+
     _currentEffect.remove(effect);
     notifyListeners();
   }
@@ -155,6 +169,8 @@ class AnimationBadgeProvider extends ChangeNotifier {
   }
 
   void initializeAnimation() {
+    if (_isDisposed) return; // Safety check
+
     if (_timer == null || !_timer!.isActive) {
       startTimer();
     }
@@ -163,6 +179,7 @@ class AnimationBadgeProvider extends ChangeNotifier {
   void stopAnimation() {
     logger.d("Timer stopped  ${_timer?.tick.toString()}");
     _timer?.cancel();
+    _timer = null; // Clear reference
     _animationIndex = 0;
   }
 
@@ -175,13 +192,24 @@ class AnimationBadgeProvider extends ChangeNotifier {
   }
 
   void startTimer() {
+    if (_isDisposed) return; // Safety check
+
     if (_newGrid.isEmpty || _newGrid[0].isEmpty) {
       logger.w("Cannot start animation timer: _newGrid is empty");
       return;
     }
 
+    // Cancel existing timer before starting new one
+    _timer?.cancel();
+
     _timer =
         Timer.periodic(Duration(microseconds: _animationSpeed), (Timer timer) {
+      // Check if disposed at the start of callback
+      if (_isDisposed) {
+        timer.cancel();
+        return;
+      }
+
       renderGrid(getNewGrid());
       if (_currentAnimation is CupidAnimation) {
         int frameLimit =
@@ -194,6 +222,8 @@ class AnimationBadgeProvider extends ChangeNotifier {
   }
 
   void setAnimationMode(BadgeAnimation? animation) {
+    if (_isDisposed) return; // Safety check
+
     // Always reset the animation index and set the new animation
     _animationIndex = 0;
     _currentAnimation = animation ?? LeftAnimation();
@@ -225,6 +255,8 @@ class AnimationBadgeProvider extends ChangeNotifier {
     bool isInverted,
     ScreenSize screenSize,
   ) async {
+    if (_isDisposed) return; // Safety check
+
     bool isSpecial = isSpecialAnimationSelected();
     if (message.isEmpty && !isSpecial) {
       stopAllAnimations();
@@ -305,6 +337,9 @@ class AnimationBadgeProvider extends ChangeNotifier {
   }
 
   void renderGrid(List<List<bool>> newGrid) {
+    // Critical: Check disposal state before any operations
+    if (_isDisposed) return;
+
     if (_paintGrid.isEmpty || _paintGrid[0].isEmpty) {
       logger.w("renderGrid skipped: _paintGrid is empty");
       return;
@@ -329,7 +364,38 @@ class AnimationBadgeProvider extends ChangeNotifier {
     }
 
     _paintGrid = canvas;
-    notifyListeners();
+
+    // Double check before notifying listeners
+    if (!_isDisposed) {
+      notifyListeners();
+    }
+  }
+
+  /// Override notifyListeners with disposal check
+  @override
+  void notifyListeners() {
+    if (!_isDisposed) {
+      super.notifyListeners();
+    }
+  }
+
+  /// Proper disposal method
+  @override
+  void dispose() {
+    _isDisposed = true;
+
+    // Cancel the timer before disposing
+    _timer?.cancel();
+    _timer = null;
+
+    // Clear collections
+    _currentEffect.clear();
+    _frames.clear();
+    _paintGrid.clear();
+    _newGrid.clear();
+
+    super.dispose();
+    logger.d("AnimationBadgeProvider disposed");
   }
 
   /// Handles animation transfer selection logic for the current animation index.
@@ -343,6 +409,8 @@ class AnimationBadgeProvider extends ChangeNotifier {
     required int badgeHeight,
     required int badgeWidth,
   }) async {
+    if (_isDisposed) return; // Safety check
+
     final int aniIndex = getAnimationIndex() ?? 0;
     final int selectedSpeed = speedDialProvider.getOuterValue();
     if (aniIndex == 9) {
