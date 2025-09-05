@@ -11,6 +11,10 @@ class BadgePaint extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (grid.isEmpty || grid[0].isEmpty) {
+      return;
+    }
+
     // Padding for the rectangle
     MapEntry<double, double> badgeOffsetBackground =
         badgeUtils.getBadgeOffsetBackground(size);

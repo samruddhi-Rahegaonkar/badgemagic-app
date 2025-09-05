@@ -36,16 +36,13 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
   ToastUtils toastUtils = ToastUtils();
   FileHelper fileHelper = FileHelper();
   SavedBadgeProvider savedBadgeProvider = SavedBadgeProvider();
-  AnimationBadgeProvider animationBadgeProvider = AnimationBadgeProvider();
   late ScreenSize _previewSize;
 
   @override
   void initState() {
+    super.initState();
     _setOrientation();
     _previewSize = supportedScreenSizes.first;
-    animationBadgeProvider.initGrids(_previewSize);
-
-    super.initState();
   }
 
   void _updatePreviewSize(ScreenSize size) {
@@ -62,24 +59,19 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
   }
 
   @override
-  void dispose() {
-    animationBadgeProvider.stopAnimation();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     BadgeMessageProvider badgeMessageProvider = BadgeMessageProvider();
+
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<SavedBadgeProvider>.value(
           value: savedBadgeProvider,
         ),
         ChangeNotifierProvider<AnimationBadgeProvider>(
-          create: (context) => animationBadgeProvider,
+          create: (_) => AnimationBadgeProvider()..initGrids(_previewSize),
         ),
         ChangeNotifierProvider<BadgeSlotProvider>(
-          create: (context) => BadgeSlotProvider(),
+          create: (_) => BadgeSlotProvider(),
         ),
       ],
       child: CommonScaffold(
@@ -103,7 +95,7 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
           Consumer<BadgeSlotProvider>(
             builder: (context, selectionProvider, _) {
               if (selectionProvider.selectedBadges.isEmpty) {
-                return SizedBox.shrink();
+                return const SizedBox.shrink();
               }
               return IconButton(
                 icon: const Icon(Icons.delete, color: Colors.red),
@@ -129,8 +121,7 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
                     ),
                   );
                   if (confirm == true) {
-                    final provider = Provider.of<InlineImageProvider>(context,
-                        listen: false);
+                    final provider = context.read<InlineImageProvider>();
                     final selectedBadges =
                         selectionProvider.selectedBadges.toList();
                     for (final badgeKey in selectedBadges) {
@@ -162,9 +153,7 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
                         height: 200.h,
                       ),
                     ),
-                    SizedBox(
-                      height: 20.h,
-                    ),
+                    SizedBox(height: 20.h),
                     Text(
                       'No saved badges !',
                       style: TextStyle(
@@ -191,21 +180,22 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
                       AnimationBadge(selectedSize: _previewSize),
                       Expanded(
                         child: Selector<BadgeSlotProvider, bool>(
-                            selector: (context, selectionProvider) =>
-                                selectionProvider.selectedBadges.isNotEmpty,
-                            builder: (context, isTransferEnabled, _) {
-                              return BadgeListView(
-                                isTransferEnabled: isTransferEnabled,
-                                futureBadges:
-                                    Future.value(provider.savedBadgeCache),
-                                refreshBadgesCallback: (value) {
-                                  provider.savedBadgeCache.remove(value);
-                                  setState(() {});
-                                  return Future.value();
-                                },
-                                onPreviewSizeChanged: _updatePreviewSize,
-                              );
-                            }),
+                          selector: (context, selectionProvider) =>
+                              selectionProvider.selectedBadges.isNotEmpty,
+                          builder: (context, isTransferEnabled, _) {
+                            return BadgeListView(
+                              isTransferEnabled: isTransferEnabled,
+                              futureBadges:
+                                  Future.value(provider.savedBadgeCache),
+                              refreshBadgesCallback: (value) {
+                                provider.savedBadgeCache.remove(value);
+                                setState(() {});
+                                return Future.value();
+                              },
+                              onPreviewSizeChanged: _updatePreviewSize,
+                            );
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -240,41 +230,51 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
                                             badgeData['messages'][0]);
                                         badgeDataList.add(message);
                                       }
+
                                       while (badgeDataList.length < 8) {
                                         badgeDataList.add(Message(text: []));
                                       }
+
+                                      final animationProvider = context
+                                          .read<AnimationBadgeProvider>();
+
                                       if (badgeDataList
                                               .where(
                                                   (msg) => msg.text.isNotEmpty)
                                               .length >
                                           1) {
-                                        animationBadgeProvider
+                                        animationProvider
                                             .setAnimationMode(AniAnimation());
                                       } else {
-                                        animationBadgeProvider
+                                        animationProvider
                                             .setAnimationMode(FixedAnimation());
                                       }
+
                                       final fullText = badgeDataList
                                           .map((m) => m.text.join())
                                           .join(" ");
-                                      animationBadgeProvider.badgeAnimation(
-                                          fullText,
-                                          Converters(),
-                                          false,
-                                          supportedScreenSizes.first);
+
+                                      animationProvider.badgeAnimation(
+                                        fullText,
+                                        Converters(),
+                                        false,
+                                        _previewSize,
+                                      );
+
                                       final data =
                                           Data(messages: badgeDataList);
                                       badgeMessageProvider.checkAndTransfer(
-                                          null,
-                                          null,
-                                          null,
-                                          null,
-                                          null,
-                                          null,
-                                          data.toJson(),
-                                          true,
-                                          supportedScreenSizes.first.height,
-                                          supportedScreenSizes.first.width);
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        data.toJson(),
+                                        true,
+                                        _previewSize.height,
+                                        _previewSize.width,
+                                      );
                                     }
                                   : null,
                               style: ElevatedButton.styleFrom(

@@ -8,6 +8,7 @@ import 'package:badgemagic/constants.dart';
 import 'package:badgemagic/providers/animation_badge_provider.dart';
 import 'package:badgemagic/providers/badge_message_provider.dart';
 import 'package:badgemagic/providers/badge_slot_provider..dart';
+import 'package:badgemagic/providers/imageprovider.dart';
 import 'package:badgemagic/providers/saved_badge_provider.dart';
 import 'package:badgemagic/view/homescreen.dart';
 import 'package:badgemagic/view/widgets/badge_delete_dialog.dart';
@@ -419,8 +420,42 @@ class SaveBadgeCard extends StatelessWidget {
                         value: isSelected,
                         onChanged: (selectionProvider.canSelectMore ||
                                 isSelected)
-                            ? (value) =>
-                                selectionProvider.toggleSelection(badgeData.key)
+                            ? (value) {
+                                // Check screen size compatibility
+                                final provider = Provider.of<InlineImageProvider>(
+                                    context, listen: false);
+                                final selectedBadges = selectionProvider.selectedBadges;
+                                if (selectedBadges.isNotEmpty && !isSelected) {
+                                  // Check if any selected badge has different screen size
+                                  bool hasMismatch = false;
+                                  ScreenSize currentSize = getBadgeScreenSize();
+                                  for (var key in selectedBadges) {
+                                    final selectedBadgeData = provider.savedBadgeCache
+                                        .firstWhere((element) => element.key == key)
+                                        .value;
+                                    int? height = selectedBadgeData['height'];
+                                    int? width = selectedBadgeData['width'];
+                                    ScreenSize selectedSize;
+                                    if (height != null && width != null) {
+                                      selectedSize = supportedScreenSizes.firstWhere(
+                                          (size) => size.height == height && size.width == width,
+                                          orElse: () => supportedScreenSizes.first);
+                                    } else {
+                                      selectedSize = supportedScreenSizes.first;
+                                    }
+                                    if (selectedSize != currentSize) {
+                                      hasMismatch = true;
+                                      break;
+                                    }
+                                  }
+                                  if (hasMismatch) {
+                                    toastUtils.showToast(
+                                        'Cannot select badges with different screen sizes.');
+                                    return;
+                                  }
+                                }
+                                selectionProvider.toggleSelection(badgeData.key);
+                              }
                             : null,
                         activeThumbColor: colorPrimary,
                       );

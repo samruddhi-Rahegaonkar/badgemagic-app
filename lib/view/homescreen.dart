@@ -208,7 +208,10 @@ class _HomeScreenState extends State<HomeScreen>
                       children: [
                         AnimationBadge(selectedSize: _selectedSize),
                         Padding(
-                          padding: EdgeInsets.only(right: 15.w),
+                          padding: EdgeInsets.only(
+                            right: 15.w,
+                            bottom: 0.h,
+                          ),
                           child: Material(
                             color: Colors.white.withOpacity(0.9),
                             borderRadius: BorderRadius.circular(5.r),
@@ -250,7 +253,7 @@ class _HomeScreenState extends State<HomeScreen>
                                     Text(
                                       _selectedSize.name,
                                       style: const TextStyle(
-                                          fontSize: 12, color: Colors.black87),
+                                          fontSize: 8, color: Colors.black87),
                                     ),
                                   ],
                                 ),
@@ -261,7 +264,8 @@ class _HomeScreenState extends State<HomeScreen>
                       ],
                     ),
                     Container(
-                      margin: EdgeInsets.all(15.w),
+                      margin: EdgeInsets.only(
+                          left: 15.w, right: 15.w, top: 0.h, bottom: 0.h),
                       child: Material(
                         color: drawerHeaderTitle,
                         borderRadius: BorderRadius.circular(10.r),
