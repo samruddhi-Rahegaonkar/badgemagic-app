@@ -255,7 +255,8 @@ class _HomeScreenState extends State<HomeScreen>
                     ],
                   ),
                   Container(
-                    margin: EdgeInsets.symmetric(horizontal: 15.w, vertical: 0.h),
+                    margin:
+                        EdgeInsets.symmetric(horizontal: 15.w, vertical: 0.h),
                     child: Material(
                       color: drawerHeaderTitle,
                       borderRadius: BorderRadius.circular(10.r),
@@ -277,7 +278,8 @@ class _HomeScreenState extends State<HomeScreen>
                             icon: const Icon(Icons.tag_faces_outlined),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(10.r)),
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(10.r)),
                             borderSide: BorderSide(color: colorPrimary),
                           ),
                         ),
@@ -292,8 +294,8 @@ class _HomeScreenState extends State<HomeScreen>
                           borderRadius: BorderRadius.circular(10.r),
                           color: Colors.grey[200]),
                       margin: EdgeInsets.symmetric(horizontal: 15.w),
-                      padding:
-                          EdgeInsets.symmetric(vertical: 10.h, horizontal: 10.w),
+                      padding: EdgeInsets.symmetric(
+                          vertical: 10.h, horizontal: 10.w),
                       child: VectorGridView(),
                     ),
                   ),
@@ -385,8 +387,8 @@ class _HomeScreenState extends State<HomeScreen>
                                     if (inlineimagecontroller.text
                                         .trim()
                                         .isEmpty) {
-                                      ToastUtils().showToast(
-                                          "Please enter a message");
+                                      ToastUtils()
+                                          .showToast("Please enter a message");
                                       return;
                                     }
 
@@ -410,25 +412,29 @@ class _HomeScreenState extends State<HomeScreen>
                                         animationProvider
                                             .isEffectActive(InvertLEDEffect()),
                                         speedDialProvider.getOuterValue(),
-                                        animationProvider.getAnimationIndex() ?? 1,
+                                        animationProvider.getAnimationIndex() ??
+                                            1,
                                         _selectedSize.height,
                                         _selectedSize.width,
                                       );
 
                                       ToastUtils().showToast(
                                           "Badge Updated Successfully");
-                                      Navigator.pushNamedAndRemoveUntil(
-                                          context, '/savedBadge', (route) => false);
+                                      Navigator.pushNamedAndRemoveUntil(context,
+                                          '/savedBadge', (route) => false);
                                     } else {
                                       showDialog(
                                         context: context,
                                         builder: (context) {
                                           return SaveBadgeDialog(
                                             speed: speedDialProvider,
-                                            animationProvider: animationProvider,
-                                            textController: inlineimagecontroller,
+                                            animationProvider:
+                                                animationProvider,
+                                            textController:
+                                                inlineimagecontroller,
                                             isInverse: animationProvider
-                                                .isEffectActive(InvertLEDEffect()),
+                                                .isEffectActive(
+                                                    InvertLEDEffect()),
                                             selectedSize: _selectedSize,
                                           );
                                         },
@@ -445,12 +451,11 @@ class _HomeScreenState extends State<HomeScreen>
                                     child: const Text('Save'),
                                   ),
                                 ),
-
                                 SizedBox(width: 40.w),
-
                                 GestureDetector(
                                   onTap: () async {
-                                    await animationProvider.handleAnimationTransfer(
+                                    await animationProvider
+                                        .handleAnimationTransfer(
                                       badgeData: badgeData,
                                       inlineImageProvider: inlineImageProvider,
                                       speedDialProvider: speedDialProvider,
@@ -498,11 +503,8 @@ class _HomeScreenState extends State<HomeScreen>
     if (animationProvider.isSpecialAnimationSelected() &&
         currentText.isNotEmpty) {
       animationProvider.resetToTextAnimation();
-      animationProvider.badgeAnimation(
-          currentText,
-          Converters(),
-          animationProvider.isEffectActive(InvertLEDEffect()),
-          _selectedSize);
+      animationProvider.badgeAnimation(currentText, Converters(),
+          animationProvider.isEffectActive(InvertLEDEffect()), _selectedSize);
       setState(() {});
     }
 

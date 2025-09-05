@@ -50,10 +50,10 @@ class DrawBadgeProvider extends ChangeNotifier {
 
   void initGridWithSize(ScreenSize size) {
     _currentSize = size;
-    _drawViewGrid =
-        List.generate(size.height, (_) => List.generate(size.width, (_) => false));
-    _previewGrid =
-        List.generate(size.height, (_) => List.generate(size.width, (_) => false));
+    _drawViewGrid = List.generate(
+        size.height, (_) => List.generate(size.width, (_) => false));
+    _previewGrid = List.generate(
+        size.height, (_) => List.generate(size.width, (_) => false));
     notifyListeners();
   }
 
@@ -86,10 +86,9 @@ class DrawBadgeProvider extends ChangeNotifier {
     _pushToUndoStack();
     for (int i = 0; i < rows; i++) {
       for (int j = 0; j < cols; j++) {
-        _drawViewGrid[i][j] =
-            (i < badgeData.length && j < badgeData[i].length)
-                ? badgeData[i][j]
-                : false;
+        _drawViewGrid[i][j] = (i < badgeData.length && j < badgeData[i].length)
+            ? badgeData[i][j]
+            : false;
       }
     }
     notifyListeners();

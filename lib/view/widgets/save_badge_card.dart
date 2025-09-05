@@ -422,24 +422,32 @@ class SaveBadgeCard extends StatelessWidget {
                                 isSelected)
                             ? (value) {
                                 // Check screen size compatibility
-                                final provider = Provider.of<InlineImageProvider>(
-                                    context, listen: false);
-                                final selectedBadges = selectionProvider.selectedBadges;
+                                final provider =
+                                    Provider.of<InlineImageProvider>(context,
+                                        listen: false);
+                                final selectedBadges =
+                                    selectionProvider.selectedBadges;
                                 if (selectedBadges.isNotEmpty && !isSelected) {
                                   // Check if any selected badge has different screen size
                                   bool hasMismatch = false;
                                   ScreenSize currentSize = getBadgeScreenSize();
                                   for (var key in selectedBadges) {
-                                    final selectedBadgeData = provider.savedBadgeCache
-                                        .firstWhere((element) => element.key == key)
+                                    final selectedBadgeData = provider
+                                        .savedBadgeCache
+                                        .firstWhere(
+                                            (element) => element.key == key)
                                         .value;
                                     int? height = selectedBadgeData['height'];
                                     int? width = selectedBadgeData['width'];
                                     ScreenSize selectedSize;
                                     if (height != null && width != null) {
-                                      selectedSize = supportedScreenSizes.firstWhere(
-                                          (size) => size.height == height && size.width == width,
-                                          orElse: () => supportedScreenSizes.first);
+                                      selectedSize =
+                                          supportedScreenSizes.firstWhere(
+                                              (size) =>
+                                                  size.height == height &&
+                                                  size.width == width,
+                                              orElse: () =>
+                                                  supportedScreenSizes.first);
                                     } else {
                                       selectedSize = supportedScreenSizes.first;
                                     }
@@ -454,7 +462,8 @@ class SaveBadgeCard extends StatelessWidget {
                                     return;
                                   }
                                 }
-                                selectionProvider.toggleSelection(badgeData.key);
+                                selectionProvider
+                                    .toggleSelection(badgeData.key);
                               }
                             : null,
                         activeThumbColor: colorPrimary,

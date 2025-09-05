@@ -73,8 +73,8 @@ class _BMBadgeState extends State<BMBadge> {
     final offsetHeightBadgeBackground = badgeOffsetBackground.key;
     final offsetWidthBadgeBackground = badgeOffsetBackground.value;
 
-    final badgeSize = badgeUtils.getBadgeSize(
-        offsetHeightBadgeBackground, offsetWidthBadgeBackground, renderBox.size);
+    final badgeSize = badgeUtils.getBadgeSize(offsetHeightBadgeBackground,
+        offsetWidthBadgeBackground, renderBox.size);
     final badgeHeight = badgeSize.key;
     final badgeWidth = badgeSize.value;
 
