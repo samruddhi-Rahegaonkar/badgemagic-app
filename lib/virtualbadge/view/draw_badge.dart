@@ -50,7 +50,6 @@ class _BMBadgeState extends State<BMBadge> {
     }
   }
 
-  // Convert global -> local coordinates
   Offset _getLocalPosition(Offset globalPosition) {
     final renderBox = context.findRenderObject() as RenderBox;
     return renderBox.globalToLocal(globalPosition);
@@ -58,6 +57,7 @@ class _BMBadgeState extends State<BMBadge> {
 
   void _handlePanStart(DragStartDetails details) {
     dragStart = _getLocalPosition(details.globalPosition);
+    drawProvider.pushToUndoStack(); // Save state for undo
   }
 
   void _handlePanUpdate(DragUpdateDetails details) {
@@ -73,8 +73,8 @@ class _BMBadgeState extends State<BMBadge> {
     final offsetHeightBadgeBackground = badgeOffsetBackground.key;
     final offsetWidthBadgeBackground = badgeOffsetBackground.value;
 
-    final badgeSize = badgeUtils.getBadgeSize(offsetHeightBadgeBackground,
-        offsetWidthBadgeBackground, renderBox.size);
+    final badgeSize = badgeUtils.getBadgeSize(
+        offsetHeightBadgeBackground, offsetWidthBadgeBackground, renderBox.size);
     final badgeHeight = badgeSize.key;
     final badgeWidth = badgeSize.value;
 
@@ -135,11 +135,12 @@ class _BMBadgeState extends State<BMBadge> {
   }
 
   void _handlePanEnd(DragEndDetails details) {
-    drawProvider.commitGridUpdate();
+    if (drawProvider.selectedShape != DrawShape.freehand) {
+      drawProvider.commitGridUpdate();
+    }
     dragStart = null;
   }
 
-  // === Shape drawing helpers ===
   void _drawLine(int r1, int c1, int r2, int c2, {bool preview = false}) {
     int dx = (c2 - c1).abs(), dy = (r2 - r1).abs();
     int sx = c1 < c2 ? 1 : -1;

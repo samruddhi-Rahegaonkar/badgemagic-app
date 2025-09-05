@@ -1,5 +1,4 @@
 import 'package:badgemagic/bademagic_module/models/screen_size.dart';
-import 'package:badgemagic/bademagic_module/utils/byte_array_utils.dart';
 import 'package:badgemagic/bademagic_module/utils/converters.dart';
 import 'package:badgemagic/bademagic_module/utils/file_helper.dart';
 import 'package:badgemagic/bademagic_module/utils/toast_utils.dart';
@@ -78,19 +77,12 @@ class _DrawBadgeState extends State<DrawBadge> {
           .getDrawViewGrid()
           .map((e) => e.map((e) => e ? 1 : 0).toList())
           .toList();
-      List<String> hexString =
-          Converters.convertBitmapToLEDHex(badgeGrid, false);
+      List<String> hexString = Converters.convertBitmapToLEDHex(badgeGrid, false);
 
       if (widget.isSavedCard == true) {
-        await FileHelper().updateBadgeText(
-          widget.filename ?? '',
-          hexString,
-        );
+        await FileHelper().updateBadgeText(widget.filename ?? '', hexString);
       } else if (widget.isSavedClipart == true) {
-        await FileHelper().updateClipart(
-          widget.filename ?? '',
-          badgeGrid,
-        );
+        await FileHelper().updateClipart(widget.filename ?? '', badgeGrid);
       } else {
         await FileHelper().saveImage(drawToggle.getDrawViewGrid());
       }
@@ -121,9 +113,7 @@ class _DrawBadgeState extends State<DrawBadge> {
             alignment: Alignment.center,
             child: LayoutBuilder(
               builder: (context, constraints) => Container(
-                constraints: BoxConstraints(
-                  maxWidth: constraints.maxWidth * 0.94,
-                ),
+                constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.94),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -135,47 +125,46 @@ class _DrawBadgeState extends State<DrawBadge> {
                           .toList(),
                       selectedSize: widget.selectedSize,
                     ),
-
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
 
                     // Control buttons
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildCompactButton(true, Icons.edit, 'Draw'),
-                        const SizedBox(width: 8),
-                        _buildCompactButton(false, Icons.delete, 'Erase'),
-                        const SizedBox(width: 8),
-                        _buildResetButton(),
-                        const SizedBox(width: 8),
-                        _buildSaveButton(),
-                        const SizedBox(width: 8),
-                        _buildShapesToggleButton(),
+                        Flexible(child: _buildCompactButton(true, Icons.edit, 'Draw')),
+                        const SizedBox(width: 2),
+                        Flexible(child: _buildCompactButton(false, Icons.delete, 'Erase')),
+                        const SizedBox(width: 2),
+                        Flexible(child: _buildResetButton()),
+                        const SizedBox(width: 2),
+                        Flexible(child: _buildSaveButton()),
+                        const SizedBox(width: 2),
+                        Flexible(child: _buildShapesToggleButton()),
+                        const SizedBox(width: 2),
+                        Flexible(child: _buildUndoButton()),
+                        const SizedBox(width: 2),
+                        Flexible(child: _buildRedoButton()),
                       ],
                     ),
+                    const SizedBox(height: 8),
 
                     // Shape options
                     if (_showShapeOptions)
                       Container(
                         height: 60,
-                        margin: const EdgeInsets.only(top: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            _buildCompactShapeCard(
-                                DrawShape.freehand, Icons.gesture, 'Free'),
-                            const SizedBox(width: 6),
-                            _buildCompactShapeCard(
-                                DrawShape.square, Icons.crop_square, 'Square'),
-                            const SizedBox(width: 6),
-                            _buildCompactShapeCard(DrawShape.rectangle,
-                                Icons.rectangle_outlined, 'Rect'),
-                            const SizedBox(width: 6),
-                            _buildCompactShapeCard(DrawShape.circle,
-                                Icons.circle_outlined, 'Circle'),
-                            const SizedBox(width: 6),
-                            _buildCompactShapeCard(DrawShape.triangle,
-                                Icons.change_history, 'Triangle'),
+                            _buildCompactShapeCard(DrawShape.freehand, Icons.gesture, 'Free'),
+                            const SizedBox(width: 2),
+                            _buildCompactShapeCard(DrawShape.square, Icons.crop_square, 'Square'),
+                            const SizedBox(width: 2),
+                            _buildCompactShapeCard(DrawShape.rectangle, Icons.rectangle_outlined, 'Rect'),
+                            const SizedBox(width: 2),
+                            _buildCompactShapeCard(DrawShape.circle, Icons.circle_outlined, 'Circle'),
+                            const SizedBox(width: 2),
+                            _buildCompactShapeCard(DrawShape.triangle, Icons.change_history, 'Triangle'),
                           ],
                         ),
                       ),
@@ -191,20 +180,15 @@ class _DrawBadgeState extends State<DrawBadge> {
 
   Widget _buildCompactButton(bool isDraw, IconData icon, String label) {
     final isSelected = drawToggle.isDrawing == isDraw;
-
     return TextButton(
       onPressed: () {
-        setState(() {
-          drawToggle.toggleIsDrawing(isDraw);
-        });
+        setState(() => drawToggle.toggleIsDrawing(isDraw));
       },
       child: Column(
         children: [
           Icon(icon, color: isSelected ? colorPrimary : Colors.black, size: 20),
           Text(label,
-              style: TextStyle(
-                  color: isSelected ? colorPrimary : Colors.black,
-                  fontSize: 10)),
+              style: TextStyle(color: isSelected ? colorPrimary : Colors.black, fontSize: 10)),
         ],
       ),
     );
@@ -212,11 +196,7 @@ class _DrawBadgeState extends State<DrawBadge> {
 
   Widget _buildResetButton() {
     return TextButton(
-      onPressed: () {
-        setState(() {
-          drawToggle.resetDrawViewGrid();
-        });
-      },
+      onPressed: () => setState(() => drawToggle.resetDrawViewGrid()),
       child: const Column(
         children: [
           Icon(Icons.refresh, color: Colors.black, size: 20),
@@ -230,9 +210,7 @@ class _DrawBadgeState extends State<DrawBadge> {
     return TextButton(
       onPressed: () async {
         await _saveImage();
-        Future.delayed(const Duration(milliseconds: 800), () {
-          Navigator.of(context).popUntil((route) => route.isFirst);
-        });
+        if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
       },
       child: const Column(
         children: [
@@ -248,9 +226,7 @@ class _DrawBadgeState extends State<DrawBadge> {
       onPressed: () {
         setState(() {
           _showShapeOptions = !_showShapeOptions;
-          if (!_showShapeOptions) {
-            drawToggle.setShape(DrawShape.freehand);
-          }
+          if (!_showShapeOptions) drawToggle.setShape(DrawShape.freehand);
         });
       },
       child: Column(
@@ -266,21 +242,59 @@ class _DrawBadgeState extends State<DrawBadge> {
     );
   }
 
+  Widget _buildUndoButton() {
+    return AnimatedBuilder(
+      animation: drawToggle,
+      builder: (context, _) {
+        final canUndo = drawToggle.canUndo;
+        return TextButton(
+          onPressed: canUndo ? drawToggle.undo : null,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.undo, color: canUndo ? Colors.black : Colors.grey, size: 20),
+              const SizedBox(height: 2),
+              Text('Undo',
+                  style: TextStyle(
+                      color: canUndo ? Colors.black : Colors.grey, fontSize: 10)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildRedoButton() {
+    return AnimatedBuilder(
+      animation: drawToggle,
+      builder: (context, _) {
+        final canRedo = drawToggle.canRedo;
+        return TextButton(
+          onPressed: canRedo ? drawToggle.redo : null,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.redo, color: canRedo ? Colors.black : Colors.grey, size: 20),
+              const SizedBox(height: 2),
+              Text('Redo',
+                  style: TextStyle(
+                      color: canRedo ? Colors.black : Colors.grey, fontSize: 10)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildCompactShapeCard(DrawShape shape, IconData icon, String label) {
     final isSelected = drawToggle.selectedShape == shape;
-
     return ElevatedButton(
-      onPressed: () {
-        setState(() {
-          drawToggle.setShape(shape);
-        });
-      },
+      onPressed: () => setState(() => drawToggle.setShape(shape)),
       style: ElevatedButton.styleFrom(
         foregroundColor: isSelected ? Colors.white : Colors.black,
         backgroundColor: isSelected ? colorPrimary : Colors.white,
         elevation: isSelected ? 2 : 1,
-        side:
-            BorderSide(color: isSelected ? colorPrimary : Colors.grey.shade300),
+        side: BorderSide(color: isSelected ? colorPrimary : Colors.grey.shade300),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
         minimumSize: const Size(55, 40),
@@ -288,9 +302,7 @@ class _DrawBadgeState extends State<DrawBadge> {
       child: Column(
         children: [
           Icon(icon, size: 18),
-          Text(label,
-              style: const TextStyle(fontSize: 9),
-              overflow: TextOverflow.ellipsis),
+          Text(label, style: const TextStyle(fontSize: 9), overflow: TextOverflow.ellipsis),
         ],
       ),
     );

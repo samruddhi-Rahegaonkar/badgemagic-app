@@ -8,26 +8,36 @@ enum DrawShape { freehand, square, rectangle, circle, triangle }
 class DrawBadgeProvider extends ChangeNotifier {
   List<List<bool>> _drawViewGrid = [];
   List<List<bool>> _previewGrid = [];
+  final List<List<List<bool>>> _undoStack = [];
+  final List<List<List<bool>>> _redoStack = [];
+
   ScreenSize _currentSize = supportedScreenSizes.first;
   bool isDrawing = true;
   DrawShape _selectedShape = DrawShape.freehand;
   BadgeAnimation currentAnimation = LeftAnimation();
+
   int get rows => _drawViewGrid.length;
   int get cols => _drawViewGrid.isNotEmpty ? _drawViewGrid[0].length : 0;
+
+  // ========== GETTERS ==========
+  List<List<bool>> getDrawViewGrid() {
+    // Merge preview + permanent grid
+    return List.generate(
+      rows,
+      (i) => List.generate(
+        cols,
+        (j) => _drawViewGrid[i][j] || _previewGrid[i][j],
+      ),
+    );
+  }
 
   DrawShape get selectedShape => _selectedShape;
   ScreenSize getCurrentSize() => _currentSize;
   bool getIsDrawing() => isDrawing;
+  bool get canUndo => _undoStack.isNotEmpty;
+  bool get canRedo => _redoStack.isNotEmpty;
 
-  List<List<bool>> getDrawViewGrid() {
-    return List.generate(
-      rows,
-      (i) => List.generate(cols, (j) {
-        return _drawViewGrid[i][j] || _previewGrid[i][j];
-      }),
-    );
-  }
-
+  // ========== STATE SETTERS ==========
   void toggleIsDrawing(bool drawing) {
     isDrawing = drawing;
     notifyListeners();
@@ -40,40 +50,10 @@ class DrawBadgeProvider extends ChangeNotifier {
 
   void initGridWithSize(ScreenSize size) {
     _currentSize = size;
-    _drawViewGrid = List.generate(
-      size.height,
-      (_) => List.generate(size.width, (_) => false),
-    );
-    _previewGrid = List.generate(
-      size.height,
-      (_) => List.generate(size.width, (_) => false),
-    );
-    notifyListeners();
-  }
-
-  void resetDrawViewGrid() {
     _drawViewGrid =
-        List.generate(rows, (_) => List.generate(cols, (_) => false));
-    notifyListeners();
-  }
-
-  void clearPreviewGrid() {
-    for (int i = 0; i < rows; i++) {
-      for (int j = 0; j < cols; j++) {
-        _previewGrid[i][j] = false;
-      }
-    }
-  }
-
-  void commitGridUpdate() {
-    for (int i = 0; i < rows; i++) {
-      for (int j = 0; j < cols; j++) {
-        if (_previewGrid[i][j]) {
-          _drawViewGrid[i][j] = true;
-        }
-      }
-    }
-    clearPreviewGrid();
+        List.generate(size.height, (_) => List.generate(size.width, (_) => false));
+    _previewGrid =
+        List.generate(size.height, (_) => List.generate(size.width, (_) => false));
     notifyListeners();
   }
 
@@ -95,22 +75,44 @@ class DrawBadgeProvider extends ChangeNotifier {
     }
   }
 
+  void resetDrawViewGrid() {
+    _pushToUndoStack();
+    _drawViewGrid =
+        List.generate(rows, (_) => List.generate(cols, (_) => false));
+    notifyListeners();
+  }
+
   void updateDrawViewGrid(List<List<bool>> badgeData) {
-    final r = _drawViewGrid.length;
-    final c = _drawViewGrid.isNotEmpty ? _drawViewGrid[0].length : 0;
-
-    for (int i = 0; i < r; i++) {
-      for (int j = 0; j < c; j++) {
-        _drawViewGrid[i][j] = false;
+    _pushToUndoStack();
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < cols; j++) {
+        _drawViewGrid[i][j] =
+            (i < badgeData.length && j < badgeData[i].length)
+                ? badgeData[i][j]
+                : false;
       }
     }
+    notifyListeners();
+  }
 
-    for (int i = 0; i < r && i < badgeData.length; i++) {
-      for (int j = 0; j < c && j < badgeData[i].length; j++) {
-        _drawViewGrid[i][j] = badgeData[i][j];
+  void clearPreviewGrid() {
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < cols; j++) {
+        _previewGrid[i][j] = false;
       }
     }
+  }
 
+  void commitGridUpdate() {
+    _pushToUndoStack();
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < cols; j++) {
+        if (_previewGrid[i][j]) {
+          _drawViewGrid[i][j] = true;
+        }
+      }
+    }
+    clearPreviewGrid();
     notifyListeners();
   }
 
@@ -118,6 +120,36 @@ class DrawBadgeProvider extends ChangeNotifier {
     final row = (position.dy / cellSize).floor();
     final col = (position.dx / cellSize).floor();
     return GridPosition(row, col);
+  }
+
+  // ========== UNDO / REDO ==========
+  void _pushToUndoStack() {
+    _undoStack.add(_copyGrid(_drawViewGrid));
+    _redoStack.clear(); // Invalidate redo stack on new action
+  }
+
+  void pushToUndoStack() {
+    _pushToUndoStack(); // Existing private method
+  }
+
+  void undo() {
+    if (_undoStack.isNotEmpty) {
+      _redoStack.add(_copyGrid(_drawViewGrid));
+      _drawViewGrid = _undoStack.removeLast();
+      notifyListeners();
+    }
+  }
+
+  void redo() {
+    if (_redoStack.isNotEmpty) {
+      _undoStack.add(_copyGrid(_drawViewGrid));
+      _drawViewGrid = _redoStack.removeLast();
+      notifyListeners();
+    }
+  }
+
+  List<List<bool>> _copyGrid(List<List<bool>> grid) {
+    return grid.map((row) => List<bool>.from(row)).toList();
   }
 }
 
