@@ -208,7 +208,7 @@ class Converters {
     int height,
     DataToByteArrayConverter conv,
   ) {
-    const int w = 8, h = 11, spacing = 2;
+    const int w = 8, h = 11, spacing = 0;
     if (msg.isEmpty) return List.generate(height, (_) => []);
 
     int totalWidth = msg.length * (w + spacing) - spacing;
