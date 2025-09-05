@@ -244,7 +244,7 @@ class _HomeScreenState extends State<HomeScreen>
                                   Text(
                                     _selectedSize.name,
                                     style: const TextStyle(
-                                        fontSize: 8, color: Colors.black87),
+                                        fontSize: 10, color: Colors.black87),
                                   ),
                                 ],
                               ),
