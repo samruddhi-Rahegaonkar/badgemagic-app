@@ -6,10 +6,12 @@ enum BadgeScanMode { any, specific }
 class BadgeScanProvider with ChangeNotifier {
   BadgeScanMode _mode = BadgeScanMode.any;
   List<String> _badgeNames = ['LSLED', 'VBLAB'];
+  Set<int> _selectedIndices = {}; // Track selected badge indices
   bool _isLoaded = false;
 
   BadgeScanMode get mode => _mode;
   List<String> get badgeNames => List.unmodifiable(_badgeNames);
+  Set<int> get selectedIndices => Set.unmodifiable(_selectedIndices);
   bool get isLoaded => _isLoaded;
 
   BadgeScanProvider() {
@@ -51,6 +53,7 @@ class BadgeScanProvider with ChangeNotifier {
 
   void setBadgeNames(List<String> names) {
     _badgeNames = names.where((name) => name.trim().isNotEmpty).toList();
+    _selectedIndices.clear(); // Clear selections when badge names change
     _saveToPrefs();
     notifyListeners();
   }
@@ -65,6 +68,12 @@ class BadgeScanProvider with ChangeNotifier {
   void removeBadgeNameAt(int index) {
     if (index < 0 || index >= _badgeNames.length) return;
     _badgeNames.removeAt(index);
+
+    // Update selected indices after removal
+    _selectedIndices.removeWhere((i) => i == index);
+    _selectedIndices =
+        _selectedIndices.map((i) => i > index ? i - 1 : i).toSet();
+
     _saveToPrefs();
     notifyListeners();
   }
@@ -74,5 +83,57 @@ class BadgeScanProvider with ChangeNotifier {
     _badgeNames[index] = newName.trim();
     _saveToPrefs();
     notifyListeners();
+  }
+
+  // --- Selection methods ---
+  void toggleSelection(int index) {
+    if (index < 0 || index >= _badgeNames.length) return;
+
+    if (_selectedIndices.contains(index)) {
+      _selectedIndices.remove(index);
+    } else {
+      _selectedIndices.add(index);
+    }
+    notifyListeners();
+  }
+
+  bool isSelected(int index) {
+    return _selectedIndices.contains(index);
+  }
+
+  void clearSelection() {
+    _selectedIndices.clear();
+    notifyListeners();
+  }
+
+  void selectAll() {
+    _selectedIndices =
+        Set.from(List.generate(_badgeNames.length, (index) => index));
+    notifyListeners();
+  }
+
+  void removeSelectedDevices() {
+    if (_selectedIndices.isEmpty) return;
+
+    // Sort indices in descending order to remove from end first
+    final sortedIndices = _selectedIndices.toList()
+      ..sort((a, b) => b.compareTo(a));
+
+    for (final index in sortedIndices) {
+      if (index < _badgeNames.length) {
+        _badgeNames.removeAt(index);
+      }
+    }
+
+    _selectedIndices.clear();
+    _saveToPrefs();
+    notifyListeners();
+  }
+
+  List<String> getSelectedBadgeNames() {
+    return _selectedIndices
+        .where((index) => index < _badgeNames.length)
+        .map((index) => _badgeNames[index])
+        .toList();
   }
 }

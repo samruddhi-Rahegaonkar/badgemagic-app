@@ -27,12 +27,8 @@ class _BadgeScanSettingsWidgetState extends State<BadgeScanSettingsWidget> {
     setState(() {
       _controllers.add(TextEditingController());
     });
-  }
-
-  void _removeBadgeName(int index) {
-    setState(() {
-      _controllers.removeAt(index).dispose();
-    });
+    final provider = Provider.of<BadgeScanProvider>(context, listen: false);
+    provider.addBadgeName(''); // Add empty badge name to provider
   }
 
   Future<void> _onSave() async {
@@ -94,35 +90,110 @@ class _BadgeScanSettingsWidgetState extends State<BadgeScanSettingsWidget> {
                 groupValue: _mode,
                 onChanged: (val) => setState(() => _mode = val!),
               ),
-              if (_mode == BadgeScanMode.specific)
+              if (_mode == BadgeScanMode.specific) ...[
+                // Selection controls
+                if (_controllers.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            TextButton(
+                              onPressed: () => provider.selectAll(),
+                              child: const Text('Select All'),
+                            ),
+                            TextButton(
+                              onPressed: () => provider.clearSelection(),
+                              child: const Text('Clear'),
+                            ),
+                          ],
+                        ),
+                        if (provider.selectedIndices.isNotEmpty)
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              // Remove selected controllers
+                              final sortedIndices = provider.selectedIndices
+                                  .toList()
+                                ..sort((a, b) => b.compareTo(a));
+
+                              for (final index in sortedIndices) {
+                                if (index < _controllers.length) {
+                                  _controllers[index].dispose();
+                                  _controllers.removeAt(index);
+                                }
+                              }
+
+                              provider.removeSelectedDevices();
+                              setState(() {});
+                            },
+                            icon: const Icon(Icons.delete, size: 18),
+                            label: Text(
+                                'Remove (${provider.selectedIndices.length})'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                // Badge list with checkboxes
                 Expanded(
                   child: ListView.builder(
                     itemCount: _controllers.length,
                     itemBuilder: (context, index) {
-                      return Row(
-                        children: [
-                          Expanded(
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 12.0),
-                              child: TextField(
-                                controller: _controllers[index],
-                                decoration: const InputDecoration(
-                                  labelText: 'Badge Name',
+                      final isSelected = provider.isSelected(index);
+
+                      return Container(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 12.0, vertical: 4.0),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color:
+                                isSelected ? Colors.blue : Colors.grey.shade300,
+                            width: isSelected ? 2 : 1,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                          color: isSelected
+                              ? Colors.blue.shade50
+                              : Colors.transparent,
+                        ),
+                        child: Row(
+                          children: [
+                            Checkbox(
+                              value: isSelected,
+                              onChanged: (value) =>
+                                  provider.toggleSelection(index),
+                              activeColor: Colors.blue,
+                            ),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 12.0),
+                                child: TextField(
+                                  controller: _controllers[index],
+                                  decoration: const InputDecoration(
+                                    labelText: 'Badge Name',
+                                    border: InputBorder.none,
+                                    contentPadding:
+                                        EdgeInsets.symmetric(vertical: 12),
+                                  ),
+                                  onChanged: (value) {
+                                    // Update the provider when text changes
+                                    provider.updateBadgeName(index, value);
+                                  },
                                 ),
                               ),
                             ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle_outline),
-                            onPressed: () => _removeBadgeName(index),
-                          ),
-                        ],
+                          ],
+                        ),
                       );
                     },
                   ),
                 ),
-              if (_mode == BadgeScanMode.specific)
+                // Add more button
                 Padding(
                   padding: const EdgeInsets.all(12.0),
                   child: ElevatedButton.icon(
@@ -131,6 +202,7 @@ class _BadgeScanSettingsWidgetState extends State<BadgeScanSettingsWidget> {
                     label: const Text("Add more"),
                   ),
                 ),
+              ],
             ],
           ),
         );
