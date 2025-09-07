@@ -198,59 +198,66 @@ class _HomeScreenState extends State<HomeScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      AnimationBadge(selectedSize: _selectedSize),
-                      Padding(
-                        padding: EdgeInsets.only(right: 15.w, bottom: 0.h),
-                        child: Material(
-                          color: Colors.white.withOpacity(0.9),
-                          borderRadius: BorderRadius.circular(5.r),
-                          child: PopupMenuButton<ScreenSize>(
-                            key: ValueKey(_selectedSize),
-                            tooltip: "Select Screen Size",
-                            initialValue: _selectedSize,
-                            onSelected: (newSize) {
-                              setState(() {
-                                _selectedSize = newSize;
-                                animationProvider.initGrids(_selectedSize);
-                                animationProvider.badgeAnimation(
-                                  inlineImageProvider.getController().text,
-                                  Converters(),
-                                  animationProvider
-                                      .isEffectActive(InvertLEDEffect()),
-                                  _selectedSize,
-                                );
-                              });
-                            },
-                            itemBuilder: (context) {
-                              return supportedScreenSizes.map((size) {
-                                return PopupMenuItem<ScreenSize>(
-                                  value: size,
-                                  child: Text(size.name,
-                                      style: const TextStyle(fontSize: 13)),
-                                );
-                              }).toList();
-                            },
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 6.w, vertical: 3.h),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.aspect_ratio,
-                                      size: 16, color: Colors.black54),
-                                  SizedBox(width: 4.w),
-                                  Text(
-                                    _selectedSize.name,
-                                    style: const TextStyle(
-                                        fontSize: 10, color: Colors.black87),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          AnimationBadge(selectedSize: _selectedSize),
+                          Transform.translate(
+                            offset:
+                                Offset(-11, -6), // Move up to overlap slightly
+                            child: Material(
+                              color: Colors.white.withOpacity(0.9),
+                              borderRadius: BorderRadius.circular(5.r),
+                              child: PopupMenuButton<ScreenSize>(
+                                key: ValueKey(_selectedSize),
+                                tooltip: "Select Screen Size",
+                                initialValue: _selectedSize,
+                                onSelected: (newSize) {
+                                  setState(() {
+                                    _selectedSize = newSize;
+                                    animationProvider.initGrids(_selectedSize);
+                                    animationProvider.badgeAnimation(
+                                      inlineImageProvider.getController().text,
+                                      Converters(),
+                                      animationProvider
+                                          .isEffectActive(InvertLEDEffect()),
+                                      _selectedSize,
+                                    );
+                                  });
+                                },
+                                itemBuilder: (context) {
+                                  return supportedScreenSizes.map((size) {
+                                    return PopupMenuItem<ScreenSize>(
+                                      value: size,
+                                      child: Text(size.name,
+                                          style: const TextStyle(fontSize: 13)),
+                                    );
+                                  }).toList();
+                                },
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 6.w, vertical: 3.h),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.aspect_ratio,
+                                          size: 16, color: Colors.black54),
+                                      SizedBox(width: 4.w),
+                                      Text(
+                                        _selectedSize.name,
+                                        style: const TextStyle(
+                                            fontSize: 10,
+                                            color: Colors.black87),
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
