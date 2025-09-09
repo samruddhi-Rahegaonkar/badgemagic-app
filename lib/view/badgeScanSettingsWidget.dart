@@ -212,7 +212,9 @@ class _BadgeScanSettingsWidgetState extends State<BadgeScanSettingsWidget> {
 
   @override
   void dispose() {
-    for (var c in _controllers) c.dispose();
+    for (var c in _controllers) {
+      c.dispose();
+    }
     super.dispose();
   }
 }

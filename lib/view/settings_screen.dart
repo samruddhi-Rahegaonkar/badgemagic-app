@@ -190,7 +190,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                         ],
                       ),
                     );
-                  }).toList(),
+                  }),
                   // Add more button
                   TextButton.icon(
                     onPressed: () => setState(() {

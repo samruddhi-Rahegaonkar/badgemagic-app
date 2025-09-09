@@ -104,7 +104,7 @@ class BadgeMessageProvider {
         ? Provider.of<BadgeScanProvider>(context, listen: false)
         : null;
 
-    final BleState? initialState = ScanState(
+    final BleState initialState = ScanState(
       manager: manager,
       mode: scanProvider?.mode ?? BadgeScanMode.any,
       allowedNames: scanProvider?.getSelectedBadgeNames() ?? <String>[],

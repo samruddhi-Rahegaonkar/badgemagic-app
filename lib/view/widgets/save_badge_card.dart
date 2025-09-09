@@ -301,7 +301,7 @@ class SaveBadgeCard extends StatelessWidget {
                         ? (value) =>
                             selectionProvider.toggleSelection(badgeData.key)
                         : null,
-                    activeColor: colorPrimary,
+                    activeThumbColor: colorPrimary,
                   );
                 },
               ),
