@@ -133,6 +133,7 @@ class _TransitionTabState extends State<TransitionTab> {
                 icon: Icons.directions_bike,
                 animationName: 'Cycle',
                 index: 21,
+                screenSize: widget.selectedSize,
               )
             ]),
           ],
