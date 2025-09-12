@@ -53,9 +53,11 @@ class ScanState extends NormalBleState {
 
                 final deviceName = result.device.name.trim().toLowerCase();
 
+                // ✅ Direct match or "any" mode
                 final matchesDirectName = mode == BadgeScanMode.any ||
                     normalizedAllowedNames.contains(deviceName);
 
+                // ✅ Alias-based match
                 final aliasMatch = normalizedAllowedNames.any((realName) {
                   final alias =
                       aliasProvider.getAlias(realName)?.trim().toLowerCase();
@@ -72,16 +74,6 @@ class ScanState extends NormalBleState {
 
             toast.showToast('Device found. Connecting...');
 
-            final foundName = foundDevice.device.name.trim();
-
-            for (final real in allowedNames) {
-              final alias = aliasProvider.getAlias(real)?.trim();
-              if (alias != null &&
-                  alias.toLowerCase() == foundName.toLowerCase()) {
-                break;
-              }
-            }
-
             nextStateCompleter.complete(ConnectState(
               scanResult: foundDevice,
               manager: manager,
@@ -93,7 +85,7 @@ class ScanState extends NormalBleState {
         onError: (e) async {
           if (!isCompleted) {
             isCompleted = true;
-            stopScanSafely(); // ✅ Guarded again
+            stopScanSafely();
             logger.e("Scan error: $e");
             toast.showErrorToast('Scan error occurred.');
             nextStateCompleter.completeError(Exception("Scan error: $e"));

@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class BadgeScanSettingsWidget extends StatefulWidget {
-  final Function(BadgeScanMode mode, List<String> names) onSave;
+  final Function(BadgeScanMode mode, List<String> names)? onSave;
 
-  const BadgeScanSettingsWidget({super.key, required this.onSave});
+  const BadgeScanSettingsWidget({super.key, this.onSave});
 
   @override
   State<BadgeScanSettingsWidget> createState() =>
@@ -38,16 +38,21 @@ class _BadgeScanSettingsWidgetState extends State<BadgeScanSettingsWidget> {
       _nameControllers.add(TextEditingController());
       _aliasControllers.add(TextEditingController());
     });
+    final scanProvider = Provider.of<BadgeScanProvider>(context, listen: false);
+    scanProvider.addBadgeName('');
   }
 
   void _removeBadgeName(int index) {
+    if (index < 0 || index >= _nameControllers.length) return;
     setState(() {
       _nameControllers.removeAt(index).dispose();
       _aliasControllers.removeAt(index).dispose();
     });
+    final scanProvider = Provider.of<BadgeScanProvider>(context, listen: false);
+    scanProvider.removeBadgeNameAt(index);
   }
 
-  void _onSave() {
+  Future<void> _onSave() async {
     final updatedNames = <String>[];
     final Map<String, String> aliases = {};
     final Set<String> realNameSet = {};
@@ -79,9 +84,11 @@ class _BadgeScanSettingsWidgetState extends State<BadgeScanSettingsWidget> {
         }
       }
     }
+
     final scanProvider = Provider.of<BadgeScanProvider>(context, listen: false);
     scanProvider.setMode(_mode);
     scanProvider.setBadgeNames(updatedNames);
+
     final aliasProvider =
         Provider.of<BadgeAliasProvider>(context, listen: false);
     aliasProvider.clearAll();
@@ -91,8 +98,8 @@ class _BadgeScanSettingsWidgetState extends State<BadgeScanSettingsWidget> {
       const SnackBar(content: Text('Scan settings saved successfully')),
     );
 
-    widget.onSave(_mode, updatedNames);
-    Navigator.pop(context);
+    widget.onSave?.call(_mode, updatedNames);
+    if (mounted) Navigator.pop(context);
   }
 
   @override
