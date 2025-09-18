@@ -10,7 +10,7 @@ import 'package:badgemagic/providers/badge_message_provider.dart';
 import 'package:badgemagic/providers/badge_slot_provider..dart';
 import 'package:badgemagic/providers/imageprovider.dart';
 import 'package:badgemagic/providers/saved_badge_provider.dart';
-import 'package:badgemagic/view/draw_badge_screen.dart';
+import 'package:badgemagic/view/homescreen.dart';
 import 'package:badgemagic/view/widgets/badge_delete_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -164,16 +164,6 @@ class SaveBadgeCard extends StatelessWidget {
                             color: Colors.black,
                           ),
                           onPressed: () async {
-                            List<List<int>> data = hexStringToBool(
-                                    file
-                                        .jsonToData(badgeData.value)
-                                        .messages[0]
-                                        .text
-                                        .join(),
-                                    getBadgeScreenSize().height)
-                                .map((e) => e.map((v) => v == 1).toList())
-                                .toList();
-                            
                             final shouldEdit = await showDialog<bool>(
                               context: context,
                               builder: (context) => AlertDialog(
@@ -194,22 +184,15 @@ class SaveBadgeCard extends StatelessWidget {
                                 ],
                               ),
                             );
-                            
+
                             if (shouldEdit == true) {
-                              // Extract the speed value from the saved badge
-                              final speed = Speed.getIntValue(file
-                                  .jsonToData(badgeData.value)
-                                  .messages[0]
-                                  .speed);
                               String badgeFilename = badgeData.key;
-                              
-                              // Use the draw badge screen for editing
+
+                              // Navigate to HomeScreen for editing
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (context) => DrawBadge(
-                                    filename: badgeFilename,
-                                    isSavedCard: true,
-                                    badgeGrid: data,
+                                  builder: (context) => HomeScreen(
+                                    savedBadgeFilename: badgeFilename,
                                   ),
                                 ),
                               );
@@ -255,10 +238,12 @@ class SaveBadgeCard extends StatelessWidget {
                           ),
                           onPressed: () async {
                             //add a dialog for confirmation before deleting
-                            await _showDeleteDialog(context).then((value) async {
+                            await _showDeleteDialog(context)
+                                .then((value) async {
                               if (value == true) {
                                 file.deleteFile(badgeData.key);
-                                toastUtils.showToast("Badge Deleted Successfully");
+                                toastUtils
+                                    .showToast("Badge Deleted Successfully");
                                 await refreshBadgesCallback(badgeData);
                               }
                             });

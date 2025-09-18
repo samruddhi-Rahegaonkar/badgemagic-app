@@ -201,5 +201,20 @@
   "rectangle": "Rectangle",
   "circle": "Circle",
   "triangle": "Triangle",
-  "clipartSavedSuccessfully": "Clipart saved successfully"
+  "clipartSavedSuccessfully": "Clipart saved successfully",
+  "selectScreenSize": "Select Screen Size",
+  "enterValidBadgeName": "Enter Valid Badge Name",
+  "animationPacman": "Pacman",
+  "animationChevron": "Chevron",
+  "animationDiamond": "Diamond",
+  "animationBrokenHearts": "Broken Hearts",
+  "animationCupid": "Cupid",
+  "animationFeet": "Feet",
+  "animationFishKiss": "Fish Kiss",
+  "animationDiagonal": "Diagonal",
+  "animationEmergency": "Emergency",
+  "animationBeatingHearts": "Beating Hearts",
+  "animationFireworks": "Fireworks",
+  "animationEqualizer": "Equalizer",
+  "animationCycle": "Cycle"
 }

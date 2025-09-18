@@ -43,7 +43,8 @@ class _DrawBadgeState extends State<DrawBadge> {
     super.initState();
     drawToggle = DrawBadgeProvider();
     drawToggle.initGridWithSize(widget.selectedSize);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _setLandscapeOrientation());
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _setLandscapeOrientation());
   }
 
   @override
@@ -80,7 +81,8 @@ class _DrawBadgeState extends State<DrawBadge> {
           .getDrawViewGrid()
           .map((row) => row.map((cell) => cell ? 1 : 0).toList())
           .toList();
-      List<String> hexString = Converters.convertBitmapToLEDHex(badgeGrid, false);
+      List<String> hexString =
+          Converters.convertBitmapToLEDHex(badgeGrid, false);
 
       if (widget.isSavedCard!) {
         await fileHelper.updateBadgeText(widget.filename!, hexString);
@@ -138,9 +140,13 @@ class _DrawBadgeState extends State<DrawBadge> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Flexible(child: _buildCompactButton(true, Icons.edit, l10n.draw)),
+                        Flexible(
+                            child: _buildCompactButton(
+                                true, Icons.edit, l10n.draw)),
                         const SizedBox(width: 2),
-                        Flexible(child: _buildCompactButton(false, Icons.delete, l10n.erase)),
+                        Flexible(
+                            child: _buildCompactButton(
+                                false, Icons.delete, l10n.erase)),
                         const SizedBox(width: 2),
                         Flexible(child: _buildResetButton()),
                         const SizedBox(width: 2),
@@ -163,15 +169,20 @@ class _DrawBadgeState extends State<DrawBadge> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            _buildCompactShapeCard(DrawShape.freehand, Icons.gesture, l10n.free),
+                            _buildCompactShapeCard(
+                                DrawShape.freehand, Icons.gesture, l10n.free),
                             const SizedBox(width: 2),
-                            _buildCompactShapeCard(DrawShape.square, Icons.crop_square, l10n.square),
+                            _buildCompactShapeCard(DrawShape.square,
+                                Icons.crop_square, l10n.square),
                             const SizedBox(width: 2),
-                            _buildCompactShapeCard(DrawShape.rectangle, Icons.rectangle_outlined, l10n.rectangle),
+                            _buildCompactShapeCard(DrawShape.rectangle,
+                                Icons.rectangle_outlined, l10n.rectangle),
                             const SizedBox(width: 2),
-                            _buildCompactShapeCard(DrawShape.circle, Icons.circle_outlined, l10n.circle),
+                            _buildCompactShapeCard(DrawShape.circle,
+                                Icons.circle_outlined, l10n.circle),
                             const SizedBox(width: 2),
-                            _buildCompactShapeCard(DrawShape.triangle, Icons.change_history, l10n.triangle),
+                            _buildCompactShapeCard(DrawShape.triangle,
+                                Icons.change_history, l10n.triangle),
                           ],
                         ),
                       ),
@@ -192,7 +203,10 @@ class _DrawBadgeState extends State<DrawBadge> {
       child: Column(
         children: [
           Icon(icon, color: isSelected ? colorPrimary : Colors.black, size: 20),
-          Text(label, style: TextStyle(color: isSelected ? colorPrimary : Colors.black, fontSize: 10)),
+          Text(label,
+              style: TextStyle(
+                  color: isSelected ? colorPrimary : Colors.black,
+                  fontSize: 10)),
         ],
       ),
     );
@@ -209,7 +223,8 @@ class _DrawBadgeState extends State<DrawBadge> {
           children: [
             const Icon(Icons.refresh, color: Colors.black, size: 20),
             const SizedBox(height: 2),
-            Text(l10n.reset, style: const TextStyle(color: Colors.black, fontSize: 10)),
+            Text(l10n.reset,
+                style: const TextStyle(color: Colors.black, fontSize: 10)),
           ],
         ),
       );
@@ -228,7 +243,8 @@ class _DrawBadgeState extends State<DrawBadge> {
           children: [
             const Icon(Icons.save, color: Colors.black, size: 20),
             const SizedBox(height: 2),
-            Text(l10n.save, style: const TextStyle(color: Colors.black, fontSize: 10)),
+            Text(l10n.save,
+                style: const TextStyle(color: Colors.black, fontSize: 10)),
           ],
         ),
       );
@@ -242,9 +258,14 @@ class _DrawBadgeState extends State<DrawBadge> {
         },
         child: Column(
           children: [
-            Icon(Icons.category, color: _showShapeOptions ? colorPrimary : Colors.black, size: 20),
+            Icon(Icons.category,
+                color: _showShapeOptions ? colorPrimary : Colors.black,
+                size: 20),
             const SizedBox(height: 2),
-            Text('Shapes', style: TextStyle(color: _showShapeOptions ? colorPrimary : Colors.black, fontSize: 10)),
+            Text('Shapes',
+                style: TextStyle(
+                    color: _showShapeOptions ? colorPrimary : Colors.black,
+                    fontSize: 10)),
           ],
         ),
       );
@@ -258,9 +279,13 @@ class _DrawBadgeState extends State<DrawBadge> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.undo, color: canUndo ? Colors.black : Colors.grey, size: 20),
+                Icon(Icons.undo,
+                    color: canUndo ? Colors.black : Colors.grey, size: 20),
                 const SizedBox(height: 2),
-                Text('Undo', style: TextStyle(color: canUndo ? Colors.black : Colors.grey, fontSize: 10)),
+                Text('Undo',
+                    style: TextStyle(
+                        color: canUndo ? Colors.black : Colors.grey,
+                        fontSize: 10)),
               ],
             ),
           );
@@ -276,9 +301,13 @@ class _DrawBadgeState extends State<DrawBadge> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.redo, color: canRedo ? Colors.black : Colors.grey, size: 20),
+                Icon(Icons.redo,
+                    color: canRedo ? Colors.black : Colors.grey, size: 20),
                 const SizedBox(height: 2),
-                Text('Redo', style: TextStyle(color: canRedo ? Colors.black : Colors.grey, fontSize: 10)),
+                Text('Redo',
+                    style: TextStyle(
+                        color: canRedo ? Colors.black : Colors.grey,
+                        fontSize: 10)),
               ],
             ),
           );
@@ -293,7 +322,8 @@ class _DrawBadgeState extends State<DrawBadge> {
         foregroundColor: isSelected ? Colors.white : Colors.black,
         backgroundColor: isSelected ? colorPrimary : Colors.white,
         elevation: isSelected ? 2 : 1,
-        side: BorderSide(color: isSelected ? colorPrimary : Colors.grey.shade300),
+        side:
+            BorderSide(color: isSelected ? colorPrimary : Colors.grey.shade300),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
         minimumSize: const Size(55, 40),
@@ -301,7 +331,9 @@ class _DrawBadgeState extends State<DrawBadge> {
       child: Column(
         children: [
           Icon(icon, size: 18),
-          Text(label, style: const TextStyle(fontSize: 9), overflow: TextOverflow.ellipsis),
+          Text(label,
+              style: const TextStyle(fontSize: 9),
+              overflow: TextOverflow.ellipsis),
         ],
       ),
     );

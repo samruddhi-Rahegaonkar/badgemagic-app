@@ -1,3 +1,4 @@
+import 'package:badgemagic/bademagic_module/models/screen_size.dart';
 import 'package:badgemagic/providers/font_provider.dart';
 import 'package:badgemagic/providers/BadgeScanProvider.dart';
 import 'package:badgemagic/providers/getitlocator.dart';
@@ -101,7 +102,8 @@ class MyApp extends StatelessWidget {
               initialRoute: '/',
               routes: {
                 '/': (context) => const HomeScreen(),
-                '/drawBadge': (context) => const DrawBadge(),
+                '/drawBadge': (context) =>
+                    DrawBadge(selectedSize: supportedScreenSizes.first),
                 '/savedBadge': (context) => const SaveBadgeScreen(),
                 '/savedClipart': (context) => const SavedClipart(),
                 '/aboutUs': (context) => const AboutUsScreen(),

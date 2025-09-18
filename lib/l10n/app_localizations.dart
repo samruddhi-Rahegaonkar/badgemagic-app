@@ -1093,6 +1093,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Triangle'**
   String get triangle;
+
+  /// No description provided for @selectScreenSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Screen Size'**
+  String get selectScreenSize;
+
+  /// No description provided for @enterValidBadgeName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Valid Badge Name'**
+  String get enterValidBadgeName;
+
+  /// No description provided for @animationPacman.
+  ///
+  /// In en, this message translates to:
+  /// **'Pacman'**
+  String get animationPacman;
+
+  /// No description provided for @animationChevron.
+  ///
+  /// In en, this message translates to:
+  /// **'Chevron'**
+  String get animationChevron;
+
+  /// No description provided for @animationDiamond.
+  ///
+  /// In en, this message translates to:
+  /// **'Diamond'**
+  String get animationDiamond;
+
+  /// No description provided for @animationBrokenHearts.
+  ///
+  /// In en, this message translates to:
+  /// **'Broken Hearts'**
+  String get animationBrokenHearts;
+
+  /// No description provided for @animationCupid.
+  ///
+  /// In en, this message translates to:
+  /// **'Cupid'**
+  String get animationCupid;
+
+  /// No description provided for @animationFeet.
+  ///
+  /// In en, this message translates to:
+  /// **'Feet'**
+  String get animationFeet;
+
+  /// No description provided for @animationFishKiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Fish Kiss'**
+  String get animationFishKiss;
+
+  /// No description provided for @animationDiagonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagonal'**
+  String get animationDiagonal;
+
+  /// No description provided for @animationEmergency.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency'**
+  String get animationEmergency;
+
+  /// No description provided for @animationBeatingHearts.
+  ///
+  /// In en, this message translates to:
+  /// **'Beating Hearts'**
+  String get animationBeatingHearts;
+
+  /// No description provided for @animationFireworks.
+  ///
+  /// In en, this message translates to:
+  /// **'Fireworks'**
+  String get animationFireworks;
+
+  /// No description provided for @animationEqualizer.
+  ///
+  /// In en, this message translates to:
+  /// **'Equalizer'**
+  String get animationEqualizer;
+
+  /// No description provided for @animationCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle'**
+  String get animationCycle;
 }
 
 class _AppLocalizationsDelegate

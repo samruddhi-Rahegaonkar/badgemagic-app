@@ -1,5 +1,4 @@
-import 'dart:io';
-import 'dart:math'; // from issue1344
+import 'dart:async';
 import 'package:badgemagic/bademagic_module/bluetooth/base_ble_state.dart';
 import 'package:badgemagic/bademagic_module/bluetooth/datagenerator.dart';
 import 'package:badgemagic/bademagic_module/models/screen_size.dart';
@@ -53,7 +52,8 @@ Map<int, Speed> speedMap = {
 
 class BadgeMessageProvider {
   static final Logger logger = Logger();
-  InlineImageProvider controllerData = GetIt.instance.get<InlineImageProvider>();
+  InlineImageProvider controllerData =
+      GetIt.instance.get<InlineImageProvider>();
   FileHelper fileHelper = FileHelper();
   Converters converters = Converters();
 
@@ -64,6 +64,7 @@ class BadgeMessageProvider {
       isInverted,
       badgeHeight,
       ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+      scale: false,
     );
     return Data(messages: [
       Message(

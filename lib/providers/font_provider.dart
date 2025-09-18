@@ -36,14 +36,14 @@ class FontProvider extends ChangeNotifier {
             textStyle: baseStyle.copyWith(fontWeight: FontWeight.w700));
       case 'Poppins':
         return GoogleFonts.poppins(
-            textStyle: baseStyle.copyWith(fontWeight: FontWeight.w500));
+            textStyle: baseStyle.copyWith(fontWeight: FontWeight.w700));
       case 'Montserrat':
         return GoogleFonts.montserrat(
             textStyle: baseStyle.copyWith(fontWeight: FontWeight.w700));
       case 'Orbitron':
         return GoogleFonts.orbitron(
             textStyle:
-                baseStyle.copyWith(fontSize: 10, fontWeight: FontWeight.w700));
+                baseStyle.copyWith(fontSize: 12, fontWeight: FontWeight.w700));
       case 'Lexend':
         return GoogleFonts.lexend(
             textStyle: baseStyle.copyWith(fontWeight: FontWeight.w700));

@@ -1,19 +1,18 @@
 import 'package:badgemagic/bademagic_module/models/data.dart';
 import 'package:badgemagic/bademagic_module/models/messages.dart';
 import 'package:badgemagic/bademagic_module/models/screen_size.dart';
-import 'package:badgemagic/bademagic_module/utils/byte_array_utils.dart';
 import 'package:badgemagic/bademagic_module/utils/converters.dart';
 import 'package:badgemagic/bademagic_module/utils/file_helper.dart';
 import 'package:badgemagic/bademagic_module/utils/toast_utils.dart';
 import 'package:badgemagic/badge_animation/ani_animation.dart';
 import 'package:badgemagic/badge_animation/ani_fixed.dart';
 import 'package:badgemagic/constants.dart';
-import 'package:badgemagic/services/localization_service.dart';
 import 'package:badgemagic/providers/animation_badge_provider.dart';
 import 'package:badgemagic/providers/badge_message_provider.dart';
 import 'package:badgemagic/providers/badge_slot_provider..dart';
 import 'package:badgemagic/providers/imageprovider.dart';
 import 'package:badgemagic/providers/saved_badge_provider.dart';
+import 'package:badgemagic/services/localization_service.dart';
 import 'package:badgemagic/view/widgets/common_scaffold_widget.dart';
 import 'package:badgemagic/view/widgets/saved_badge_listview.dart';
 import 'package:badgemagic/virtualbadge/view/animated_badge.dart';
@@ -32,23 +31,25 @@ class SaveBadgeScreen extends StatefulWidget {
 }
 
 class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
+  late ScreenSize _previewSize;
   InlineImageProvider imageProvider = GetIt.instance<InlineImageProvider>();
   ToastUtils toastUtils = ToastUtils();
   FileHelper fileHelper = FileHelper();
   SavedBadgeProvider savedBadgeProvider = SavedBadgeProvider();
-  late ScreenSize _previewSize;
+  late AnimationBadgeProvider animationBadgeProvider;
 
   @override
   void initState() {
     super.initState();
     _setOrientation();
     _previewSize = supportedScreenSizes.first;
+    animationBadgeProvider = AnimationBadgeProvider();
   }
 
-  void _updatePreviewSize(ScreenSize size) {
-    setState(() {
-      _previewSize = size;
-    });
+  @override
+  void dispose() {
+    animationBadgeProvider.stopAnimation();
+    super.dispose();
   }
 
   void _setOrientation() {
@@ -56,6 +57,12 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
+  }
+
+  void _updatePreviewSize(ScreenSize size) {
+    setState(() {
+      _previewSize = size;
+    });
   }
 
   @override
@@ -68,8 +75,8 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
         ChangeNotifierProvider<SavedBadgeProvider>.value(
           value: savedBadgeProvider,
         ),
-        ChangeNotifierProvider<AnimationBadgeProvider>(
-          create: (_) => AnimationBadgeProvider()..initGrids(_previewSize),
+        ChangeNotifierProvider<AnimationBadgeProvider>.value(
+          value: animationBadgeProvider,
         ),
         ChangeNotifierProvider<BadgeSlotProvider>(
           create: (_) => BadgeSlotProvider(),
@@ -178,32 +185,6 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
                 children: [
                   Column(
                     children: [
-                      // Screen Size Dropdown from issue1344
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 15.w, vertical: 10.h),
-                        child: Row(
-                          children: [
-                            const Text("Screen Size: "),
-                            SizedBox(width: 10.w),
-                            DropdownButton<ScreenSize>(
-                              value: _previewSize,
-                              items: supportedScreenSizes.map((size) {
-                                return DropdownMenuItem(
-                                  value: size,
-                                  child: Text("${size.width}x${size.height}"),
-                                );
-                              }).toList(),
-                              onChanged: (ScreenSize? newSize) {
-                                if (newSize != null) {
-                                  _updatePreviewSize(newSize);
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-
                       AnimationBadge(selectedSize: _previewSize),
                       Expanded(
                         child: Selector<BadgeSlotProvider, bool>(
@@ -261,18 +242,15 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
                                         badgeDataList.add(Message(text: []));
                                       }
 
-                                      final animationProvider = context
-                                          .read<AnimationBadgeProvider>();
-
                                       if (badgeDataList
                                               .where(
                                                   (msg) => msg.text.isNotEmpty)
                                               .length >
                                           1) {
-                                        animationProvider
+                                        animationBadgeProvider
                                             .setAnimationMode(AniAnimation());
                                       } else {
-                                        animationProvider
+                                        animationBadgeProvider
                                             .setAnimationMode(FixedAnimation());
                                       }
 
@@ -280,7 +258,7 @@ class _SaveBadgeScreenState extends State<SaveBadgeScreen> {
                                           .map((m) => m.text.join())
                                           .join(" ");
 
-                                      animationProvider.badgeAnimation(
+                                      animationBadgeProvider.badgeAnimation(
                                         fullText,
                                         Converters(),
                                         false,

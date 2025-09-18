@@ -321,6 +321,7 @@ class SavedBadgeProvider extends ChangeNotifier {
       isInverted,
       badgeHeight,
       ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
+      scale: false,
     ); // <-- pass badgeHeight
     Data data = Data(messages: [
       Message(

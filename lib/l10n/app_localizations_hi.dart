@@ -518,4 +518,49 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get triangle => 'तिकोना';
+
+  @override
+  String get selectScreenSize => 'स्क्रीन साइज चुनें';
+
+  @override
+  String get enterValidBadgeName => 'मान्य बैज नाम दर्ज करें';
+
+  @override
+  String get animationPacman => 'पैकमैन';
+
+  @override
+  String get animationChevron => 'तीर';
+
+  @override
+  String get animationDiamond => 'हीरा';
+
+  @override
+  String get animationBrokenHearts => 'टूटे दिल';
+
+  @override
+  String get animationCupid => 'कामदेव';
+
+  @override
+  String get animationFeet => 'पैर';
+
+  @override
+  String get animationFishKiss => 'मछली';
+
+  @override
+  String get animationDiagonal => 'तिरछा';
+
+  @override
+  String get animationEmergency => 'इमरजेंसी';
+
+  @override
+  String get animationBeatingHearts => 'धड़कते दिल';
+
+  @override
+  String get animationFireworks => 'पटाखे';
+
+  @override
+  String get animationEqualizer => 'इक्वलाइज़र';
+
+  @override
+  String get animationCycle => 'साइकिल';
 }

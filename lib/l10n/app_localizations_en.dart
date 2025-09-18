@@ -521,4 +521,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get triangle => 'Triangle';
+
+  @override
+  String get selectScreenSize => 'Select Screen Size';
+
+  @override
+  String get enterValidBadgeName => 'Enter Valid Badge Name';
+
+  @override
+  String get animationPacman => 'Pacman';
+
+  @override
+  String get animationChevron => 'Chevron';
+
+  @override
+  String get animationDiamond => 'Diamond';
+
+  @override
+  String get animationBrokenHearts => 'Broken Hearts';
+
+  @override
+  String get animationCupid => 'Cupid';
+
+  @override
+  String get animationFeet => 'Feet';
+
+  @override
+  String get animationFishKiss => 'Fish Kiss';
+
+  @override
+  String get animationDiagonal => 'Diagonal';
+
+  @override
+  String get animationEmergency => 'Emergency';
+
+  @override
+  String get animationBeatingHearts => 'Beating Hearts';
+
+  @override
+  String get animationFireworks => 'Fireworks';
+
+  @override
+  String get animationEqualizer => 'Equalizer';
+
+  @override
+  String get animationCycle => 'Cycle';
 }

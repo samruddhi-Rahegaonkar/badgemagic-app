@@ -74,7 +74,8 @@ class _SaveBadgeDialogState extends State<SaveBadgeDialog> {
             SizedBox(height: 10.h),
             Text(
               l10n.badgeName,
-              style: const TextStyle(fontWeight: FontWeight.w400, color: Colors.red),
+              style: const TextStyle(
+                  fontWeight: FontWeight.w400, color: Colors.red),
             ),
             TextField(
               controller: badgeNameController,
@@ -91,7 +92,8 @@ class _SaveBadgeDialogState extends State<SaveBadgeDialog> {
             SizedBox(height: 10.h),
             Text(
               l10n.selectScreenSize,
-              style: const TextStyle(fontWeight: FontWeight.w400, color: Colors.red),
+              style: const TextStyle(
+                  fontWeight: FontWeight.w400, color: Colors.red),
             ),
             DropdownButton<ScreenSize>(
               value: selectedSize,
@@ -114,7 +116,8 @@ class _SaveBadgeDialogState extends State<SaveBadgeDialog> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text(l10n.cancel, style: const TextStyle(color: Colors.red)),
+                  child: Text(l10n.cancel,
+                      style: const TextStyle(color: Colors.red)),
                 ),
                 TextButton(
                   onPressed: () async {
@@ -135,7 +138,8 @@ class _SaveBadgeDialogState extends State<SaveBadgeDialog> {
                       if (f is File) {
                         final name = f.path.split(Platform.pathSeparator).last;
                         if (name.toLowerCase().endsWith('.json')) {
-                          final base = name.substring(0, name.length - 5).trim();
+                          final base =
+                              name.substring(0, name.length - 5).trim();
                           if (base.toLowerCase() == trimmedName.toLowerCase()) {
                             ciMatch = name;
                             break;
@@ -150,13 +154,22 @@ class _SaveBadgeDialogState extends State<SaveBadgeDialog> {
                       final result = await showDialog<String>(
                         context: context,
                         builder: (_) => AlertDialog(
-                          title: Text(exists ? l10n.badgeNameExists : l10n.similarBadgeExists),
+                          title: Text(exists
+                              ? l10n.badgeNameExists
+                              : l10n.similarBadgeExists),
                           content: Text(exists
                               ? l10n.badgeExistsMessage
-                              : l10n.similarBadgeExistsMessage(ciMatch!.substring(0, ciMatch.length - 5))),
+                              : l10n.similarBadgeExistsMessage(
+                                  ciMatch!.substring(0, ciMatch.length - 5))),
                           actions: [
-                            TextButton(onPressed: () => Navigator.pop(context, 'rename'), child: Text(l10n.cancel)),
-                            TextButton(onPressed: () => Navigator.pop(context, 'update'), child: Text(l10n.overwrite)),
+                            TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(context, 'rename'),
+                                child: Text(l10n.cancel)),
+                            TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(context, 'update'),
+                                child: Text(l10n.overwrite)),
                           ],
                         ),
                       );
@@ -186,11 +199,14 @@ class _SaveBadgeDialogState extends State<SaveBadgeDialog> {
                       selectedSize.width,
                     );
                     ToastUtils().showToast(
-                      exists || ciMatch != null ? l10n.badgeUpdatedSuccessfully : l10n.badgeSavedSuccessfully,
+                      exists || ciMatch != null
+                          ? l10n.badgeUpdatedSuccessfully
+                          : l10n.badgeSavedSuccessfully,
                     );
                     Navigator.of(context).pop();
                   },
-                  child: Text('Save', style: const TextStyle(color: Colors.red)),
+                  child:
+                      Text('Save', style: const TextStyle(color: Colors.red)),
                 ),
               ],
             ),

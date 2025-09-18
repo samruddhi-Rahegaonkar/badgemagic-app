@@ -1,4 +1,3 @@
-import 'package:badgemagic/constants.dart';
 import 'package:badgemagic/services/localization_service.dart';
 import 'package:badgemagic/view/widgets/animation_container.dart';
 import 'package:flutter/material.dart';

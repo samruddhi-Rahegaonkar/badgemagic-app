@@ -115,8 +115,10 @@ class AnimationBadgeProvider extends ChangeNotifier {
 
   void initGrids(ScreenSize size) {
     if (_isDisposed) return;
-    _paintGrid = List.generate(size.height, (_) => List.generate(size.width, (_) => false));
-    _newGrid = List.generate(size.height, (_) => List.generate(size.width, (_) => false));
+    _paintGrid = List.generate(
+        size.height, (_) => List.generate(size.width, (_) => false));
+    _newGrid = List.generate(
+        size.height, (_) => List.generate(size.width, (_) => false));
     notifyListeners();
   }
 
@@ -187,7 +189,8 @@ class AnimationBadgeProvider extends ChangeNotifier {
       }
       renderGrid(getNewGrid());
       if (_currentAnimation is CupidAnimation) {
-        int frameLimit = CupidAnimation.frameCount(_paintGrid[0].length, _paintGrid.length);
+        int frameLimit =
+            CupidAnimation.frameCount(_paintGrid[0].length, _paintGrid.length);
         _animationIndex = (_animationIndex + 1) % frameLimit;
       } else {
         _animationIndex++;
@@ -219,13 +222,15 @@ class AnimationBadgeProvider extends ChangeNotifier {
     return _currentAnimation == badgeAnimation;
   }
 
-  void badgeAnimation(String message, Converters converters, bool isInverted, ScreenSize screenSize) async {
+  void badgeAnimation(String message, Converters converters, bool isInverted,
+      ScreenSize screenSize) async {
     if (_isDisposed) return;
 
     bool isSpecial = isSpecialAnimationSelected();
     if (message.isEmpty && !isSpecial) {
       stopAllAnimations();
-      List<List<bool>> emptyGrid = List.generate(screenSize.height, (i) => List.generate(screenSize.width, (j) => false));
+      List<List<bool>> emptyGrid = List.generate(screenSize.height,
+          (i) => List.generate(screenSize.width, (j) => false));
       _newGrid = emptyGrid;
       _paintGrid = emptyGrid;
       notifyListeners();
@@ -237,28 +242,38 @@ class AnimationBadgeProvider extends ChangeNotifier {
     List<List<bool>> fullBitmap;
 
     if (message.contains('<<') && message.contains('>>')) {
-      List<String> hexStrings = await converters.messageTohex(message, isInverted, screenSize.height, screenSize);
+      List<String> hexStrings = await converters.messageTohex(
+          message, isInverted, screenSize.height, screenSize,
+          scale: false);
       fullBitmap = _hexStringsToBitmap(hexStrings, screenSize);
     } else {
-      fullBitmap = Converters.textToBitmapFixedWidth(message, screenSize.height, converters.converter);
+      List<String> hexStrings = await converters.messageTohex(
+          message, isInverted, screenSize.height, screenSize,
+          scale: false);
+      fullBitmap = _hexStringsToBitmap(hexStrings, screenSize);
     }
 
     setNewGrid(fullBitmap);
   }
 
-  List<List<bool>> _hexStringsToBitmap(List<String> hexStrings, ScreenSize screenSize) {
+  List<List<bool>> _hexStringsToBitmap(
+      List<String> hexStrings, ScreenSize screenSize) {
     if (hexStrings.isEmpty) {
-      return List.generate(screenSize.height, (_) => List.generate(screenSize.width, (_) => false));
+      return List.generate(screenSize.height,
+          (_) => List.generate(screenSize.width, (_) => false));
     }
 
     int totalWidth = hexStrings.length * 8;
-    List<List<bool>> bitmap = List.generate(screenSize.height, (_) => List.filled(totalWidth, false));
+    List<List<bool>> bitmap =
+        List.generate(screenSize.height, (_) => List.filled(totalWidth, false));
 
     for (int hexIndex = 0; hexIndex < hexStrings.length; hexIndex++) {
       String hexString = hexStrings[hexIndex];
       int charsPerRow = 2;
 
-      for (int row = 0; row < screenSize.height && row * charsPerRow < hexString.length; row++) {
+      for (int row = 0;
+          row < screenSize.height && row * charsPerRow < hexString.length;
+          row++) {
         int byteStart = row * charsPerRow;
         int byteEnd = byteStart + charsPerRow;
 
@@ -290,9 +305,11 @@ class AnimationBadgeProvider extends ChangeNotifier {
       newGrid = _frames[_currentFrame];
     }
 
-    var canvas = List.generate(badgeHeight, (i) => List.generate(badgeWidth, (j) => false));
+    var canvas = List.generate(
+        badgeHeight, (i) => List.generate(badgeWidth, (j) => false));
 
-    _currentAnimation.processAnimation(badgeHeight, badgeWidth, _animationIndex, newGrid, canvas);
+    _currentAnimation.processAnimation(
+        badgeHeight, badgeWidth, _animationIndex, newGrid, canvas);
 
     for (var effect in _currentEffect) {
       effect?.processEffect(_animationIndex, canvas, badgeHeight, badgeWidth);
