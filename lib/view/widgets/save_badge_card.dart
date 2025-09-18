@@ -10,7 +10,7 @@ import 'package:badgemagic/providers/badge_message_provider.dart';
 import 'package:badgemagic/providers/badge_slot_provider..dart';
 import 'package:badgemagic/providers/imageprovider.dart';
 import 'package:badgemagic/providers/saved_badge_provider.dart';
-import 'package:badgemagic/view/homescreen.dart';
+import 'package:badgemagic/view/draw_badge_screen.dart';
 import 'package:badgemagic/view/widgets/badge_delete_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -124,7 +124,7 @@ class SaveBadgeCard extends StatelessWidget {
                     child: Padding(
                       padding: EdgeInsets.only(
                           right: 8
-                              .w), // Adding some padding to separate text and buttons
+                              .w), // Adding some padding to separate text and buttons.
                       child: Text(
                         badgeData.key.substring(0, badgeData.key.length - 5),
                         style: const TextStyle(
@@ -164,7 +164,7 @@ class SaveBadgeCard extends StatelessWidget {
                             color: Colors.black,
                           ),
                           onPressed: () async {
-                            hexStringToBool(
+                            List<List<int>> data = hexStringToBool(
                                     file
                                         .jsonToData(badgeData.value)
                                         .messages[0]
@@ -173,6 +173,7 @@ class SaveBadgeCard extends StatelessWidget {
                                     getBadgeScreenSize().height)
                                 .map((e) => e.map((v) => v == 1).toList())
                                 .toList();
+                            
                             final shouldEdit = await showDialog<bool>(
                               context: context,
                               builder: (context) => AlertDialog(
@@ -193,6 +194,7 @@ class SaveBadgeCard extends StatelessWidget {
                                 ],
                               ),
                             );
+                            
                             if (shouldEdit == true) {
                               // Extract the speed value from the saved badge
                               final speed = Speed.getIntValue(file
@@ -200,15 +202,16 @@ class SaveBadgeCard extends StatelessWidget {
                                   .messages[0]
                                   .speed);
                               String badgeFilename = badgeData.key;
-                              Navigator.of(context).pushAndRemoveUntil(
+                              
+                              // Use the draw badge screen for editing
+                              Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (context) => HomeScreen(
-                                    savedBadgeFilename: badgeFilename,
-                                    initialSpeed: speed,
-                                    // Pass the speed value
+                                  builder: (context) => DrawBadge(
+                                    filename: badgeFilename,
+                                    isSavedCard: true,
+                                    badgeGrid: data,
                                   ),
                                 ),
-                                (route) => false, // Remove all previous routes
                               );
                             }
                           },
@@ -221,7 +224,7 @@ class SaveBadgeCard extends StatelessWidget {
                           ),
                           onPressed: () {
                             logger.d("BadgeData: ${badgeData.value}");
-                            //We can Acrtually call a method to generate the data just by transffering the JSON data
+                            //We can Actually call a method to generate the data just by transferring the JSON data
                             //so we would not necessarily need the Providers.
                             badge.checkAndTransfer(
                                 null,
@@ -252,12 +255,10 @@ class SaveBadgeCard extends StatelessWidget {
                           ),
                           onPressed: () async {
                             //add a dialog for confirmation before deleting
-                            await _showDeleteDialog(context)
-                                .then((value) async {
+                            await _showDeleteDialog(context).then((value) async {
                               if (value == true) {
                                 file.deleteFile(badgeData.key);
-                                toastUtils
-                                    .showToast("Badge Deleted Successfully");
+                                toastUtils.showToast("Badge Deleted Successfully");
                                 await refreshBadgesCallback(badgeData);
                               }
                             });
@@ -269,7 +270,7 @@ class SaveBadgeCard extends StatelessWidget {
                 ],
               ),
               SizedBox(height: 8.h),
-              // Solution 1: Wrap the Row in a SingleChildScrollView for horizontal scrolling
+              // Solution: Wrap the Row in a SingleChildScrollView for horizontal scrolling
               Row(
                 children: [
                   Expanded(

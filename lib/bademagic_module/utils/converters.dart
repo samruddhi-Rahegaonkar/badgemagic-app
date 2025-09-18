@@ -1,119 +1,284 @@
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'dart:math';
 
+import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:badgemagic/bademagic_module/models/screen_size.dart';
 import 'package:badgemagic/bademagic_module/utils/byte_array_utils.dart';
 import 'package:badgemagic/bademagic_module/utils/data_to_bytearray_converter.dart';
 import 'package:badgemagic/bademagic_module/utils/file_helper.dart';
 import 'package:badgemagic/bademagic_module/utils/image_utils.dart';
+import 'package:badgemagic/providers/font_provider.dart';
 import 'package:badgemagic/providers/imageprovider.dart';
-import 'package:get_it/get_it.dart';
+
+String getFontKey(
+    String fontFamily, double fontSize, FontWeight weight, bool italic) {
+  return '$fontFamily-${fontSize.round()}-${weight.index}-$italic';
+}
 
 class Converters {
-  final controllerData = GetIt.instance.get<InlineImageProvider>();
-  final converter = DataToByteArrayConverter();
-  final imageUtils = ImageUtils();
-  final fileHelper = FileHelper();
+  final InlineImageProvider controllerData = GetIt.instance.get<InlineImageProvider>();
+  final DataToByteArrayConverter converter = DataToByteArrayConverter();
+  final ImageUtils imageUtils = ImageUtils();
+  final FileHelper fileHelper = FileHelper();
 
-  Future<List<String>> messageTohex(
-    String message,
-    bool isInverted,
-    int rows,
-    ScreenSize screenSize, {
-    bool scale = true,
-  }) async {
-    List<String> hexStrings = [];
+  static final Map<String, List<List<bool>>> _characterCache = {};
 
-    for (int i = 0; i < message.length; i++) {
-      if (_isEmojiTag(message, i)) {
-        int index = int.parse(message.substring(i + 2, i + 4));
-        hexStrings.addAll(await _handleEmoji(index, screenSize));
-        i += 5;
-      } else {
-        hexStrings.addAll(_handleChar(message[i], screenSize, scale));
-      }
-    }
+  // --------------------- Public Methods ---------------------
+
+  Future<List<String>> messageTohex(String message, bool isInverted) async {
+    if (message.isEmpty) return [];
+
+    final fontProvider = GetIt.instance<FontProvider>();
+    final usingCustomFont = fontProvider.selectedFont != null;
+
+    // Process message using either custom font or default
+    List<String> hexStrings = usingCustomFont
+        ? await _processCustomFontMessage(message, fontProvider.selectedTextStyle)
+        : await _processDefaultFont(message);
 
     if (isInverted) {
-      hexStrings = padHexString(invertHex(hexStrings.join()).split(''), rows);
+      return _processInversion(hexStrings);
     }
 
-    logger.d("Final hex strings count: ${hexStrings.length}");
     return hexStrings;
   }
 
-  bool _isEmojiTag(String msg, int i) =>
-      i + 5 < msg.length &&
-      msg.substring(i, i + 2) == '<<' &&
-      msg.substring(i + 4, i + 6) == '>>';
+  // --------------------- Private Helpers ---------------------
 
-  Future<List<String>> _handleEmoji(int index, ScreenSize size) async {
-    if (index >= controllerData.imageCache.length) {
-      logger.e("Image cache index $index out of range");
-      return [];
-    }
+  Future<List<String>> _processDefaultFont(String text) async {
+    List<Map<String, dynamic>> segments = [];
+    String currentText = '';
+    int i = 0;
 
-    var key = controllerData.imageCache.keys.toList()[index];
-    if (key is List) {
-      final data = await fileHelper.readFromFile(key[0]);
-      if (data == null) {
-        logger.e("Failed to read file: ${key[0]}");
-        return [];
+    while (i < text.length) {
+      if (text[i] == '<' && i + 5 < text.length && text[i + 5] == '>') {
+        if (currentText.isNotEmpty) {
+          segments.add({'type': 'text', 'content': currentText});
+          currentText = '';
+        }
+        segments.add({'type': 'image', 'index': int.parse(text[i + 2] + text[i + 3])});
+        i += 6;
+      } else {
+        currentText += text[i];
+        i++;
       }
-
-      var image = data.cast<List<dynamic>>().map((e) => e.cast<int>()).toList();
-      var scaled = _scaleBitmapToBadgeSize(image, size.width, size.height);
-      return convertBitmapToLEDHex(scaled, true);
+    }
+    if (currentText.isNotEmpty) {
+      segments.add({'type': 'text', 'content': currentText});
     }
 
-    if (index < controllerData.vectors.length) {
-      return await imageUtils.generateLedHexWithSize(
-          controllerData.vectors[index], size.width, size.height);
+    List<String> hexStrings = [];
+    for (var segment in segments) {
+      if (segment['type'] == 'text') {
+        hexStrings.addAll(segment['content']
+            .split('')
+            .where((char) => converter.charCodes.containsKey(char))
+            .map((char) => converter.charCodes[char]!)
+            .toList());
+      } else if (segment['type'] == 'image') {
+        int index = segment['index'];
+        var key = controllerData.imageCache.keys.toList()[index];
+        if (key is List) {
+          String filename = key[0];
+          List<dynamic>? decodedData = await fileHelper.readFromFile(filename);
+          final List<List<dynamic>> image = decodedData!.cast<List<dynamic>>();
+          List<List<int>> imageData = image.map((list) => list.cast<int>()).toList();
+          hexStrings.addAll(convertBitmapToLEDHex(imageData, true));
+        } else {
+          hexStrings.addAll(await imageUtils.generateLedHex(controllerData.vectors[index]));
+        }
+      }
     }
 
-    logger.e("Vector index $index out of range");
-    return [];
+    return hexStrings;
   }
 
-  List<String> _handleChar(String ch, ScreenSize size, bool scale) {
-    if (!converter.charCodes.containsKey(ch)) {
-      logger.w("Character '$ch' not found in charCodes");
-      return [];
+  Future<List<String>> _processCustomFontMessage(String text, TextStyle style) async {
+    List<Map<String, dynamic>> segments = [];
+    String currentText = '';
+    int i = 0;
+
+    while (i < text.length) {
+      if (text[i] == '<' && i + 5 < text.length && text[i + 5] == '>') {
+        if (currentText.isNotEmpty) {
+          segments.add({'type': 'text', 'content': currentText});
+          currentText = '';
+        }
+        segments.add({'type': 'image', 'index': int.parse(text[i + 2] + text[i + 3])});
+        i += 6;
+      } else {
+        currentText += text[i];
+        i++;
+      }
+    }
+    if (currentText.isNotEmpty) {
+      segments.add({'type': 'text', 'content': currentText});
     }
 
-    String hex = converter.charCodes[ch]!;
+    List<List<bool>> combinedMatrix = List.generate(11, (_) => []);
 
-    if (!scale) {
-      return [hex]; // ✅ return raw hex for test
+    for (var segment in segments) {
+      if (segment['type'] == 'text') {
+        String text = segment['content'];
+        for (int i = 0; i < text.length; i++) {
+          String char = text[i];
+          bool hasDescender = "ypgqj".contains(char);
+          final matrixData = await renderTextToMatrix(char, style,
+              rows: 11, hasDescender: hasDescender);
+          List<List<bool>> charMatrix = matrixData['matrix'];
+          for (int row = 0; row < 11; row++) {
+            combinedMatrix[row].addAll(charMatrix[row]);
+          }
+        }
+      } else if (segment['type'] == 'image') {
+        int index = segment['index'];
+        var key = controllerData.imageCache.keys.toList()[index];
+        List<String> hexStrings;
+        if (key is List) {
+          String filename = key[0];
+          List<dynamic>? decodedData = await fileHelper.readFromFile(filename);
+          final List<List<dynamic>> image = decodedData!.cast<List<dynamic>>();
+          List<List<int>> imageData = image.map((list) => list.cast<int>()).toList();
+          hexStrings = convertBitmapToLEDHex(imageData, true);
+        } else {
+          hexStrings = await imageUtils.generateLedHex(controllerData.vectors[index]);
+        }
+
+        for (var hex in hexStrings) {
+          for (int i = 0; i < 11; i++) {
+            String hexByte = hex.substring(i * 2, (i * 2) + 2);
+            int value = int.parse(hexByte, radix: 16);
+            for (int bit = 0; bit < 8; bit++) {
+              combinedMatrix[i].add(((value >> (7 - bit)) & 1) == 1);
+            }
+          }
+        }
+      }
     }
 
-    var scaledBitmap = _scaleCharacterToBadgeSize(hex, size.width, size.height);
-    return convertBitmapToLEDHex(scaledBitmap, true);
+    // Pad to multiple of 8 columns
+    int totalColumns = combinedMatrix.isNotEmpty ? combinedMatrix[0].length : 0;
+    if (totalColumns % 8 != 0) {
+      int paddingNeeded = 8 - (totalColumns % 8);
+      final padding = List.filled(paddingNeeded, false);
+      for (var row in combinedMatrix) {
+        row.addAll(padding);
+      }
+    }
+
+    List<String> allHexStrings = [];
+    int segmentsCount = combinedMatrix.isNotEmpty ? combinedMatrix[0].length ~/ 8 : 0;
+
+    for (int seg = 0; seg < segmentsCount; seg++) {
+      final startCol = seg * 8;
+      final endCol = startCol + 8;
+      final segmentMatrix = List.generate(
+          11, (row) => combinedMatrix[row].sublist(startCol, endCol));
+      allHexStrings.addAll(_matrixToHex(segmentMatrix));
+    }
+
+    return allHexStrings;
   }
 
-  List<List<int>> _scaleCharacterToBadgeSize(
-      String hex, int width, int height) {
-    var bitmap = _hexStringToBitmap(hex);
-    int scaledWidth = (width * 0.12).round().clamp(6, width ~/ 2);
-    return _scaleTextCharacterToBadgeSize(bitmap, scaledWidth, height);
-  }
+  Future<Map<String, dynamic>> renderTextToMatrix(
+    String message,
+    TextStyle textStyle, {
+    int rows = 11,
+    required bool hasDescender,
+  }) async {
+    final fontKey = getFontKey(
+      textStyle.fontFamily ?? 'default',
+      textStyle.fontSize ?? 14.0,
+      textStyle.fontWeight ?? FontWeight.normal,
+      textStyle.fontStyle == FontStyle.italic,
+    );
+    final cacheKey = '$fontKey-$message';
 
-  List<List<int>> _scaleTextCharacterToBadgeSize(
-      List<List<int>> bitmap, int targetW, int targetH) {
-    if (bitmap.isEmpty || bitmap[0].isEmpty) {
-      return List.generate(targetH, (_) => List.filled(targetW, 0));
+    if (_characterCache.containsKey(cacheKey)) {
+      return {'matrix': _characterCache[cacheKey]!};
     }
 
-    return List.generate(targetH, (y) {
-      int srcY =
-          (y * bitmap.length / targetH).floor().clamp(0, bitmap.length - 1);
-      return List.generate(targetW, (x) {
-        int srcX = (x * bitmap[0].length / targetW)
-            .floor()
-            .clamp(0, bitmap[0].length - 1);
-        return bitmap[srcY][srcX];
-      });
+    int cols = 1;
+    int scale = 1;
+
+    TextPainter widthCheckPainter = TextPainter(
+      text: TextSpan(
+        text: message,
+        style: textStyle.copyWith(
+            color: Colors.black, fontSize: (textStyle.fontSize ?? 14) * scale),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    widthCheckPainter.layout();
+    final rawWidth = widthCheckPainter.width;
+    cols = (rawWidth / scale).ceil().clamp(1, 16);
+
+    final int width = cols * scale;
+    final int height = rows * scale;
+
+    final ui.PictureRecorder recorder = ui.PictureRecorder();
+    final Canvas canvas = Canvas(recorder, Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble()));
+
+    final Paint bgPaint = Paint()..color = Colors.white;
+    canvas.drawRect(Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble()), bgPaint);
+
+    final TextPainter textPainter = TextPainter(
+      text: TextSpan(
+        text: message,
+        style: textStyle.copyWith(
+            color: Colors.black, fontSize: (textStyle.fontSize ?? 14) * scale),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout(maxWidth: width.toDouble());
+
+    Offset offset = hasDescender
+        ? Offset(0, height - 2 - textPainter.computeDistanceToActualBaseline(TextBaseline.alphabetic))
+        : Offset(0, (height - 1) - textPainter.computeDistanceToActualBaseline(TextBaseline.alphabetic));
+
+    textPainter.paint(canvas, offset);
+
+    final ui.Picture picture = recorder.endRecording();
+    final ui.Image image = await picture.toImage(width, height);
+    final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+
+    if (byteData == null) throw Exception("Failed to convert image to byte data.");
+
+    final Uint8List data = byteData.buffer.asUint8List();
+
+    List<List<bool>> matrix = List.generate(rows, (_) => List.generate(cols, (_) => false));
+    for (int row = 0; row < rows; row++) {
+      for (int col = 0; col < cols; col++) {
+        final int pixelIndex = (row * width + col) * 4;
+        if (pixelIndex + 3 < data.length) {
+          final int r = data[pixelIndex];
+          final int g = data[pixelIndex + 1];
+          final int b = data[pixelIndex + 2];
+          final int brightness = ((r + g + b) / 3).round();
+          matrix[row][col] = brightness < 128;
+        }
+      }
+    }
+
+    _characterCache[cacheKey] = matrix;
+    return {'matrix': matrix};
+  }
+
+  List<String> _matrixToHex(List<List<bool>> matrix) {
+    return List.generate(matrix.length, (i) {
+      final binary = matrix[i].map((b) => b ? '1' : '0').join();
+      return int.parse(binary, radix: 2).toRadixString(16).padLeft(2, '0');
     });
   }
+
+  List<String> _processInversion(List<String> hexStrings) {
+    final inverted = invertHex(hexStrings.join()).split('');
+    return padHexString(inverted);
+  }
+
+  // --------------------- Bitmap / Hex Utilities ---------------------
 
   List<List<int>> _hexStringToBitmap(String hex) {
     const int width = 8, height = 11;
@@ -123,8 +288,22 @@ class Converters {
     });
   }
 
-  List<List<int>> _scaleBitmapToBadgeSize(
-      List<List<int>> original, int targetW, int targetH) {
+  List<List<int>> _scaleTextCharacterToBadgeSize(
+      List<List<int>> bitmap, int targetW, int targetH) {
+    if (bitmap.isEmpty || bitmap[0].isEmpty) {
+      return List.generate(targetH, (_) => List.filled(targetW, 0));
+    }
+
+    return List.generate(targetH, (y) {
+      int srcY = (y * bitmap.length / targetH).floor().clamp(0, bitmap.length - 1);
+      return List.generate(targetW, (x) {
+        int srcX = (x * bitmap[0].length / targetW).floor().clamp(0, bitmap[0].length - 1);
+        return bitmap[srcY][srcX];
+      });
+    });
+  }
+
+  List<List<int>> _scaleBitmapToBadgeSize(List<List<int>> original, int targetW, int targetH) {
     if (original.isEmpty || original[0].isEmpty) {
       return List.generate(targetH, (_) => List.filled(targetW, 0));
     }
@@ -135,8 +314,7 @@ class Converters {
     int offsetX = ((targetW - scaledW) / 2).floor();
     int offsetY = ((targetH - scaledH) / 2).floor();
 
-    List<List<int>> result =
-        List.generate(targetH, (_) => List.filled(targetW, 0));
+    List<List<int>> result = List.generate(targetH, (_) => List.filled(targetW, 0));
     for (int y = 0; y < scaledH; y++) {
       for (int x = 0; x < scaledW; x++) {
         int sx = (x / scale).floor();
@@ -176,8 +354,7 @@ class Converters {
         int byteVal = 0;
         for (int bit = 0; bit < 8; bit++) {
           int col = colStart + bit - padLeft + left;
-          byteVal |=
-              ((col >= 0 && col < width ? image[row][col] : 0) << (7 - bit));
+          byteVal |= ((col >= 0 && col < width ? image[row][col] : 0) << (7 - bit));
         }
         return byteVal.toRadixString(16).padLeft(2, '0');
       }).join();
@@ -186,12 +363,11 @@ class Converters {
 
   static String invertHex(String hex) => hex
       .split('')
-      .map((c) =>
-          (~int.parse(c, radix: 16) & 0xF).toRadixString(16).toUpperCase())
+      .map((c) => (~int.parse(c, radix: 16) & 0xF).toRadixString(16).toUpperCase())
       .join();
 
-  List<String> padHexString(List<String> hex, int rows) {
-    var boolGrid = hexStringToBool(hex.join(), rows)
+  List<String> padHexString(List<String> hexArray, [int rows = 11]) {
+    var boolGrid = hexStringToBool(hexArray.join(), rows)
         .map((row) => row.map((e) => e ? 1 : 0).toList())
         .toList();
 
@@ -201,37 +377,5 @@ class Converters {
     }
 
     return convertBitmapToLEDHex(boolGrid, true);
-  }
-
-  static List<List<bool>> textToBitmapFixedWidth(
-    String msg,
-    int height,
-    DataToByteArrayConverter conv,
-  ) {
-    const int w = 8, h = 11, spacing = 0;
-    if (msg.isEmpty) return List.generate(height, (_) => []);
-
-    int totalWidth = msg.length * (w + spacing) - spacing;
-    var bitmap = List.generate(height, (_) => List.filled(totalWidth, false));
-
-    for (int i = 0; i < msg.length; i++) {
-      var hex = conv.charCodes[msg[i]];
-      if (hex == null) continue;
-
-      var charBitmap = List.generate(h, (row) {
-        int byte = int.parse(hex.substring(row * 2, row * 2 + 2), radix: 16);
-        return List.generate(w, (col) => ((byte >> (7 - col)) & 1) == 1);
-      });
-
-      int offsetX = i * (w + spacing);
-      for (int row = 0; row < height; row++) {
-        int srcRow = ((row * h) / height).floor().clamp(0, h - 1);
-        for (int col = 0; col < w; col++) {
-          bitmap[row][offsetX + col] = charBitmap[srcRow][col];
-        }
-      }
-    }
-
-    return bitmap;
   }
 }

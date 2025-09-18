@@ -17,6 +17,15 @@ import 'package:badgemagic/badge_animation/ani_pacman.dart';
 import 'package:badgemagic/badge_animation/ani_chevron_left.dart';
 import 'package:badgemagic/badge_animation/ani_diamond.dart';
 import 'package:badgemagic/badge_animation/ani_broken_hearts.dart';
+import 'package:badgemagic/badge_animation/ani_cupid.dart';
+import 'package:badgemagic/badge_animation/ani_feet.dart';
+import 'package:badgemagic/badge_animation/ani_fish.dart';
+import 'package:badgemagic/badge_animation/ani_diagonal.dart';
+import 'package:badgemagic/badge_animation/ani_emergency.dart';
+import 'package:badgemagic/badge_animation/ani_beating_hearts.dart';
+import 'package:badgemagic/badge_animation/ani_fireworks.dart';
+import 'package:badgemagic/badge_animation/ani_equalizer.dart'; // Equalizer
+import 'package:badgemagic/badge_animation/ani_cycle.dart'; // Cycle
 import 'package:badgemagic/badge_animation/animation_abstract.dart';
 import 'package:badgemagic/badge_effect/badgeeffectabstract.dart';
 import 'package:badgemagic/badge_effect/flash_effect.dart';
@@ -25,16 +34,6 @@ import 'package:badgemagic/badge_effect/marquee_effect.dart';
 import 'package:badgemagic/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:badgemagic/bademagic_module/models/screen_size.dart';
-import 'package:badgemagic/badge_animation/ani_cupid.dart';
-import 'package:badgemagic/badge_animation/ani_feet.dart';
-import 'package:badgemagic/badge_animation/ani_fish.dart';
-import 'package:badgemagic/badge_animation/ani_diagonal.dart';
-
-import 'package:badgemagic/badge_animation/ani_emergency.dart';
-import 'package:badgemagic/badge_animation/ani_beating_hearts.dart';
-import 'package:badgemagic/badge_animation/ani_fireworks.dart';
-import 'package:badgemagic/badge_animation/ani_equalizer.dart'; // new import of EqualizerAnimation
-import 'package:badgemagic/badge_animation/ani_cycle.dart';
 
 Map<int, BadgeAnimation?> animationMap = {
   0: LeftAnimation(),
@@ -46,19 +45,19 @@ Map<int, BadgeAnimation?> animationMap = {
   6: SnowFlakeAnimation(),
   7: PictureAnimation(),
   8: LaserAnimation(),
-  9: PacmanClassicAnimation(), // Pacman
-  10: LeftChevronAnimation(), // Chevron left
-  11: DiamondAnimation(), // Diamond
-  12: BrokenHeartsAnimation(), // Broken Hearts
-  13: CupidAnimation(), // Cupid
-  14: FeetAnimation(), // Feet
-  15: FishAnimation(), // Fish
-  16: DiagonalAnimation(), // Diagonal
-  17: EmergencyAnimation(), // Emergency
-  18: BeatingHeartsAnimation(), // Beating Hearts
-  19: FireworksAnimation(), // Fireworks
-  20: EqualizerAnimation(), // Digital Rain
-  21: CycleAnimation(), // Cycle
+  9: PacmanClassicAnimation(),
+  10: LeftChevronAnimation(),
+  11: DiamondAnimation(),
+  12: BrokenHeartsAnimation(),
+  13: CupidAnimation(),
+  14: FeetAnimation(),
+  15: FishAnimation(),
+  16: DiagonalAnimation(),
+  17: EmergencyAnimation(),
+  18: BeatingHeartsAnimation(),
+  19: FireworksAnimation(),
+  20: EqualizerAnimation(),
+  21: CycleAnimation(),
 };
 
 Map<int, BadgeEffect> effectMap = {
@@ -73,7 +72,7 @@ class AnimationBadgeProvider extends ChangeNotifier {
   int _animationIndex = 0;
   int _animationSpeed = aniSpeedStrategy(0);
   Timer? _timer;
-  bool _isDisposed = false; // Track disposal state
+  bool _isDisposed = false;
 
   List<List<bool>> _paintGrid = [];
   List<List<bool>> _newGrid = [];
@@ -86,37 +85,23 @@ class AnimationBadgeProvider extends ChangeNotifier {
   List<List<bool>> getPaintGrid() => _paintGrid;
   List<List<bool>> getNewGrid() => _newGrid;
 
-  // Helper: returns true if a special animation (custom) is selected
   bool isSpecialAnimationSelected() {
     int idx = getAnimationIndex() ?? 0;
-    // Add all special animation indices here (including Equalizer at 20 and Cycle at 20):
     return [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21].contains(idx);
   }
 
-  // Call this to reset to text animation (LeftAnimation)
   void resetToTextAnimation() {
     setAnimationMode(LeftAnimation());
   }
 
-  //function to calculate duration for the animation
   void calculateDuration(int speed) {
-    if (_isDisposed) return; // Safety check
+    if (_isDisposed) return;
 
     int idx = getAnimationIndex() ?? 0;
     int newSpeed;
-    if (idx == 9 ||
-        idx == 10 ||
-        idx == 11 ||
-        idx == 12 ||
-        idx == 20 ||
-        idx == 21) {
-      //added EqualizerAnimation
-      // Use slower mapping for custom animations
-      // (aniSpeedStrategy already uses the slower mapping if you want, or you can hardcode)
-      newSpeed = aniSpeedStrategy(speed - 1); // keep as is, or adjust if needed
+    if ([9, 10, 11, 12, 20, 21].contains(idx)) {
+      newSpeed = aniSpeedStrategy(speed - 1);
     } else {
-      // Use original (faster) mapping for text/standard animations
-      // For original: aniBaseSpeed = 200000us, minSpeed = 25000us (example)
       const int originalBase = 200000;
       const int minSpeed = 25000;
       newSpeed = originalBase - ((speed - 1) * (originalBase - minSpeed) ~/ 8);
@@ -129,18 +114,14 @@ class AnimationBadgeProvider extends ChangeNotifier {
   }
 
   void initGrids(ScreenSize size) {
-    if (_isDisposed) return; // Safety check
-
-    _paintGrid = List.generate(
-        size.height, (_) => List.generate(size.width, (_) => false));
-    _newGrid = List.generate(
-        size.height, (_) => List.generate(size.width, (_) => false));
+    if (_isDisposed) return;
+    _paintGrid = List.generate(size.height, (_) => List.generate(size.width, (_) => false));
+    _newGrid = List.generate(size.height, (_) => List.generate(size.width, (_) => false));
     notifyListeners();
   }
 
   void setNewGrid(List<List<bool>> grid) {
-    if (_isDisposed) return; // Safety check
-
+    if (_isDisposed) return;
     _newGrid = grid;
     _animationIndex = 0;
     notifyListeners();
@@ -148,25 +129,21 @@ class AnimationBadgeProvider extends ChangeNotifier {
 
   Set<BadgeEffect?> get getCurrentEffect => _currentEffect;
 
-  /// Clears all currently active effects
   void clearAllEffects() {
-    if (_isDisposed) return; // Safety check
-
+    if (_isDisposed) return;
     _currentEffect.clear();
     notifyListeners();
   }
 
   void addEffect(BadgeEffect? effect) {
-    if (_isDisposed) return; // Safety check
-
+    if (_isDisposed) return;
     _currentEffect.add(effect);
     logger.i("Effect Added: $effect : $_currentEffect");
     notifyListeners();
   }
 
   void removeEffect(BadgeEffect? effect) {
-    if (_isDisposed) return; // Safety check
-
+    if (_isDisposed) return;
     _currentEffect.remove(effect);
     notifyListeners();
   }
@@ -176,17 +153,14 @@ class AnimationBadgeProvider extends ChangeNotifier {
   }
 
   void initializeAnimation() {
-    if (_isDisposed) return; // Safety check
-
-    if (_timer == null || !_timer!.isActive) {
-      startTimer();
-    }
+    if (_isDisposed) return;
+    if (_timer == null || !_timer!.isActive) startTimer();
   }
 
   void stopAnimation() {
     logger.d("Timer stopped  ${_timer?.tick.toString()}");
     _timer?.cancel();
-    _timer = null; // Clear reference
+    _timer = null;
     _animationIndex = 0;
   }
 
@@ -199,28 +173,21 @@ class AnimationBadgeProvider extends ChangeNotifier {
   }
 
   void startTimer() {
-    if (_isDisposed) return; // Safety check
-
+    if (_isDisposed) return;
     if (_newGrid.isEmpty || _newGrid[0].isEmpty) {
       logger.w("Cannot start animation timer: _newGrid is empty");
       return;
     }
-
-    // Cancel existing timer before starting new one
     _timer?.cancel();
 
-    _timer =
-        Timer.periodic(Duration(microseconds: _animationSpeed), (Timer timer) {
-      // Check if disposed at the start of callback
+    _timer = Timer.periodic(Duration(microseconds: _animationSpeed), (timer) {
       if (_isDisposed) {
         timer.cancel();
         return;
       }
-
       renderGrid(getNewGrid());
       if (_currentAnimation is CupidAnimation) {
-        int frameLimit =
-            CupidAnimation.frameCount(_paintGrid[0].length, _paintGrid.length);
+        int frameLimit = CupidAnimation.frameCount(_paintGrid[0].length, _paintGrid.length);
         _animationIndex = (_animationIndex + 1) % frameLimit;
       } else {
         _animationIndex++;
@@ -229,14 +196,10 @@ class AnimationBadgeProvider extends ChangeNotifier {
   }
 
   void setAnimationMode(BadgeAnimation? animation) {
-    if (_isDisposed) return; // Safety check
-
-    // Always reset the animation index and set the new animation
+    if (_isDisposed) return;
     _animationIndex = 0;
     _currentAnimation = animation ?? LeftAnimation();
-    // Stop the timer if running
     _timer?.cancel();
-    // Start the timer for the new animation
     startTimer();
     notifyListeners();
     logger.i("Animation Mode set to: $_currentAnimation and timer restarted");
@@ -256,73 +219,46 @@ class AnimationBadgeProvider extends ChangeNotifier {
     return _currentAnimation == badgeAnimation;
   }
 
-  void badgeAnimation(
-    String message,
-    Converters converters,
-    bool isInverted,
-    ScreenSize screenSize,
-  ) async {
-    if (_isDisposed) return; // Safety check
+  void badgeAnimation(String message, Converters converters, bool isInverted, ScreenSize screenSize) async {
+    if (_isDisposed) return;
 
     bool isSpecial = isSpecialAnimationSelected();
     if (message.isEmpty && !isSpecial) {
       stopAllAnimations();
-      List<List<bool>> emptyGrid = List.generate(screenSize.height,
-          (i) => List.generate(screenSize.width, (j) => false));
+      List<List<bool>> emptyGrid = List.generate(screenSize.height, (i) => List.generate(screenSize.width, (j) => false));
       _newGrid = emptyGrid;
       _paintGrid = emptyGrid;
       notifyListeners();
       return;
     }
 
-    if (_timer == null || !_timer!.isActive) {
-      startTimer();
-    }
+    if (_timer == null || !_timer!.isActive) startTimer();
 
     List<List<bool>> fullBitmap;
 
     if (message.contains('<<') && message.contains('>>')) {
-      List<String> hexStrings = await converters.messageTohex(
-        message,
-        isInverted,
-        screenSize.height,
-        screenSize,
-      );
-
+      List<String> hexStrings = await converters.messageTohex(message, isInverted, screenSize.height, screenSize);
       fullBitmap = _hexStringsToBitmap(hexStrings, screenSize);
     } else {
-      fullBitmap = Converters.textToBitmapFixedWidth(
-        message,
-        screenSize.height,
-        converters.converter,
-      );
+      fullBitmap = Converters.textToBitmapFixedWidth(message, screenSize.height, converters.converter);
     }
 
     setNewGrid(fullBitmap);
   }
 
-  List<List<bool>> _hexStringsToBitmap(
-      List<String> hexStrings, ScreenSize screenSize) {
+  List<List<bool>> _hexStringsToBitmap(List<String> hexStrings, ScreenSize screenSize) {
     if (hexStrings.isEmpty) {
-      return List.generate(screenSize.height,
-          (_) => List.generate(screenSize.width, (_) => false));
+      return List.generate(screenSize.height, (_) => List.generate(screenSize.width, (_) => false));
     }
 
     int totalWidth = hexStrings.length * 8;
-
-    List<List<bool>> bitmap = List.generate(
-      screenSize.height,
-      (_) => List.filled(totalWidth, false),
-    );
+    List<List<bool>> bitmap = List.generate(screenSize.height, (_) => List.filled(totalWidth, false));
 
     for (int hexIndex = 0; hexIndex < hexStrings.length; hexIndex++) {
       String hexString = hexStrings[hexIndex];
-
       int charsPerRow = 2;
 
-      for (int row = 0;
-          row < screenSize.height && row * charsPerRow < hexString.length;
-          row++) {
+      for (int row = 0; row < screenSize.height && row * charsPerRow < hexString.length; row++) {
         int byteStart = row * charsPerRow;
         int byteEnd = byteStart + charsPerRow;
 
@@ -339,18 +275,12 @@ class AnimationBadgeProvider extends ChangeNotifier {
         }
       }
     }
-
     return bitmap;
   }
 
   void renderGrid(List<List<bool>> newGrid) {
-    // Critical: Check disposal state before any operations
     if (_isDisposed) return;
-
-    if (_paintGrid.isEmpty || _paintGrid[0].isEmpty) {
-      logger.w("renderGrid skipped: _paintGrid is empty");
-      return;
-    }
+    if (_paintGrid.isEmpty || _paintGrid[0].isEmpty) return;
 
     int badgeWidth = _paintGrid[0].length;
     int badgeHeight = _paintGrid.length;
@@ -360,52 +290,36 @@ class AnimationBadgeProvider extends ChangeNotifier {
       newGrid = _frames[_currentFrame];
     }
 
-    var canvas = List.generate(
-        badgeHeight, (i) => List.generate(badgeWidth, (j) => false));
+    var canvas = List.generate(badgeHeight, (i) => List.generate(badgeWidth, (j) => false));
 
-    _currentAnimation.processAnimation(
-        badgeHeight, badgeWidth, _animationIndex, newGrid, canvas);
+    _currentAnimation.processAnimation(badgeHeight, badgeWidth, _animationIndex, newGrid, canvas);
 
     for (var effect in _currentEffect) {
       effect?.processEffect(_animationIndex, canvas, badgeHeight, badgeWidth);
     }
 
     _paintGrid = canvas;
-
-    // Double check before notifying listeners
-    if (!_isDisposed) {
-      notifyListeners();
-    }
+    if (!_isDisposed) notifyListeners();
   }
 
-  /// Override notifyListeners with disposal check
   @override
   void notifyListeners() {
-    if (!_isDisposed) {
-      super.notifyListeners();
-    }
+    if (!_isDisposed) super.notifyListeners();
   }
 
-  /// Proper disposal method
   @override
   void dispose() {
     _isDisposed = true;
-
-    // Cancel the timer before disposing
     _timer?.cancel();
     _timer = null;
-
-    // Clear collections
     _currentEffect.clear();
     _frames.clear();
     _paintGrid.clear();
     _newGrid.clear();
-
     super.dispose();
     logger.d("AnimationBadgeProvider disposed");
   }
 
-  /// Handles animation transfer selection logic for the current animation index.
   Future<void> handleAnimationTransfer({
     required BadgeMessageProvider badgeData,
     required InlineImageProvider inlineImageProvider,
@@ -416,12 +330,12 @@ class AnimationBadgeProvider extends ChangeNotifier {
     required int badgeHeight,
     required int badgeWidth,
   }) async {
-    if (_isDisposed) return; // Safety check
+    if (_isDisposed) return;
 
     final int aniIndex = getAnimationIndex() ?? 0;
     final int selectedSpeed = speedDialProvider.getOuterValue();
+
     if (aniIndex == 9) {
-      // Pacman
       await transferPacmanAnimation(badgeData, selectedSpeed);
     } else if (aniIndex == 10) {
       await transferChevronAnimation(badgeData, selectedSpeed);
@@ -452,16 +366,17 @@ class AnimationBadgeProvider extends ChangeNotifier {
       await transferCycleAnimation(badgeData, selectedSpeed);
     } else {
       await badgeData.checkAndTransfer(
-          inlineImageProvider.getController().text,
-          flash,
-          marquee,
-          invert,
-          selectedSpeed,
-          modeValueMap[aniIndex],
-          null,
-          false,
-          badgeHeight,
-          badgeWidth);
+        inlineImageProvider.getController().text,
+        flash,
+        marquee,
+        invert,
+        selectedSpeed,
+        modeValueMap[aniIndex],
+        null,
+        false,
+        badgeHeight,
+        badgeWidth,
+      );
     }
   }
 }
