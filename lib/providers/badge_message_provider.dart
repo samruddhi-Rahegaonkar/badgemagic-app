@@ -64,7 +64,7 @@ class BadgeMessageProvider {
       isInverted,
       badgeHeight,
       ScreenSize(width: badgeWidth, height: badgeHeight, name: ''),
-      scale: false,
+      scale: true,
     );
     return Data(messages: [
       Message(

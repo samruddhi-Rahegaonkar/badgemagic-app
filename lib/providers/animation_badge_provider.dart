@@ -244,12 +244,12 @@ class AnimationBadgeProvider extends ChangeNotifier {
     if (message.contains('<<') && message.contains('>>')) {
       List<String> hexStrings = await converters.messageTohex(
           message, isInverted, screenSize.height, screenSize,
-          scale: false);
+          scale: true);
       fullBitmap = _hexStringsToBitmap(hexStrings, screenSize);
     } else {
       List<String> hexStrings = await converters.messageTohex(
           message, isInverted, screenSize.height, screenSize,
-          scale: false);
+          scale: true);
       fullBitmap = _hexStringsToBitmap(hexStrings, screenSize);
     }
 
