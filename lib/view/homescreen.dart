@@ -30,6 +30,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get_it/get_it.dart';
 import 'package:provider/provider.dart';
 import 'package:badgemagic/bademagic_module/models/screen_size.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:badgemagic/providers/font_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   final String? savedBadgeFilename;
@@ -166,6 +168,35 @@ class _HomeScreenState extends State<HomeScreen>
     super.dispose();
   }
 
+  TextStyle _getFontStyle(String fontName) {
+    const baseStyle = TextStyle(fontSize: 12);
+    switch (fontName) {
+      case 'Roboto':
+        return GoogleFonts.roboto(
+            textStyle: baseStyle.copyWith(fontWeight: FontWeight.w700));
+      case 'Open Sans':
+        return GoogleFonts.openSans(
+            textStyle: baseStyle.copyWith(fontWeight: FontWeight.w700));
+      case 'Lato':
+        return GoogleFonts.lato(
+            textStyle: baseStyle.copyWith(fontWeight: FontWeight.w700));
+      case 'Poppins':
+        return GoogleFonts.poppins(
+            textStyle: baseStyle.copyWith(fontWeight: FontWeight.w700));
+      case 'Montserrat':
+        return GoogleFonts.montserrat(
+            textStyle: baseStyle.copyWith(fontWeight: FontWeight.w700));
+      case 'Orbitron':
+        return GoogleFonts.orbitron(
+            textStyle: baseStyle.copyWith(fontWeight: FontWeight.w700));
+      case 'Lexend':
+        return GoogleFonts.lexend(
+            textStyle: baseStyle.copyWith(fontWeight: FontWeight.w700));
+      default:
+        return baseStyle;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -182,6 +213,9 @@ class _HomeScreenState extends State<HomeScreen>
             inlineImageProvider.getController().addListener(_controllerListner);
             return speedDialProvider;
           },
+        ),
+        ChangeNotifierProvider<FontProvider>(
+          create: (context) => FontProvider(),
         ),
       ],
       child: DefaultTabController(
@@ -268,28 +302,83 @@ class _HomeScreenState extends State<HomeScreen>
                       color: drawerHeaderTitle,
                       borderRadius: BorderRadius.circular(10.r),
                       elevation: 4,
-                      child: ExtendedTextField(
-                        onChanged: (value) {},
-                        controller: inlineimagecontroller,
-                        specialTextSpanBuilder: ImageBuilder(),
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.r),
-                          ),
-                          prefixIcon: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                isPrefixIconClicked = !isPrefixIconClicked;
-                              });
-                            },
-                            icon: const Icon(Icons.tag_faces_outlined),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(10.r)),
-                            borderSide: BorderSide(color: colorPrimary),
-                          ),
-                        ),
+                      child: Consumer2<FontProvider, AnimationBadgeProvider>(
+                        builder: (context, fontProvider, animationProvider, _) {
+                          return ExtendedTextField(
+                            onChanged: (value) {},
+                            controller: inlineimagecontroller,
+                            specialTextSpanBuilder: ImageBuilder(),
+                            style: fontProvider.selectedFont != null
+                                ? _getFontStyle(fontProvider.selectedFont!)
+                                    .copyWith(fontSize: 14)
+                                : const TextStyle(fontSize: 14),
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.r),
+                              ),
+                              prefixIcon: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    isPrefixIconClicked = !isPrefixIconClicked;
+                                  });
+                                },
+                                icon: const Icon(Icons.tag_faces_outlined),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius:
+                                    const BorderRadius.all(Radius.circular(10)),
+                                borderSide: BorderSide(color: colorPrimary),
+                              ),
+                              suffixIcon: Padding(
+                                padding: EdgeInsets.only(right: 8.w),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: fontProvider.selectedFont,
+                                    icon: const Icon(Icons.arrow_drop_down),
+                                    hint: Text(
+                                      'Font',
+                                      style: TextStyle(
+                                        fontSize: 12.sp,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                    items: [
+                                      const DropdownMenuItem(
+                                        value: null,
+                                        child: Text(
+                                          'Default Font',
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                      ),
+                                      ...fontProvider.availableFonts.map(
+                                        (font) => DropdownMenuItem(
+                                          value: font,
+                                          child: Text(
+                                            font,
+                                            style: _getFontStyle(font),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                    onChanged: (String? newFont) {
+                                      fontProvider.changeFont(newFont);
+                                      animationProvider.badgeAnimation(
+                                        inlineimagecontroller.text,
+                                        Converters(),
+                                        animationProvider
+                                            .isEffectActive(InvertLEDEffect()),
+                                        _selectedSize,
+                                      );
+                                    },
+                                    borderRadius: BorderRadius.circular(8.r),
+                                    elevation: 2,
+                                    isDense: true,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
