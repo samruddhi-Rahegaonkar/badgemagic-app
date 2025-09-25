@@ -184,7 +184,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get speedTitle => 'Speed';
 
   @override
-  String get animation => 'Dot-Matrix';
+  String get animation => 'Animation';
 
   @override
   String get transition => 'Transition';
