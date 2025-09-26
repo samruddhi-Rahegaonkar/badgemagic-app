@@ -238,6 +238,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get equalizer => 'Equalizer';
 
   @override
+  String get cycle => 'Cycle';
+
+  @override
   String get switchToSpecialAnimation => 'Switch to Special Animation?';
 
   @override
@@ -549,4 +552,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get badgeScanMode => 'Badge Scan Mode';
+
+  @override
+  String get selectScreenSize => 'Select Screen Size';
+
+  @override
+  String get enterValidBadgeName => 'Enter a valid badge name';
 }

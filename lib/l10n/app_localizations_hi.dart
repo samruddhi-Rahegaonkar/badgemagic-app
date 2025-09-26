@@ -236,6 +236,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get equalizer => 'इक्वलाइज़र';
 
   @override
+  String get cycle => 'साइकिल';
+
+  @override
   String get switchToSpecialAnimation => 'स्पेशल एनिमेशन लगाएं?';
 
   @override
@@ -546,4 +549,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get badgeScanMode => 'बैज स्कैन मोड';
+
+  @override
+  String get selectScreenSize => 'स्क्रीन साइज चुनें';
+
+  @override
+  String get enterValidBadgeName => 'एक वैध बैज नाम दर्ज करें';
 }

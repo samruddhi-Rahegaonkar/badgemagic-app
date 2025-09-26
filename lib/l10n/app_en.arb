@@ -79,6 +79,7 @@
   "beatingHearts": "Beating Hearts",
   "fireworks": "Fireworks",
   "equalizer": "Equalizer",
+  "cycle": "Cycle",
   "switchToSpecialAnimation": "Switch to Special Animation?",
   "specialAnimationWarning": "Selecting this animation will overwrite your current text.",
   "copyText": "Copy text",
@@ -210,5 +211,7 @@
   "badgeNameHint": "Badge name",
   "triangle": "Triangle",
   "clipartSavedSuccessfully": "Clipart saved successfully",
-  "badgeScanMode": "Badge Scan Mode"
+  "badgeScanMode": "Badge Scan Mode",
+  "selectScreenSize": "Select Screen Size",
+  "enterValidBadgeName": "Enter a valid badge name"
 }

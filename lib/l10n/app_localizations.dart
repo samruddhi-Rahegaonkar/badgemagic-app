@@ -542,6 +542,12 @@ abstract class AppLocalizations {
   /// **'Equalizer'**
   String get equalizer;
 
+  /// No description provided for @cycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle'**
+  String get cycle;
+
   /// No description provided for @switchToSpecialAnimation.
   ///
   /// In en, this message translates to:
@@ -1147,6 +1153,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Badge Scan Mode'**
   String get badgeScanMode;
+
+  /// No description provided for @selectScreenSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Screen Size'**
+  String get selectScreenSize;
+
+  /// No description provided for @enterValidBadgeName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid badge name'**
+  String get enterValidBadgeName;
 }
 
 class _AppLocalizationsDelegate

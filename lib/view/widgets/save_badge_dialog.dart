@@ -128,6 +128,8 @@ class _SaveBadgeDialogState extends State<SaveBadgeDialog> {
                     }
 
                     final dir = await getApplicationDocumentsDirectory();
+                    if (!mounted) return;
+
                     final filePath = '${dir.path}/$trimmedName.json';
                     final file = File(filePath);
 
@@ -149,6 +151,7 @@ class _SaveBadgeDialogState extends State<SaveBadgeDialog> {
                     }
 
                     final exists = await file.exists();
+                    if (!mounted) return;
 
                     if (exists || ciMatch != null) {
                       final result = await showDialog<String>(
@@ -180,6 +183,7 @@ class _SaveBadgeDialogState extends State<SaveBadgeDialog> {
                         if (ciMatch != null) {
                           final existingFile = File('${dir.path}/$ciMatch');
                           await existingFile.writeAsString('');
+                          if (!mounted) return;
                         }
                       } else {
                         return;
@@ -198,12 +202,14 @@ class _SaveBadgeDialogState extends State<SaveBadgeDialog> {
                       selectedSize.height,
                       selectedSize.width,
                     );
-                    ToastUtils().showToast(
-                      exists || ciMatch != null
-                          ? l10n.badgeUpdatedSuccessfully
-                          : l10n.badgeSavedSuccessfully,
-                    );
-                    Navigator.of(context).pop();
+                    if (mounted) {
+                      ToastUtils().showToast(
+                        exists || ciMatch != null
+                            ? l10n.badgeUpdatedSuccessfully
+                            : l10n.badgeSavedSuccessfully,
+                      );
+                      Navigator.of(context).pop();
+                    }
                   },
                   child:
                       Text('Save', style: const TextStyle(color: Colors.red)),
