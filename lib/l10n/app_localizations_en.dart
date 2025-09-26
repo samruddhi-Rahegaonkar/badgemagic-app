@@ -520,50 +520,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get circle => 'Circle';
 
   @override
+  String get connectToBadgesWithNames =>
+      'Connect to badges with the following names';
+
+  @override
+  String get selectAll => 'Select All';
+
+  @override
+  String get clearAll => 'Clear All';
+
+  @override
+  String get addMore => 'Add More';
+
+  @override
+  String get scanSettingsSaved => 'Scan settings saved';
+
+  @override
+  String get saveSettings => 'Save Settings';
+
+  @override
+  String get connectToAnyBadge => 'Connect to any badge';
+
+  @override
+  String get badgeNameHint => 'Badge name';
+
+  @override
   String get triangle => 'Triangle';
 
   @override
-  String get selectScreenSize => 'Select Screen Size';
-
-  @override
-  String get enterValidBadgeName => 'Enter Valid Badge Name';
-
-  @override
-  String get animationPacman => 'Pacman';
-
-  @override
-  String get animationChevron => 'Chevron';
-
-  @override
-  String get animationDiamond => 'Diamond';
-
-  @override
-  String get animationBrokenHearts => 'Broken Hearts';
-
-  @override
-  String get animationCupid => 'Cupid';
-
-  @override
-  String get animationFeet => 'Feet';
-
-  @override
-  String get animationFishKiss => 'Fish Kiss';
-
-  @override
-  String get animationDiagonal => 'Diagonal';
-
-  @override
-  String get animationEmergency => 'Emergency';
-
-  @override
-  String get animationBeatingHearts => 'Beating Hearts';
-
-  @override
-  String get animationFireworks => 'Fireworks';
-
-  @override
-  String get animationEqualizer => 'Equalizer';
-
-  @override
-  String get animationCycle => 'Cycle';
+  String get badgeScanMode => 'Badge Scan Mode';
 }
