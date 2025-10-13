@@ -231,6 +231,7 @@ class _HomeScreenState extends State<HomeScreen>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Animated badge and screen-size selector
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -239,8 +240,7 @@ class _HomeScreenState extends State<HomeScreen>
                         children: [
                           AnimationBadge(selectedSize: _selectedSize),
                           Transform.translate(
-                            offset:
-                                Offset(-11, -6), // Move up to overlap slightly
+                            offset: const Offset(-11, -6), // Move up slightly
                             child: Material(
                               color: Colors.white.withOpacity(0.9),
                               borderRadius: BorderRadius.circular(5.r),
@@ -295,6 +295,8 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ],
                   ),
+
+                  // Text input with font selector
                   Container(
                     margin:
                         EdgeInsets.symmetric(horizontal: 15.w, vertical: 0.h),
@@ -302,64 +304,105 @@ class _HomeScreenState extends State<HomeScreen>
                       color: drawerHeaderTitle,
                       borderRadius: BorderRadius.circular(10.r),
                       elevation: 4,
-                      child: Consumer2<FontProvider, AnimationBadgeProvider>(
-                        builder: (context, fontProvider, animationProvider, _) {
-                          return ExtendedTextField(
-                            onChanged: (value) {},
-                            controller: inlineimagecontroller,
-                            specialTextSpanBuilder: ImageBuilder(),
-                            style: fontProvider.selectedFont != null
-                                ? _getFontStyle(fontProvider.selectedFont!)
-                                    .copyWith(fontSize: 14)
-                                : const TextStyle(fontSize: 14),
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10.r),
-                              ),
-                              prefixIcon: IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    isPrefixIconClicked = !isPrefixIconClicked;
-                                  });
-                                },
-                                icon: const Icon(Icons.tag_faces_outlined),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius:
-                                    const BorderRadius.all(Radius.circular(10)),
-                                borderSide: BorderSide(color: colorPrimary),
-                              ),
-                              suffixIcon: Padding(
-                                padding: EdgeInsets.only(right: 8.w),
-                                child: DropdownButtonHideUnderline(
+                      child: ExtendedTextField(
+                        onChanged: (value) {},
+                        controller: inlineimagecontroller,
+                        specialTextSpanBuilder: ImageBuilder(),
+                        style: Provider.of<FontProvider>(context).selectedFont !=
+                                null
+                            ? _getFontStyle(
+                                    Provider.of<FontProvider>(context)
+                                        .selectedFont!)
+                                .copyWith(fontSize: 14)
+                            : const TextStyle(fontSize: 14),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10.r),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10.r),
+                            borderSide: BorderSide(color: colorPrimary),
+                          ),
+                          prefixIcon: IconButton(
+                            onPressed: () {
+                              setState(() {
+                                isPrefixIconClicked = !isPrefixIconClicked;
+                              });
+                            },
+                            icon: const Icon(Icons.tag_faces_outlined),
+                          ),
+                          suffixIcon: Padding(
+                            padding: EdgeInsets.only(right: 8.w),
+                            child: Consumer<FontProvider>(
+                              builder: (context, fontProvider, _) {
+                                return DropdownButtonHideUnderline(
                                   child: DropdownButton<String>(
                                     value: fontProvider.selectedFont,
-                                    icon: const Icon(Icons.arrow_drop_down),
+                                    icon: const SizedBox.shrink(),
+                                    iconEnabledColor: mdGrey400,
+                                    style: TextStyle(
+                                      color: mdGrey400,
+                                      fontSize: 12.sp,
+                                    ),
                                     hint: Text(
                                       'Font',
                                       style: TextStyle(
                                         fontSize: 12.sp,
-                                        color: Colors.grey[600],
+                                        color: mdGrey400,
                                       ),
                                     ),
                                     items: [
-                                      const DropdownMenuItem(
+                                      DropdownMenuItem(
                                         value: null,
                                         child: Text(
-                                          'Default Font',
-                                          style: TextStyle(fontSize: 12),
-                                        ),
-                                      ),
-                                      ...fontProvider.availableFonts.map(
-                                        (font) => DropdownMenuItem(
-                                          value: font,
-                                          child: Text(
-                                            font,
-                                            style: _getFontStyle(font),
+                                          'Default',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                          ).copyWith(
+                                            color: Colors.black,
                                           ),
                                         ),
                                       ),
+                                      ...fontProvider.availableFonts
+                                          .map((font) => DropdownMenuItem(
+                                                value: font,
+                                                child: Text(
+                                                  font,
+                                                  style: _getFontStyle(
+                                                    font,
+                                                  ).copyWith(
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                              ))
                                     ],
+                                    selectedItemBuilder: (context) {
+                                      final List<String?> options = [
+                                        null,
+                                        ...fontProvider.availableFonts,
+                                      ];
+                                      return options.map((opt) {
+                                        final String label = opt ?? 'Default';
+                                        return Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              label,
+                                              style: TextStyle(
+                                                color: mdGrey400,
+                                                fontSize: 12.sp,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const Icon(
+                                              Icons.arrow_drop_down,
+                                              size: 16,
+                                              color: mdGrey400,
+                                            ),
+                                          ],
+                                        );
+                                      }).toList();
+                                    },
                                     onChanged: (String? newFont) {
                                       fontProvider.changeFont(newFont);
                                       animationProvider.badgeAnimation(
@@ -374,14 +417,16 @@ class _HomeScreenState extends State<HomeScreen>
                                     elevation: 2,
                                     isDense: true,
                                   ),
-                                ),
-                              ),
+                                );
+                              },
                             ),
-                          );
-                        },
+                          ),
+                        ),
                       ),
                     ),
                   ),
+
+                  // Inline image picker area
                   Visibility(
                     visible: isPrefixIconClicked,
                     child: Container(
@@ -390,33 +435,43 @@ class _HomeScreenState extends State<HomeScreen>
                           borderRadius: BorderRadius.circular(10.r),
                           color: Colors.grey[200]),
                       margin: EdgeInsets.symmetric(horizontal: 15.w),
-                      padding: EdgeInsets.symmetric(
-                          vertical: 10.h, horizontal: 10.w),
+                      padding:
+                          EdgeInsets.symmetric(vertical: 10.h, horizontal: 10.w),
                       child: VectorGridView(),
                     ),
                   ),
+
+                  // Tabs
                   TabBar(
                     isScrollable: false,
                     indicatorSize: TabBarIndicatorSize.tab,
-                    labelStyle: TextStyle(fontSize: 12),
-                    unselectedLabelStyle: TextStyle(fontSize: 12),
-                    labelColor: Colors.black,
-                    unselectedLabelColor: mdGrey400,
+                    labelStyle:
+                        TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    unselectedLabelStyle:
+                        TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    labelColor: const Color.fromARGB(255, 12, 12, 12),
+                    unselectedLabelColor:
+                        const Color.fromARGB(255, 146, 121, 121),
                     indicatorColor: colorPrimary,
                     controller: _tabController,
                     splashFactory: InkRipple.splashFactory,
-                    overlayColor: WidgetStateProperty.resolveWith<Color?>(
-                      (states) => states.contains(WidgetState.pressed)
-                          ? dividerColor
-                          : null,
-                    ),
-                    tabs: const [
-                      Tab(text: 'Speed'),
-                      Tab(text: 'Animation'),
-                      Tab(text: 'Transition'),
-                      Tab(text: 'Effects'),
+                    overlayColor:
+                        MaterialStateProperty.resolveWith<Color?>((states) =>
+                            states.contains(MaterialState.pressed)
+                                ? dividerColor
+                                : null),
+                    tabs: [
+                      Tab(key: const ValueKey('tab_speed'), text: l10n.speedTitle),
+                      Tab(
+                          key: const ValueKey('tab_transition'),
+                          text: l10n.transitionTitle),
+                      Tab(
+                          key: const ValueKey('tab_effects'),
+                          text: l10n.effectsTitle),
+                      Tab(key: const ValueKey('tab_animation'), text: l10n.animation),
                     ],
                   ),
+
                   SizedBox(
                     height: 350.h,
                     child: TabBarView(
@@ -438,17 +493,20 @@ class _HomeScreenState extends State<HomeScreen>
                       ],
                     ),
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Consumer<AnimationBadgeProvider>(
-                        builder: (context, animationProvider, _) {
-                          final isSpecial =
-                              animationProvider.isSpecialAnimationSelected();
 
-                          if (isSpecial) {
-                            return GestureDetector(
+                  // Save / Transfer / Transfer-only behaviour for special animations
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    child: Consumer<AnimationBadgeProvider>(
+                      builder: (context, animationProvider, _) {
+                        final isSpecial =
+                            animationProvider.isSpecialAnimationSelected();
+
+                        if (isSpecial) {
+                          // Only Transfer button (for special animations)
+                          return SizedBox(
+                            height: 36.h,
+                            child: GestureDetector(
                               onTap: () async {
                                 await animationProvider.handleAnimationTransfer(
                                   badgeData: badgeData,
@@ -465,122 +523,118 @@ class _HomeScreenState extends State<HomeScreen>
                                 );
                               },
                               child: Container(
+                                alignment: Alignment.center,
                                 padding: EdgeInsets.symmetric(
-                                    horizontal: 33.w, vertical: 8.h),
+                                    horizontal: 16.w, vertical: 8.h),
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(2.r),
+                                  borderRadius: BorderRadius.circular(8.r),
                                   color: mdGrey400,
                                 ),
-                                child: const Text('Transfer'),
+                                child: Text(l10n.transferButton),
                               ),
-                            );
-                          } else {
-                            return Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                GestureDetector(
-                                  onTap: () async {
-                                    if (inlineimagecontroller.text
-                                        .trim()
-                                        .isEmpty) {
-                                      ToastUtils()
-                                          .showToast("Please enter a message");
-                                      return;
+                            ),
+                          );
+                        } else {
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              GestureDetector(
+                                onTap: () async {
+                                  if (inlineimagecontroller.text
+                                      .trim()
+                                      .isEmpty) {
+                                    ToastUtils()
+                                        .showToast("Please enter a message");
+                                    return;
+                                  }
+
+                                  if (widget.savedBadgeFilename != null) {
+                                    SavedBadgeProvider savedBadgeProvider =
+                                        SavedBadgeProvider();
+                                    String baseFilename =
+                                        widget.savedBadgeFilename!;
+                                    if (baseFilename.endsWith('.json')) {
+                                      baseFilename = baseFilename.substring(
+                                          0, baseFilename.length - 5);
                                     }
 
-                                    if (widget.savedBadgeFilename != null) {
-                                      SavedBadgeProvider savedBadgeProvider =
-                                          SavedBadgeProvider();
-                                      String baseFilename =
-                                          widget.savedBadgeFilename!;
-                                      if (baseFilename.endsWith('.json')) {
-                                        baseFilename = baseFilename.substring(
-                                            0, baseFilename.length - 5);
-                                      }
-
-                                      await savedBadgeProvider.updateBadgeData(
-                                        baseFilename,
-                                        inlineimagecontroller.text,
-                                        animationProvider
-                                            .isEffectActive(FlashEffect()),
-                                        animationProvider
-                                            .isEffectActive(MarqueeEffect()),
-                                        animationProvider
-                                            .isEffectActive(InvertLEDEffect()),
-                                        speedDialProvider.getOuterValue(),
-                                        animationProvider.getAnimationIndex() ??
-                                            1,
-                                        _selectedSize.height,
-                                        _selectedSize.width,
-                                      );
-
-                                      ToastUtils().showToast(
-                                          "Badge Updated Successfully");
-                                      Navigator.pushNamedAndRemoveUntil(context,
-                                          '/savedBadge', (route) => false);
-                                    } else {
-                                      showDialog(
-                                        context: context,
-                                        builder: (context) {
-                                          return SaveBadgeDialog(
-                                            speed: speedDialProvider,
-                                            animationProvider:
-                                                animationProvider,
-                                            textController:
-                                                inlineimagecontroller,
-                                            isInverse: animationProvider
-                                                .isEffectActive(
-                                                    InvertLEDEffect()),
-                                            selectedSize: _selectedSize,
-                                          );
-                                        },
-                                      );
-                                    }
-                                  },
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 33.w, vertical: 8.h),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(2.r),
-                                      color: mdGrey400,
-                                    ),
-                                    child: const Text('Save'),
-                                  ),
-                                ),
-                                SizedBox(width: 40.w),
-                                GestureDetector(
-                                  onTap: () async {
-                                    await animationProvider
-                                        .handleAnimationTransfer(
-                                      badgeData: badgeData,
-                                      inlineImageProvider: inlineImageProvider,
-                                      speedDialProvider: speedDialProvider,
-                                      flash: animationProvider
+                                    await savedBadgeProvider.updateBadgeData(
+                                      baseFilename,
+                                      inlineimagecontroller.text,
+                                      animationProvider
                                           .isEffectActive(FlashEffect()),
-                                      marquee: animationProvider
+                                      animationProvider
                                           .isEffectActive(MarqueeEffect()),
-                                      invert: animationProvider
+                                      animationProvider
                                           .isEffectActive(InvertLEDEffect()),
-                                      badgeHeight: _selectedSize.height,
-                                      badgeWidth: _selectedSize.width,
+                                      speedDialProvider.getOuterValue(),
+                                      animationProvider.getAnimationIndex() ?? 1,
+                                      _selectedSize.height,
+                                      _selectedSize.width,
                                     );
-                                  },
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 33.w, vertical: 8.h),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(2.r),
-                                      color: mdGrey400,
-                                    ),
-                                    child: const Text('Transfer'),
+
+                                    ToastUtils()
+                                        .showToast("Badge Updated Successfully");
+                                    Navigator.pushNamedAndRemoveUntil(
+                                        context, '/savedBadge', (route) => false);
+                                  } else {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return SaveBadgeDialog(
+                                          speed: speedDialProvider,
+                                          animationProvider: animationProvider,
+                                          textController: inlineimagecontroller,
+                                          isInverse: animationProvider
+                                              .isEffectActive(InvertLEDEffect()),
+                                          selectedSize: _selectedSize,
+                                        );
+                                      },
+                                    );
+                                  }
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 33.w, vertical: 8.h),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8.r),
+                                    color: mdGrey400,
                                   ),
+                                  child: Text(l10n.saveButton),
                                 ),
-                              ],
-                            );
-                          }
-                        },
-                      ),
-                    ],
+                              ),
+                              SizedBox(width: 40.w),
+                              GestureDetector(
+                                onTap: () async {
+                                  await animationProvider.handleAnimationTransfer(
+                                    badgeData: badgeData,
+                                    inlineImageProvider: inlineImageProvider,
+                                    speedDialProvider: speedDialProvider,
+                                    flash: animationProvider
+                                        .isEffectActive(FlashEffect()),
+                                    marquee: animationProvider
+                                        .isEffectActive(MarqueeEffect()),
+                                    invert: animationProvider
+                                        .isEffectActive(InvertLEDEffect()),
+                                    badgeHeight: _selectedSize.height,
+                                    badgeWidth: _selectedSize.width,
+                                  );
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 33.w, vertical: 8.h),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8.r),
+                                    color: mdGrey400,
+                                  ),
+                                  child: Text(l10n.transferButton),
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+                      },
+                    ),
                   ),
                 ],
               ),

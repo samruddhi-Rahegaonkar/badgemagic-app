@@ -61,7 +61,7 @@ class _AnimationTabState extends State<AnimationTab> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          // Original animations from issue1344
+          // Original basic animations
           Row(
             children: [
               AniContainer(
@@ -129,7 +129,7 @@ class _AnimationTabState extends State<AnimationTab> {
             ],
           ),
 
-          // Additional animations from development
+          // Extended icon-based animations
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 4.0),
             child: Row(

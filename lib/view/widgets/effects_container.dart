@@ -94,13 +94,27 @@ class _EffectContainerState extends State<EffectContainer> {
                 child: Image.asset(
                   widget.effect,
                   fit: BoxFit.contain,
+                  color: effectCardState.isEffectActive(badgeEffect)
+                      ? Colors.white
+                      : null,
+                  colorBlendMode: effectCardState.isEffectActive(badgeEffect)
+                      ? BlendMode.srcIn
+                      : null,
                 ),
               ),
-              Text(
-                _getLocalizedEffectName(widget.effectName, context),
-                style: TextStyle(fontSize: 10.sp),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
+              Padding(
+                padding: EdgeInsets.only(bottom: 6.h), // space after text
+                child: Text(
+                  _getLocalizedEffectName(widget.effectName, context),
+                  style: TextStyle(
+                    fontSize: 10.sp,
+                    color: effectCardState.isEffectActive(badgeEffect)
+                        ? Colors.white
+                        : Colors.black,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
               ),
             ],
           ),
