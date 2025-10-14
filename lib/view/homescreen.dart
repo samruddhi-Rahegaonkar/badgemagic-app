@@ -645,8 +645,8 @@ class _HomeScreenState extends State<HomeScreen>
     if (state == AppLifecycleState.resumed) {
       inlineimagecontroller.clear();
       previousText = '';
-      animationProvider.stopAllAnimations.call();
-      animationProvider.initializeAnimation.call();
+      animationProvider.stopAllAnimations();
+      animationProvider.initializeAnimation();
       if (mounted) setState(() {});
     } else if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
