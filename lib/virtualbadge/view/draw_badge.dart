@@ -125,7 +125,7 @@ class _BMBadgeState extends State<BMBadge> {
           break;
         case DrawShape.triangle:
           final height = (end.row - start.row).abs();
-          _drawTriangle(start.col, start.col, height, preview: true);
+          _drawTriangle(start.row, start.col, height, preview: true);
           break;
       }
 
