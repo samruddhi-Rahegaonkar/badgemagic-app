@@ -51,6 +51,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hindi => 'Hindi';
 
   @override
+  String get italian => 'Italian';
+
+  @override
   String get cancel => 'Cancel';
 
   @override
@@ -306,10 +309,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fixedTitle => 'Fixed';
 
   @override
-  String get flashEffect => 'Flash Effect';
+  String get flashEffect => 'Flash';
 
   @override
-  String get marqueeEffect => 'Marquee Effect';
+  String get marqueeEffect => 'Marquee';
 
   @override
   String get slow => 'Slow';
