@@ -6,73 +6,98 @@ enum BadgeScanMode { any, specific }
 class BadgeScanProvider with ChangeNotifier {
   BadgeScanMode _mode = BadgeScanMode.any;
   List<String> _badgeNames = ['LSLED', 'VBLAB'];
-  Set<int> _selectedIndices = {}; // Track selected badge indices
+  Set<String> _selectedBadgeNames = {};
   bool _isLoaded = false;
 
   BadgeScanMode get mode => _mode;
   List<String> get badgeNames => List.unmodifiable(_badgeNames);
-  Set<int> get selectedIndices => Set.unmodifiable(_selectedIndices);
+  Set<String> get selectedBadgeNames => Set.unmodifiable(_selectedBadgeNames);
   bool get isLoaded => _isLoaded;
 
   BadgeScanProvider() {
-    _loadFromPrefs(); // Load persisted values in background
+    _loadFromPrefs();
   }
 
-  // --- Persistence helpers ---
+  // ===============================
+  // LOAD FROM PREFERENCES
+  // ===============================
   Future<void> _loadFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Load scan mode
     final modeIndex = prefs.getInt('badge_scan_mode');
-    if (modeIndex != null) {
+    if (modeIndex != null &&
+        modeIndex >= 0 &&
+        modeIndex < BadgeScanMode.values.length) {
       _mode = BadgeScanMode.values[modeIndex];
     }
 
-    // Load badge names
     final storedNames = prefs.getStringList('badge_names');
     if (storedNames != null && storedNames.isNotEmpty) {
       _badgeNames = storedNames;
     }
 
+    final storedSelected = prefs.getStringList('selected_badge_names');
+    if (storedSelected != null) {
+      _selectedBadgeNames = storedSelected.where(_badgeNames.contains).toSet();
+    }
+
     _isLoaded = true;
-    notifyListeners(); // Notify UI that values are loaded
+    notifyListeners();
   }
 
+  // ===============================
+  // SAVE TO PREFERENCES
+  // ===============================
   Future<void> _saveToPrefs() async {
     final prefs = await SharedPreferences.getInstance();
+
     await prefs.setInt('badge_scan_mode', _mode.index);
     await prefs.setStringList('badge_names', _badgeNames);
+
+    await prefs.setStringList(
+      'selected_badge_names',
+      _selectedBadgeNames.toList(),
+    );
   }
 
-  // --- Public methods to update values ---
+  // ===============================
+  // MODE
+  // ===============================
   void setMode(BadgeScanMode mode) {
     _mode = mode;
     _saveToPrefs();
     notifyListeners();
   }
 
+  // ===============================
+  // BADGE NAMES
+  // ===============================
   void setBadgeNames(List<String> names) {
     _badgeNames = names.where((name) => name.trim().isNotEmpty).toList();
-    _selectedIndices.clear(); // Clear selections when badge names change
+
+    // Remove selections that no longer exist
+    _selectedBadgeNames.removeWhere((name) => !_badgeNames.contains(name));
+
     _saveToPrefs();
     notifyListeners();
   }
 
   void addBadgeName(String name) {
-    if (name.trim().isEmpty) return;
-    _badgeNames.add(name.trim());
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return;
+
+    _badgeNames.add(trimmed);
     _saveToPrefs();
     notifyListeners();
   }
 
   void removeBadgeNameAt(int index) {
     if (index < 0 || index >= _badgeNames.length) return;
+
+    final removedName = _badgeNames[index];
     _badgeNames.removeAt(index);
 
-    // Update selected indices after removal
-    _selectedIndices.removeWhere((i) => i == index);
-    _selectedIndices =
-        _selectedIndices.map((i) => i > index ? i - 1 : i).toSet();
+    _selectedBadgeNames.remove(removedName);
 
     _saveToPrefs();
     notifyListeners();
@@ -80,60 +105,69 @@ class BadgeScanProvider with ChangeNotifier {
 
   void updateBadgeName(int index, String newName) {
     if (index < 0 || index >= _badgeNames.length) return;
-    _badgeNames[index] = newName.trim();
+
+    final oldName = _badgeNames[index];
+    final trimmed = newName.trim();
+
+    _badgeNames[index] = trimmed;
+
+    // Update selection if name changed
+    if (_selectedBadgeNames.contains(oldName)) {
+      _selectedBadgeNames.remove(oldName);
+      _selectedBadgeNames.add(trimmed);
+    }
+
     _saveToPrefs();
     notifyListeners();
   }
 
-  // --- Selection methods ---
+  // ===============================
+  // SELECTION LOGIC
+  // ===============================
   void toggleSelection(int index) {
     if (index < 0 || index >= _badgeNames.length) return;
 
-    if (_selectedIndices.contains(index)) {
-      _selectedIndices.remove(index);
+    final badgeName = _badgeNames[index];
+
+    if (_selectedBadgeNames.contains(badgeName)) {
+      _selectedBadgeNames.remove(badgeName);
     } else {
-      _selectedIndices.add(index);
+      _selectedBadgeNames.add(badgeName);
     }
+
+    _saveToPrefs();
     notifyListeners();
   }
 
   bool isSelected(int index) {
-    return _selectedIndices.contains(index);
+    if (index < 0 || index >= _badgeNames.length) return false;
+    return _selectedBadgeNames.contains(_badgeNames[index]);
   }
 
   void clearSelection() {
-    _selectedIndices.clear();
+    _selectedBadgeNames.clear();
+    _saveToPrefs();
     notifyListeners();
   }
 
   void selectAll() {
-    _selectedIndices =
-        Set.from(List.generate(_badgeNames.length, (index) => index));
+    _selectedBadgeNames = _badgeNames.toSet();
+    _saveToPrefs();
     notifyListeners();
   }
 
   void removeSelectedDevices() {
-    if (_selectedIndices.isEmpty) return;
+    if (_selectedBadgeNames.isEmpty) return;
 
-    // Sort indices in descending order to remove from end first
-    final sortedIndices = _selectedIndices.toList()
-      ..sort((a, b) => b.compareTo(a));
+    _badgeNames.removeWhere((name) => _selectedBadgeNames.contains(name));
 
-    for (final index in sortedIndices) {
-      if (index < _badgeNames.length) {
-        _badgeNames.removeAt(index);
-      }
-    }
+    _selectedBadgeNames.clear();
 
-    _selectedIndices.clear();
     _saveToPrefs();
     notifyListeners();
   }
 
   List<String> getSelectedBadgeNames() {
-    return _selectedIndices
-        .where((index) => index < _badgeNames.length)
-        .map((index) => _badgeNames[index])
-        .toList();
+    return _selectedBadgeNames.toList();
   }
 }

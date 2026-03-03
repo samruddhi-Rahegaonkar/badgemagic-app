@@ -111,15 +111,21 @@ class _BadgeScanSettingsWidgetState extends State<BadgeScanSettingsWidget> {
                             ),
                           ],
                         ),
-                        if (provider.selectedIndices.isNotEmpty)
+                        if (provider.selectedBadgeNames.isNotEmpty)
                           ElevatedButton.icon(
                             onPressed: () {
-                              // Remove selected controllers
-                              final sortedIndices = provider.selectedIndices
-                                  .toList()
-                                ..sort((a, b) => b.compareTo(a));
+                              final badgeNames = provider.badgeNames;
 
-                              for (final index in sortedIndices) {
+                              // Convert selected badge names to indices
+                              final selectedIndices = provider
+                                  .selectedBadgeNames
+                                  .map((name) => badgeNames.indexOf(name))
+                                  .where((index) => index != -1)
+                                  .toList()
+                                ..sort((a, b) =>
+                                    b.compareTo(a)); // descending order
+
+                              for (final index in selectedIndices) {
                                 if (index < _controllers.length) {
                                   _controllers[index].dispose();
                                   _controllers.removeAt(index);
@@ -131,7 +137,7 @@ class _BadgeScanSettingsWidgetState extends State<BadgeScanSettingsWidget> {
                             },
                             icon: const Icon(Icons.delete, size: 18),
                             label: Text(
-                                'Remove (${provider.selectedIndices.length})'),
+                                'Remove (${provider.selectedBadgeNames.length})'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red,
                               foregroundColor: Colors.white,

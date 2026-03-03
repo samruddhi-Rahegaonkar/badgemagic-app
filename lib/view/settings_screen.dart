@@ -148,7 +148,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                               ),
                             ],
                           ),
-                          if (provider.selectedIndices.isNotEmpty)
+                          if (provider.selectedBadgeNames.isNotEmpty)
                             ElevatedButton.icon(
                               onPressed: () {
                                 provider.removeSelectedDevices();
@@ -165,7 +165,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                               },
                               icon: const Icon(Icons.delete, size: 18),
                               label: Text(
-                                  'Remove (${provider.selectedIndices.length})'),
+                                  'Remove (${provider.selectedBadgeNames.length})'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.red,
                                 foregroundColor: Colors.white,
