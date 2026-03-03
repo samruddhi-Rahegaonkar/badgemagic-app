@@ -25,7 +25,10 @@ class DrawBadgeProvider extends ChangeNotifier {
       rows,
       (i) => List.generate(
         cols,
-        (j) => (_drawViewGrid[i][j]) || (_previewGrid[i][j] ?? false),
+        (j) {
+          final preview = _previewGrid[i][j];
+          return preview ?? _drawViewGrid[i][j];
+        },
       ),
     );
   }
